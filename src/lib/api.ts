@@ -1,10 +1,12 @@
-import { PUBLIC_API_URL } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import type {
 	ApiResponse,
 	RadicleRepositoryListItem,
 	SeededRadicleRepository,
 	User
 } from '$types/app';
+
+const PUBLIC_API_URL = env.PUBLIC_API_URL;
 
 export const api = {
 	_getCsrfToken: async () => {
