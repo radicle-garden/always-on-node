@@ -21,7 +21,7 @@ steps:
     image: woodpeckerci/plugin-docker-buildx:5.2.1
     settings:
       platforms: linux/amd64
-      repo: quay.io/radicle_garden/backend_builder
+      repo: quay.io/radicle_garden/frontend
       registry: quay.io
       dockerfile: Containerfile
       env_file:
