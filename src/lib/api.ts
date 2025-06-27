@@ -6,7 +6,7 @@ import type {
 	User
 } from '$types/app';
 
-const PUBLIC_API_URL = env.PUBLIC_API_URL;
+const { PUBLIC_API_URL } = env;
 
 export const api = {
 	_getCsrfToken: async () => {
