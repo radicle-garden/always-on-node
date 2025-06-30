@@ -41,7 +41,11 @@
 			if (response.success) {
 				goto('/login', {
 					state: {
-						message: 'Please check your email for a verification link'
+						message: {
+							title: 'Account Created',
+							body: 'Please check your email for a verification link',
+							status: 'success'
+						}
 					}
 				});
 			} else {

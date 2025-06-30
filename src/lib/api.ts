@@ -111,6 +111,9 @@ export const api = {
 			password
 		});
 	},
+	verifyEmail: async (token: string): Promise<ApiResponse<User>> => {
+		return await api.get(`${PUBLIC_API_URL}/signup/verify-email?token=${token}`);
+	},
 	getProfile: async (handle: string): Promise<ApiResponse<User>> => {
 		return await api.get(`${PUBLIC_API_URL}/${handle}`);
 	},
