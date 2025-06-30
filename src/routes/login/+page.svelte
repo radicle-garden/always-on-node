@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 
 	import { login } from '$lib/auth';
 	import * as Alert from '$lib/components/ui/alert';
@@ -11,6 +12,10 @@
 
 	let errors = $state<string[]>([]);
 	let isLoggingIn = $state(false);
+	const { message } = page.state as { message?: string };
+	let emailVerified = page.url.searchParams.get('email-verified');
+
+	console.log({ emailVerified });
 
 	const handleSubmit = async (event: Event) => {
 		event.preventDefault();
@@ -57,6 +62,32 @@
 			<Card.Description
 				>Enter your email below to login to your account</Card.Description
 			>
+			{#if message}
+				<Alert.Root variant="success">
+					<Alert.Title>Account created</Alert.Title>
+					<Alert.Description>{message}</Alert.Description>
+				</Alert.Root>
+			{/if}
+			{#if emailVerified === '1'}
+				<Alert.Root variant="success">
+					<Alert.Title>Email verified</Alert.Title>
+					<Alert.Description
+						>You can now login to Radicle Garden</Alert.Description
+					>
+				</Alert.Root>
+			{:else if emailVerified === '0'}
+				<Alert.Root variant="destructive">
+					<Alert.Title>Email could not be verified</Alert.Title>
+					<Alert.Description>
+						<div class="flex flex-row items-center gap-1">
+							Please contact support <a
+								href="https://radicle.zulipchat.com/#narrow/channel/369873-support"
+								>on Zulip.</a
+							>
+						</div></Alert.Description
+					>
+				</Alert.Root>
+			{/if}
 		</Card.Header>
 		<Card.Content>
 			<div class="flex flex-col gap-6">

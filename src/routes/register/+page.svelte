@@ -39,7 +39,11 @@
 		try {
 			const response = await api.signup(handle, email, password);
 			if (response.success) {
-				goto('/login');
+				goto('/login', {
+					state: {
+						message: 'Please check your email for a verification link'
+					}
+				});
 			} else {
 				throw response.error;
 			}
