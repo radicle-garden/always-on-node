@@ -155,35 +155,44 @@ export function parseNodeStatus(status: string) {
 		};
 	}
 
-	const lines = status.split('\n');
-	const isRunning = lines.filter((line) => line.includes('✓')).length >= 3;
-	const peers = lines.filter((line) => line.includes('✓')).length - 2;
+	try {
 
-	// Parse time values from lines containing time units
-	const timeUnits = ['second', 'minute', 'hour', 'day', 'month', 'year'];
-	const timeUnitValues = { second: 1, minute: 60, hour: 3600, day: 86400, month: 2592000, year: 31536000 };
+		const lines = status.split('\n');
+		const isRunning = lines.filter((line) => line.includes('✓')).length >= 3;
+		const peers = lines.filter((line) => line.includes('✓')).length - 2;
 
-	const timeLines = lines.filter((line) => timeUnits.some((unit) => line.includes(unit)));
+		// Parse time values from lines containing time units
+		const timeUnits = ['second', 'minute', 'hour', 'day', 'month', 'year'];
+		const timeUnitValues = { second: 1, minute: 60, hour: 3600, day: 86400, month: 2592000, year: 31536000 };
 
-	// Extract and parse time values
-	const timeValues = timeLines.map(line => {
-		for (const unit of timeUnits) {
-			const match = line.match(new RegExp(`(\\d+(?:\\.\\d+)?)\\s*${unit}s?`));
-			if (match) {
-				const value = parseFloat(match[1]);
-				return { value, unit, seconds: value * timeUnitValues[unit as keyof typeof timeUnitValues] };
+		const timeLines = lines.filter((line) => timeUnits.some((unit) => line.includes(unit)));
+
+		// Extract and parse time values
+		const timeValues = timeLines.map(line => {
+			for (const unit of timeUnits) {
+				const match = line.match(new RegExp(`(\\d+(?:\\.\\d+)?)\\s*${unit}s?`));
+				if (match) {
+					const value = parseFloat(match[1]);
+					return { value, unit, seconds: value * timeUnitValues[unit as keyof typeof timeUnitValues] };
+				}
 			}
-		}
-		return null;
-	}).filter(Boolean) as Array<{ value: number; unit: string; seconds: number }>;
+			return null;
+		}).filter(Boolean) as Array<{ value: number; unit: string; seconds: number }>;
 
-	// Sort by seconds (longest first) and take the first one
-	const longestTime = timeValues.sort((a, b) => b.seconds - a.seconds)[0];
-	const sinceSeconds = longestTime ? longestTime.seconds : 0;
+		// Sort by seconds (longest first) and take the first one
+		const longestTime = timeValues.sort((a, b) => b.seconds - a.seconds)[0];
+		const sinceSeconds = longestTime ? longestTime.seconds : 0;
 
-	return {
-		isRunning,
-		peers,
-		sinceSeconds
-	};
+		return {
+			isRunning,
+			peers,
+			sinceSeconds
+		};
+	} catch (error) {
+		return {
+			isRunning: false,
+			peers: 0,
+			sinceSeconds: 0
+		};
+	}
 }

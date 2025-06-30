@@ -20,8 +20,6 @@
 		showInfoTooltip?: boolean;
 	} = $props();
 
-	$inspect({ pinnedRepositories });
-
 	let numPinnedRepositories = $derived(
 		Object.values(pinnedRepositories).reduce(
 			(acc, repositories) => acc + repositories.length,

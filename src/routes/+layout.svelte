@@ -10,9 +10,12 @@
 
 	let { children } = $props();
 
-	onMount(() => {
-		initialiseUser();
-		initializeRadicleRepositoryList();
+	let initialised = $state(false);
+
+	onMount(async () => {
+		await initialiseUser();
+		await initializeRadicleRepositoryList();
+		initialised = true;
 	});
 </script>
 
@@ -23,7 +26,13 @@
 		<Header />
 	</header>
 	<main class="w-full xl:w-2/3 px-2">
-		{@render children()}
+		{#if initialised}
+			{@render children()}
+		{:else}
+			<div class="flex h-full w-full items-center justify-center">
+				<Icon name="seedling" />
+			</div>
+		{/if}
 	</main>
 	<footer class="txt-small px-2">
 		&copy; {new Date().getFullYear()} Radicle <Icon name="seedling" />

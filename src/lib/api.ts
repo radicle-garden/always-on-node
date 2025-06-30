@@ -189,5 +189,8 @@ export const api = {
 	},
 	getNodeStatus: async (nodeId: string): Promise<ApiResponse<string>> => {
 		return await api.get(`${PUBLIC_API_URL}/nodes/${nodeId}/status`);
+	},
+	getNodeConfig: async (nodeId: string): Promise<ApiResponse<string>> => {
+		return await api.get(`${PUBLIC_API_URL}/nodes/${nodeId}/config`);
 	}
 };

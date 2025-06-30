@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import emoji from 'remark-emoji';
+	import Markdown, { type Plugin } from 'svelte-exmarkdown';
+	import { gfmPlugin } from 'svelte-exmarkdown/gfm';
 	import { toast } from 'svelte-sonner';
 
 	import type { User } from '$types/app';
@@ -33,6 +36,9 @@
 	let editing = $state(false);
 	let unescapedDescription = $state('');
 
+	let emojiPlugin = { remarkPlugin: [emoji, { emoticon: true }] } as Plugin;
+	let markdownPlugins = [gfmPlugin(), emojiPlugin];
+
 	$effect(() => {
 		if (isMe) {
 			user.subscribe((user) => (profile = user));
@@ -41,9 +47,7 @@
 	});
 
 	$effect(() => {
-		if (editing && profile?.description) {
-			unescapedDescription = unescapeHtml(profile.description);
-		}
+		unescapedDescription = unescapeHtml(profile?.description ?? '');
 	});
 
 	async function loadProfile(handle: string) {
@@ -52,11 +56,17 @@
 		for (const node of profile.nodes) {
 			const { content } = await api.getPinnedRepositories(node.node_id);
 			pinnedRepositories[node.node_id] = content;
-			const { content: status } = await api.getNodeStatus(node.node_id);
-			const { isRunning, peers, sinceSeconds } = parseNodeStatus(status);
-			node.is_running = isRunning;
-			node.peers = peers;
-			node.since_seconds = sinceSeconds;
+			try {
+				const { content: status } = await api.getNodeStatus(node.node_id);
+				const { isRunning, peers, sinceSeconds } = parseNodeStatus(status);
+				node.is_running = isRunning;
+				node.peers = peers;
+				node.since_seconds = sinceSeconds;
+			} catch (error) {
+				node.is_running = false;
+				node.peers = 0;
+				node.since_seconds = 0;
+			}
 		}
 	}
 
@@ -204,10 +214,13 @@
 					>Joined {timeAgo(new Date(profile.created_at))} ago</span
 				>
 			</div>
+
 			{#if editing}
 				<Textarea bind:value={unescapedDescription} />
 			{:else}
-				<div>{@html profile.description}</div>
+				<div class="markdown">
+					<Markdown md={unescapedDescription} plugins={markdownPlugins} />
+				</div>
 			{/if}
 
 			{#if isMe}
@@ -227,3 +240,51 @@
 {:else}
 	<div>Loading...</div>
 {/if}
+
+<style>
+	@reference '../../app.css';
+
+	.markdown :global(h1) {
+		@apply text-2xl font-bold;
+	}
+	.markdown :global(h2) {
+		@apply text-xl font-bold;
+	}
+	.markdown :global(h3) {
+		@apply text-lg font-bold;
+	}
+	.markdown :global(pre),
+	.markdown :global(code) {
+		@apply bg-muted rounded-xs p-2;
+	}
+	.markdown :global(pre) {
+		@apply my-4 overflow-x-auto;
+	}
+	.markdown :global(ul li) {
+		@apply list-inside list-disc;
+	}
+	.markdown :global(ol li) {
+		@apply list-inside list-decimal;
+	}
+	.markdown :global(blockquote) {
+		@apply border-muted-foreground border-l-4 pl-2;
+	}
+	.markdown :global(table) {
+		@apply w-full;
+	}
+	.markdown :global(table th) {
+		@apply bg-muted p-2;
+	}
+	.markdown :global(table td) {
+		@apply border-border border p-2;
+	}
+	.markdown :global(.footnotes ol li) {
+		@apply list-none;
+	}
+	.markdown :global(.contains-task-list li) {
+		@apply list-none;
+	}
+	.markdown :global(.contains-task-list .task-list-item) {
+		@apply flex items-center gap-2;
+	}
+</style>

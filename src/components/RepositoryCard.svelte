@@ -27,14 +27,6 @@
 		seedingStart?: Date;
 		onRemove?: (repositoryId: string, nodeId: string) => void;
 	} = $props();
-
-	$inspect({
-		name,
-		description,
-		repositoryId,
-		nodeId,
-		seedingStart
-	});
 </script>
 
 <div in:fade class="h-full">

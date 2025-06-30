@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import type { Snippet } from 'svelte';
 
 	import { login } from '$lib/auth';
 	import * as Alert from '$lib/components/ui/alert';

@@ -53,6 +53,8 @@
 	},
 	"dependencies": {
 		"@trivago/prettier-plugin-sort-imports": "^5.2.2",
-		"bs58": "^6.0.0"
+		"bs58": "^6.0.0",
+		"remark-emoji": "^5.0.1",
+		"svelte-exmarkdown": "^5.0.1"
 	}
 }
