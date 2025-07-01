@@ -12,11 +12,8 @@
 			<NavigationMenu.Item>
 				<NavigationMenu.Link class="hover:bg-transparent" tabindex={-1}>
 					<a href="/">
-						<img
-							src="/img/radicle-logo.svg"
-							alt="Radicle Garden"
-							class="h-8 w-full"
-						/>
+						<img src="/img/radicle-logo.svg" alt="Radicle" class="h-8 w-full" />
+						Garden
 					</a>
 				</NavigationMenu.Link>
 			</NavigationMenu.Item>
@@ -66,5 +63,8 @@
 	}
 	a:hover {
 		color: var(--foreground);
+	}
+	a:hover:no-underline {
+		text-decoration: none;
 	}
 </style>
