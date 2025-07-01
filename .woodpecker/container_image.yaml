@@ -31,6 +31,6 @@ steps:
       password:
         from_secret: quay_password
     when:
-      - event: pull_request
+      - event: manual
       - event: push
         branch: main
