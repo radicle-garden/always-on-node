@@ -70,8 +70,13 @@ export function validateEmail(email: string) {
 }
 
 export function timeAgo(date: Date) {
+
+	// We need to handle the user's timezone here
+	const userOffset = new Date().getTimezoneOffset();
+	const userDate = new Date(date.getTime() - userOffset * 60000);
+
 	const now = new Date();
-	const then = date;
+	const then = userDate;
 	const diff = now.getTime() - then.getTime();
 	const seconds = Math.floor(diff / 1000);
 	const minutes = Math.floor(seconds / 60);
