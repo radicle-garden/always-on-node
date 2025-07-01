@@ -10,10 +10,15 @@
 	<NavigationMenu.Root>
 		<NavigationMenu.List>
 			<NavigationMenu.Item>
-				<NavigationMenu.Link class="hover:bg-transparent" tabindex={-1}>
-					<a href="/">
-						<img src="/img/radicle-logo.svg" alt="Radicle" class="h-8 w-full" />
-						Garden
+				<NavigationMenu.Link class="hover:bg-transparent p-0" tabindex={-1}>
+					<a
+						href="/"
+						class="flex flex-col md:flex-row items-start md:items-center justify-start md:gap-2"
+					>
+						<img src="/img/radicle-logo.svg" alt="Radicle" />
+						<span class="text-sm md:text-4xl md:font-thin hover:no-underline"
+							>garden</span
+						>
 					</a>
 				</NavigationMenu.Link>
 			</NavigationMenu.Item>
