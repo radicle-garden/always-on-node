@@ -161,17 +161,19 @@
 			class={cn('min-w-24', !parseRepositoryId(rid) && 'cursor-not-allowed')}
 			onclick={async () => {
 				if (!nid || !rid) return;
-				try {
-					seedingRepository = true;
-					await addSeededRepository(nid, rid);
-					rid = '';
-					toast.success('Repository seeded');
-					refresh();
-				} catch (error) {
-					toast.error('Failed to seed repository');
-				} finally {
-					seedingRepository = false;
-				}
+				seedingRepository = true;
+				toast.promise(addSeededRepository(nid, rid), {
+					loading: 'Seeding repository...',
+					success: () => {
+						rid = '';
+						refresh();
+						return 'Repository seeded';
+					},
+					error: 'Failed to seed repository',
+					finally: () => {
+						seedingRepository = false;
+					}
+				});
 			}}><Icon name="seedling" />Seed</Button
 		>
 		<Button
@@ -179,17 +181,19 @@
 			class={cn('min-w-24', !parseRepositoryId(rid) && 'cursor-not-allowed')}
 			onclick={async () => {
 				if (!nid || !rid) return;
-				try {
-					pinningRepository = true;
-					await addPinnedRepository(nid, rid);
-					rid = '';
-					toast.success('Repository pinned');
-					refresh();
-				} catch (error) {
-					toast.error('Failed to pin repository');
-				} finally {
-					pinningRepository = false;
-				}
+				pinningRepository = true;
+				toast.promise(addPinnedRepository(nid, rid), {
+					loading: 'Pinning repository...',
+					success: () => {
+						rid = '';
+						refresh();
+						return 'Repository pinned';
+					},
+					error: 'Failed to pin repository',
+					finally: () => {
+						pinningRepository = false;
+					}
+				});
 			}}><Icon name="pin" />Pin</Button
 		>
 	</div>

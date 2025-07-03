@@ -123,6 +123,14 @@ export const api = {
 	putMyProfile: async (profile: any) => {
 		return await api.put(`${PUBLIC_API_URL}/profile`, profile);
 	},
+	addExternalNode: async (alias: string, nid: string) => {
+		return await api.post(`${PUBLIC_API_URL}/profile/externalNodes/${nid}`, {
+			alias,
+		});
+	},
+	removeExternalNode: async (nid: string) => {
+		return await api.delete(`${PUBLIC_API_URL}/profile/externalNodes/${nid}`);
+	},
 	uploadFileToS3: async (file: File, imageType: 'avatar' | 'banner'): Promise<{ fileUrl: string }> => {
 		const { content: { presignedUrl, fileUrl } } = await api.post(`${PUBLIC_API_URL}/profile/${imageType}/presigned`, {
 			contentType: file.type

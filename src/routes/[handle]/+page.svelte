@@ -9,8 +9,12 @@
 
 	import { api } from '$lib/api';
 	import { initialiseUser } from '$lib/auth';
+	import * as Alert from '$lib/components/ui/alert';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { user } from '$lib/state';
@@ -34,7 +38,21 @@
 	let isMe = $derived(handle === $user?.handle);
 	let pinnedRepositories: Record<string, string[]> = $state({});
 	let editing = $state(false);
+	let nodeStatuses: Record<
+		string,
+		{
+			isRunning: boolean;
+			peers: number;
+			sinceSeconds: number;
+		}
+	> = $state({});
+	let addingNode = $state(false);
+	let removingNode = $state(false);
 	let unescapedDescription = $state('');
+	let newNode = $state({
+		alias: '',
+		nid: ''
+	});
 
 	let emojiPlugin = { remarkPlugin: [emoji, { emoticon: true }] } as Plugin;
 	let markdownPlugins = [gfmPlugin(), emojiPlugin];
@@ -59,13 +77,17 @@
 			try {
 				const { content: status } = await api.getNodeStatus(node.node_id);
 				const { isRunning, peers, sinceSeconds } = parseNodeStatus(status);
-				node.is_running = isRunning;
-				node.peers = peers;
-				node.since_seconds = sinceSeconds;
+				nodeStatuses[node.node_id] = {
+					isRunning,
+					peers,
+					sinceSeconds: sinceSeconds ?? 0
+				};
 			} catch (error) {
-				node.is_running = false;
-				node.peers = 0;
-				node.since_seconds = 0;
+				nodeStatuses[node.node_id] = {
+					isRunning: false,
+					peers: 0,
+					sinceSeconds: 0
+				};
 			}
 		}
 	}
@@ -80,6 +102,30 @@
 		await initialiseUser();
 	};
 
+	const addNode = (alias: string, nid: string) => {
+		addingNode = false;
+		toast.promise(api.addExternalNode(alias, nid), {
+			loading: `Adding ${alias}...`,
+			success: `Added ${alias}`,
+			error: `Failed to add ${alias}`,
+			finally: () => {
+				initialiseUser();
+			}
+		});
+	};
+
+	const removeNode = (alias: string, nid: string) => {
+		removingNode = false;
+		toast.promise(api.removeExternalNode(nid), {
+			loading: `Removing ${alias}...`,
+			success: `Removed ${alias}`,
+			error: `Failed to remove ${alias}`,
+			finally: () => {
+				initialiseUser();
+			}
+		});
+	};
+
 	const handleClickAvatar = () => {
 		const avatarInput = document.getElementById(
 			'avatar-input'
@@ -89,18 +135,22 @@
 
 	const handleChangeAvatar = async (event: Event) => {
 		const file = (event.target as HTMLInputElement).files?.[0];
-		if (file) {
-			try {
-				toast.loading('Updating avatar...');
+		if (!file) return;
+		toast.promise(
+			new Promise(async (resolve) => {
 				const { fileUrl } = await api.uploadFileToS3(file, 'avatar');
 				await api.putAvatar(fileUrl);
-				toast.success('Avatar uploaded successfully');
-				await initialiseUser();
-			} catch (error) {
-				console.error(error);
-				toast.error('Failed to upload avatar');
+				resolve(true);
+			}),
+			{
+				loading: 'Updating avatar...',
+				success: 'Avatar updated',
+				error: 'Failed to update avatar',
+				finally: () => {
+					initialiseUser();
+				}
 			}
-		}
+		);
 	};
 
 	const handleClickBanner = () => {
@@ -112,18 +162,22 @@
 
 	const handleChangeBanner = async (event: Event) => {
 		const file = (event.target as HTMLInputElement).files?.[0];
-		if (file) {
-			try {
-				toast.loading('Updating banner...');
+		if (!file) return;
+		toast.promise(
+			new Promise(async (resolve) => {
 				const { fileUrl } = await api.uploadFileToS3(file, 'banner');
 				await api.putBanner(fileUrl);
-				toast.success('Banner uploaded successfully');
-				await initialiseUser();
-			} catch (error) {
-				console.error(error);
-				toast.error('Failed to upload banner');
+				resolve(true);
+			}),
+			{
+				loading: 'Updating banner...',
+				success: 'Banner updated',
+				error: 'Failed to update banner',
+				finally: () => {
+					initialiseUser();
+				}
 			}
-		}
+		);
 	};
 </script>
 
@@ -195,21 +249,124 @@
 					<div class="flex items-center gap-2">
 						<CopyableText text={node.did}>{truncateId(node.did)}</CopyableText>
 						{#if isMe}
-							{#if node.is_running}
-								<Badge variant="success"
-									><Icon name="checkmark" />Node online</Badge
-								>
-							{:else if node.is_running === false}
-								<Badge variant="destructive"
-									><Icon name="cross" />Node offline</Badge
-								>
-							{:else}
-								<Badge variant="outline"><Icon name="clock" />Checking...</Badge
-								>
+							{#if !node.external && nodeStatuses[node.node_id]}
+								{#if nodeStatuses[node.node_id].isRunning}
+									<Badge variant="success"
+										><Icon name="checkmark" />Node online</Badge
+									>
+								{:else if nodeStatuses[node.node_id].isRunning === false}
+									<Badge variant="destructive"
+										><Icon name="cross" />Node offline</Badge
+									>
+								{:else}
+									<Badge variant="outline"
+										><Icon name="clock" />Checking...</Badge
+									>
+								{/if}
+								<Tooltip.Provider delayDuration={0}>
+									<Tooltip.Root>
+										<Tooltip.Trigger>
+											<Icon name="info" />
+										</Tooltip.Trigger>
+										<Tooltip.Content>
+											Node managed by Radicle.Garden
+										</Tooltip.Content>
+									</Tooltip.Root>
+								</Tooltip.Provider>
+							{:else if node.external}
+								<Badge variant="outline">{node.alias}</Badge>
+								<Dialog.Root bind:open={removingNode}>
+									<Dialog.Trigger>
+										<Button variant="ghost">
+											<Icon name="cross" />
+										</Button>
+									</Dialog.Trigger>
+									<Dialog.Content>
+										<Dialog.Header>
+											<Dialog.Title>Remove External Node</Dialog.Title>
+											<Dialog.Description>
+												<p>
+													Are you sure you want to remove {node.alias}?
+												</p>
+												<Alert.Root variant="destructive">
+													<Alert.Description>
+														You will not be able to add this node back to your
+														profile.
+													</Alert.Description>
+												</Alert.Root>
+											</Dialog.Description>
+										</Dialog.Header>
+										<Dialog.Footer>
+											<Button
+												variant="outline"
+												onclick={() => (removingNode = false)}>Cancel</Button
+											>
+											<Button
+												variant="destructive"
+												onclick={() => removeNode(node.alias, node.node_id)}
+												>Remove</Button
+											>
+										</Dialog.Footer>
+									</Dialog.Content>
+								</Dialog.Root>
 							{/if}
 						{/if}
 					</div>
 				{/each}
+				{#if isMe}
+					<div class="flex flex-col items-start">
+						<Dialog.Root bind:open={addingNode}>
+							<Dialog.Trigger>
+								<Button variant="outline"><Icon name="plus" />Add Node</Button>
+							</Dialog.Trigger>
+							<Dialog.Content>
+								<Dialog.Header>
+									<Dialog.Title>Add External Node</Dialog.Title>
+									<Dialog.Description>
+										Add an external node to your profile. This could be a node
+										you run on your laptop, or some other machine.
+									</Dialog.Description>
+									<Dialog.Description>
+										You can find your node id by running
+										<div class="inline-block">
+											<CopyableText text={'rad self'}>rad self</CopyableText>
+										</div>
+										in a shell where a radicle node is running.
+									</Dialog.Description>
+								</Dialog.Header>
+								<div class="grid gap-4 py-4 w-full">
+									<div class="grid grid-cols-4 items-center gap-4">
+										<Label for="nid">Node ID</Label>
+										<Input
+											type="text"
+											name="nid"
+											class="col-span-3"
+											bind:value={newNode.nid}
+										/>
+									</div>
+									<div class="grid grid-cols-4 items-center gap-4">
+										<Label for="alias">Alias</Label>
+										<Input
+											type="text"
+											name="alias"
+											class="col-span-3"
+											bind:value={newNode.alias}
+										/>
+									</div>
+								</div>
+								<Dialog.Footer>
+									<Button
+										disabled={!newNode.nid || !newNode.alias}
+										type="submit"
+										variant="outline"
+										onclick={() => addNode(newNode.alias, newNode.nid)}
+										><Icon name="checkmark" />Save</Button
+									>
+								</Dialog.Footer>
+							</Dialog.Content>
+						</Dialog.Root>
+					</div>
+				{/if}
 				<span class="text-muted-foreground"
 					>Joined {timeAgo(new Date(profile.created_at))} ago</span
 				>
