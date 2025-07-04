@@ -68,17 +68,24 @@
 	$effect(() => {
 		if (nid && !hasLoaded) {
 			hasLoaded = true;
-			Promise.all([
-				getSeededRepositories(nid),
-				getPinnedRepositories(nid)
-			]).then(([seeded, pinned]) => {
-				console.log({ seeded, pinned });
-				if (seeded.success) {
+
+			// This is not very nice. TODO: Find a better way to handle a single
+			// failing promise in a chain
+			Promise.all(
+				[getSeededRepositories(nid), getPinnedRepositories(nid)].map((p) =>
+					p.catch((e) => e)
+				)
+			).then(([seeded, pinned]) => {
+				if (seeded instanceof Error) {
+					// Do nothing
+				} else {
 					seededRepositories[nid] = seeded.content.filter(
-						(repository) => repository.seeding
+						(repository: SeededRadicleRepository) => repository.seeding
 					);
 				}
-				if (pinned.success) {
+				if (pinned instanceof Error) {
+					// Do nothing
+				} else {
 					pinnedRepositories[nid] = pinned.content;
 				}
 			});
