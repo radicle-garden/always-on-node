@@ -47,6 +47,30 @@ export function publicKeyFromDid(did: string) {
 	return did.replace('did:key:', '');
 }
 
+export function parseNodeId(
+  nid: string,
+): { prefix: string; pubkey: string } | undefined {
+  const match = /^(did:key:)?(z[a-zA-Z0-9]+)$/.exec(nid);
+  if (match) {
+    let hex: Uint8Array | undefined = undefined;
+    try {
+      hex = bs58.decode(match[2].substring(1));
+    } catch (error) {
+      console.error("utils.parseNodId: Not able to decode received NID", error);
+      return undefined;
+    }
+    // This checks also that the first 2 bytes are equal
+    // to the ed25519 public key type used.
+    if (hex && !(hex.byteLength === 34 && hex[0] === 0xed && hex[1] === 1)) {
+      return undefined;
+    }
+
+    return { prefix: match[1] || "did:key:", pubkey: match[2] };
+  }
+
+  return undefined;
+}
+
 export function parseRepositoryId(
 	rid: string
 ): { prefix: string; pubkey: string } | undefined {

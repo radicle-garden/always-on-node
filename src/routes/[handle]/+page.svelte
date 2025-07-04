@@ -20,6 +20,7 @@
 	import { user } from '$lib/state';
 	import {
 		cn,
+		parseNodeId,
 		parseNodeStatus,
 		publicKeyFromDid,
 		timeAgo,
@@ -69,6 +70,13 @@
 		unescapedDescription = unescapeHtml(profile?.description ?? '');
 	});
 
+	function validateNewNode() {
+		return {
+			nid: !!parseNodeId(newNode.nid),
+			alias: newNode.alias.length > 0
+		};
+	}
+
 	function resetNewNode() {
 		newNode = {
 			alias: '',
@@ -112,7 +120,12 @@
 
 	function addNode(alias: string, nid: string) {
 		addingNode = false;
-		toast.promise(api.addExternalNode(alias, publicKeyFromDid(nid)), {
+		const parsedNodeId = parseNodeId(nid);
+		if (!parsedNodeId) {
+			toast.error('Invalid node ID');
+			return;
+		}
+		toast.promise(api.addExternalNode(alias, parsedNodeId.pubkey), {
 			loading: `Adding ${alias}...`,
 			success: `Added ${alias}`,
 			error: `Failed to add ${alias}`,
@@ -349,7 +362,12 @@
 										<Input
 											type="text"
 											name="nid"
-											class="col-span-3"
+											class={cn(
+												'col-span-3',
+												newNode.nid &&
+													!validateNewNode().nid &&
+													'border-destructive'
+											)}
 											bind:value={newNode.nid}
 										/>
 									</div>
@@ -365,7 +383,8 @@
 								</div>
 								<Dialog.Footer>
 									<Button
-										disabled={!newNode.nid || !newNode.alias}
+										disabled={!validateNewNode().nid ||
+											!validateNewNode().alias}
 										type="submit"
 										variant="outline"
 										onclick={() => addNode(newNode.alias, newNode.nid)}
