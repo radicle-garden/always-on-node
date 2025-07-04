@@ -16,10 +16,10 @@
 		onRemove: () => void;
 	} = $props();
 
-	const handleConfirm = () => {
+	function handleConfirm() {
 		onRemove();
 		open = false;
-	};
+	}
 </script>
 
 <AlertDialog.Root bind:open>

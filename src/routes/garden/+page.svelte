@@ -43,27 +43,31 @@
 	let ridInput = $state<HTMLInputElement>();
 	let isPopoverOpen = $state(false);
 
-	const refresh = () => {
+	function refresh() {
 		hasLoaded = false;
-	};
+	}
 
-	const getSeededRepositories = async (nid: string) =>
-		api.getSeededRepositories(nid);
-	const addSeededRepository = async (nid: string, rid: string) =>
-		api.addSeededRepository(nid, rid);
-	const deleteSeededRepository = async (nid: string, rid: string) => {
+	async function getSeededRepositories(nid: string) {
+		return api.getSeededRepositories(nid);
+	}
+	async function addSeededRepository(nid: string, rid: string) {
+		return api.addSeededRepository(nid, rid);
+	}
+	async function deleteSeededRepository(nid: string, rid: string) {
 		await api.deleteSeededRepository(nid, rid);
 		refresh();
-	};
+	}
 
-	const getPinnedRepositories = async (nid: string) =>
-		api.getPinnedRepositories(nid);
-	const addPinnedRepository = async (nid: string, rid: string) =>
-		api.addPinnedRepository(nid, rid);
-	const deletePinnedRepository = async (nid: string, rid: string) => {
+	async function getPinnedRepositories(nid: string) {
+		return api.getPinnedRepositories(nid);
+	}
+	async function addPinnedRepository(nid: string, rid: string) {
+		return api.addPinnedRepository(nid, rid);
+	}
+	async function deletePinnedRepository(nid: string, rid: string) {
 		await api.deletePinnedRepository(nid, rid);
 		refresh();
-	};
+	}
 
 	$effect(() => {
 		if (nid && !hasLoaded) {

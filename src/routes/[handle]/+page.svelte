@@ -69,6 +69,13 @@
 		unescapedDescription = unescapeHtml(profile?.description ?? '');
 	});
 
+	function resetNewNode() {
+		newNode = {
+			alias: '',
+			nid: ''
+		};
+	}
+
 	async function loadProfile(handle: string) {
 		const { content } = await api.getProfile(handle);
 		profile = content;
@@ -93,7 +100,7 @@
 		}
 	}
 
-	const saveProfile = async (profile: User) => {
+	async function saveProfile(profile: User) {
 		editing = false;
 		await api.putMyProfile({
 			description: unescapedDescription,
@@ -101,9 +108,9 @@
 			banner_img: profile.banner_img
 		});
 		await initialiseUser();
-	};
+	}
 
-	const addNode = (alias: string, nid: string) => {
+	function addNode(alias: string, nid: string) {
 		addingNode = false;
 		toast.promise(api.addExternalNode(alias, publicKeyFromDid(nid)), {
 			loading: `Adding ${alias}...`,
@@ -111,11 +118,12 @@
 			error: `Failed to add ${alias}`,
 			finally: () => {
 				initialiseUser();
+				resetNewNode();
 			}
 		});
-	};
+	}
 
-	const removeNode = (alias: string, nid: string) => {
+	function removeNode(alias: string, nid: string) {
 		removingNode = false;
 		toast.promise(api.removeExternalNode(nid), {
 			loading: `Removing ${alias}...`,
@@ -125,16 +133,16 @@
 				initialiseUser();
 			}
 		});
-	};
+	}
 
-	const handleClickAvatar = () => {
+	function handleClickAvatar() {
 		const avatarInput = document.getElementById(
 			'avatar-input'
 		) as HTMLInputElement;
 		avatarInput.click();
-	};
+	}
 
-	const handleChangeAvatar = async (event: Event) => {
+	async function handleChangeAvatar(event: Event) {
 		const file = (event.target as HTMLInputElement).files?.[0];
 		if (!file) return;
 		toast.promise(
@@ -152,16 +160,16 @@
 				}
 			}
 		);
-	};
+	}
 
-	const handleClickBanner = () => {
+	function handleClickBanner() {
 		const bannerInput = document.getElementById(
 			'banner-input'
 		) as HTMLInputElement;
 		bannerInput.click();
-	};
+	}
 
-	const handleChangeBanner = async (event: Event) => {
+	async function handleChangeBanner(event: Event) {
 		const file = (event.target as HTMLInputElement).files?.[0];
 		if (!file) return;
 		toast.promise(
@@ -179,7 +187,7 @@
 				}
 			}
 		);
-	};
+	}
 </script>
 
 {#if profile}

@@ -21,7 +21,7 @@
 		};
 	};
 
-	const handleSubmit = async (event: Event) => {
+	async function handleSubmit(event: Event) {
 		event.preventDefault();
 		isLoggingIn = true;
 		const email = (document.getElementById('email') as HTMLInputElement).value;
@@ -56,7 +56,7 @@
 		} finally {
 			isLoggingIn = false;
 		}
-	};
+	}
 </script>
 
 <form onsubmit={handleSubmit} class="w-full max-w-sm">

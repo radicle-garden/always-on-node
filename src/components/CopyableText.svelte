@@ -14,12 +14,12 @@
 		icon = 'copy';
 	}, 800);
 
-	const copyToClipboard = async (text: string) => {
+	async function copyToClipboard(text: string) {
 		await navigator.clipboard.writeText(text);
 		icon = 'checkmark';
 		toast.success('Copied to clipboard');
 		restoreIcon();
-	};
+	}
 </script>
 
 <div class="flex items-center gap-2">

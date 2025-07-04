@@ -12,7 +12,7 @@
 	let errors = $state<string[]>([]);
 	let isRegistering = $state(false);
 
-	const handleSubmit = async (event: Event) => {
+	async function handleSubmit(event: Event) {
 		event.preventDefault();
 		isRegistering = true;
 
@@ -56,7 +56,7 @@
 		} finally {
 			isRegistering = false;
 		}
-	};
+	}
 </script>
 
 <form onsubmit={handleSubmit} class="w-full max-w-sm">
