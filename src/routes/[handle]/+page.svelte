@@ -21,6 +21,7 @@
 	import {
 		cn,
 		parseNodeStatus,
+		publicKeyFromDid,
 		timeAgo,
 		truncateId,
 		unescapeHtml
@@ -104,7 +105,7 @@
 
 	const addNode = (alias: string, nid: string) => {
 		addingNode = false;
-		toast.promise(api.addExternalNode(alias, nid), {
+		toast.promise(api.addExternalNode(alias, publicKeyFromDid(nid)), {
 			loading: `Adding ${alias}...`,
 			success: `Added ${alias}`,
 			error: `Failed to add ${alias}`,
