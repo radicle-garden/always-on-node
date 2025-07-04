@@ -40,6 +40,7 @@
 		}
 
 		if (errors.length > 0) {
+			isLoggingIn = false;
 			return;
 		}
 
@@ -51,8 +52,7 @@
 				throw error;
 			}
 		} catch (error) {
-			console.error(error);
-			errors.push(`Check your email and password`);
+			errors.push(error as string);
 		} finally {
 			isLoggingIn = false;
 		}

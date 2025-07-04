@@ -49,7 +49,8 @@ export const api = {
 		});
 
 		if (!response.ok) {
-			throw new Error('Failed to post');
+			const error = await response.json();
+			throw new Error(error.message);
 		}
 
 		return response.json();

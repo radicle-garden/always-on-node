@@ -4,7 +4,7 @@ import { setUser, clearUser, setRadicleRepositoryList } from './state';
 
 export const login = async (email: string, password: string) => {
 	try {
-		const { content: user } = await api.login(email, password);
+		const { content: user, error } = await api.login(email, password);
 		setUser(user);
 		return { success: true, user };
 	} catch (error) {
