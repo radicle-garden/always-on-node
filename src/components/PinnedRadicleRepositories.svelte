@@ -26,6 +26,9 @@
 			0
 		)
 	);
+
+	$inspect(pinnedRepositories);
+	$inspect(numPinnedRepositories);
 </script>
 
 <div class="flex flex-col gap-2">

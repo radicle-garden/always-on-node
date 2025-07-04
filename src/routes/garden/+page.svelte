@@ -72,6 +72,7 @@
 				getSeededRepositories(nid),
 				getPinnedRepositories(nid)
 			]).then(([seeded, pinned]) => {
+				console.log({ seeded, pinned });
 				if (seeded.success) {
 					seededRepositories[nid] = seeded.content.filter(
 						(repository) => repository.seeding
