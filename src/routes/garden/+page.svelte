@@ -72,29 +72,32 @@
 	$effect(() => {
 		if (nid && !hasLoaded) {
 			hasLoaded = true;
-
-			// This is not very nice. TODO: Find a better way to handle a single
-			// failing promise in a chain
-			Promise.all(
-				[getSeededRepositories(nid), getPinnedRepositories(nid)].map((p) =>
-					p.catch((e) => e)
-				)
-			).then(([seeded, pinned]) => {
-				if (seeded instanceof Error) {
-					// Do nothing
-				} else {
-					seededRepositories[nid] = seeded.content.filter(
-						(repository: SeededRadicleRepository) => repository.seeding
-					);
-				}
-				if (pinned instanceof Error) {
-					// Do nothing
-				} else {
-					pinnedRepositories[nid] = pinned.content;
-				}
-			});
+			loadRepositories(nid);
 		}
 	});
+
+	async function loadRepositories(nid: string) {
+		const [seededResult, pinnedResult] = await Promise.allSettled([
+			getSeededRepositories(nid),
+			getPinnedRepositories(nid)
+		]);
+
+		if (seededResult.status === 'fulfilled') {
+			seededRepositories[nid] = seededResult.value.content.filter(
+				(repository: SeededRadicleRepository) => repository.seeding
+			);
+		} else {
+			console.warn('Failed to load seeded repositories:', seededResult.reason);
+			seededRepositories[nid] = [];
+		}
+
+		if (pinnedResult.status === 'fulfilled') {
+			pinnedRepositories[nid] = pinnedResult.value.content;
+		} else {
+			console.warn('Failed to load pinned repositories:', pinnedResult.reason);
+			pinnedRepositories[nid] = [];
+		}
+	}
 
 	$effect(() => {
 		if (rid && rid.length > 0 && !parseRepositoryId(rid)) {
