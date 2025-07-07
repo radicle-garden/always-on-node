@@ -8,7 +8,11 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { user } from '$lib/state';
 	import { validateEmail } from '$lib/utils';
+
+	// If the user is already logged in, redirect to the profile
+	if ($user) goto(`/${$user.handle}`);
 
 	let errors = $state<string[]>([]);
 	let isLoggingIn = $state(false);
