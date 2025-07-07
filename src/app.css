@@ -144,3 +144,9 @@
 button {
   cursor: pointer;
 }
+
+/* The default for this is not great */
+::selection {
+  background: var(--foreground);
+  color: var(--background);
+}
