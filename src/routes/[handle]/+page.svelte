@@ -22,8 +22,8 @@
 		cn,
 		parseNodeId,
 		parseNodeStatus,
-		publicKeyFromDid,
 		timeAgo,
+		truncateDid,
 		truncateId,
 		unescapeHtml
 	} from '$lib/utils';
@@ -285,16 +285,31 @@
 										><Icon name="clock" />Checking...</Badge
 									>
 								{/if}
-								<Tooltip.Provider delayDuration={0}>
-									<Tooltip.Root>
-										<Tooltip.Trigger>
-											<Icon name="info" />
-										</Tooltip.Trigger>
-										<Tooltip.Content>
-											Node managed by Radicle.Garden
-										</Tooltip.Content>
-									</Tooltip.Root>
-								</Tooltip.Provider>
+								<Dialog.Root>
+									<Dialog.Trigger>
+										<Icon name="info" />
+									</Dialog.Trigger>
+									<Dialog.Content>
+										<Dialog.Header>
+											<Dialog.Title>Your Radicle Garden Node</Dialog.Title>
+											<Dialog.Description>
+												<p>This node is managed by Radicle Garden.</p>
+												<div>
+													To force a connection to this node, you can run
+													<div class="inline-block">
+														<CopyableText
+															text={`rad node connect ${node.node_id}@${node.connect_address}`}
+															>rad node connect {truncateDid(
+																`${node.node_id}@${node.connect_address}`
+															)}</CopyableText
+														>
+													</div>
+													in a shell where a radicle node is running.
+												</div>
+											</Dialog.Description>
+										</Dialog.Header>
+									</Dialog.Content>
+								</Dialog.Root>
 							{:else if node.external}
 								<Badge variant="outline">{node.alias}</Badge>
 								<Dialog.Root bind:open={removingNode}>

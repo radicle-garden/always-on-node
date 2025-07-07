@@ -23,6 +23,7 @@ export type Node = {
 	created_at: Date;
 	deleted: boolean;
 	external: boolean;
+	connect_address: string;
 
 	// Frontend only
 	is_running?: boolean;
