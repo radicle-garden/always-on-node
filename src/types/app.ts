@@ -57,5 +57,5 @@ export type ApiResponse<T> = {
 	success: boolean;
 	statusCode: number;
 	message?: string;
-	error?: string;
+	error?: string | [];
 };

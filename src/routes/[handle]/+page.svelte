@@ -20,6 +20,8 @@
 	import { user } from '$lib/state';
 	import {
 		cn,
+		createFormValidator,
+		hasFormErrors,
 		parseNodeId,
 		parseNodeStatus,
 		timeAgo,
@@ -55,6 +57,7 @@
 		alias: '',
 		nid: ''
 	});
+	let errors = $state<Record<string, string>>({});
 
 	let emojiPlugin = { remarkPlugin: [emoji, { emoticon: true }] } as Plugin;
 	let markdownPlugins = [gfmPlugin(), emojiPlugin];
@@ -70,12 +73,19 @@
 		unescapedDescription = unescapeHtml(profile?.description ?? '');
 	});
 
-	function validateNewNode() {
-		return {
-			nid: !!parseNodeId(newNode.nid),
-			alias: newNode.alias.length > 0
-		};
-	}
+	const validateNewNode = createFormValidator({
+		nid: (value: string) => {
+			if (!value) return 'Node ID is required';
+			if (!parseNodeId(value)) return 'Invalid Node ID';
+			if (profile?.nodes.some((node) => node.node_id === value))
+				return 'Node ID already added';
+			return null;
+		},
+		alias: (value: string) => {
+			if (!value) return 'Alias is required';
+			return null;
+		}
+	});
 
 	function resetNewNode() {
 		newNode = {
@@ -119,13 +129,15 @@
 	}
 
 	function addNode(alias: string, nid: string) {
-		addingNode = false;
-		const parsedNodeId = parseNodeId(nid);
-		if (!parsedNodeId) {
-			toast.error('Invalid node ID');
+		errors = validateNewNode({ nid, alias });
+		console.log({ ...errors });
+		if (hasFormErrors(errors)) {
 			return;
 		}
-		toast.promise(api.addExternalNode(alias, parsedNodeId.pubkey), {
+		const parsedNodeId = parseNodeId(nid);
+		addingNode = false;
+		// Note ! here because we know that the node id is valid
+		toast.promise(api.addExternalNode(alias, parsedNodeId!.pubkey), {
 			loading: `Adding ${alias}...`,
 			success: `Added ${alias}`,
 			error: `Failed to add ${alias}`,
@@ -352,7 +364,15 @@
 				{/each}
 				{#if isMe}
 					<div class="flex flex-col items-start">
-						<Dialog.Root bind:open={addingNode}>
+						<Dialog.Root
+							bind:open={addingNode}
+							onOpenChange={() =>
+								// Wait for animation to finish before resetting the form
+								setTimeout(() => {
+									errors = {};
+									resetNewNode();
+								}, 500)}
+						>
 							<Dialog.Trigger>
 								<Button variant="outline"><Icon name="plus" />Add Node</Button>
 							</Dialog.Trigger>
@@ -379,27 +399,41 @@
 											name="nid"
 											class={cn(
 												'col-span-3',
-												newNode.nid &&
-													!validateNewNode().nid &&
-													'border-destructive'
+												errors.nid && 'border-destructive'
 											)}
 											bind:value={newNode.nid}
 										/>
+										{#if errors.nid}
+											<div
+												class="col-span-4 text-right text-sm text-destructive"
+											>
+												{errors.nid}
+											</div>
+										{/if}
 									</div>
 									<div class="grid grid-cols-4 items-center gap-4">
 										<Label for="alias">Alias</Label>
 										<Input
 											type="text"
 											name="alias"
-											class="col-span-3"
+											class={cn(
+												'col-span-3',
+												errors.alias && 'border-destructive'
+											)}
 											bind:value={newNode.alias}
 										/>
+										{#if errors.alias}
+											<div
+												class="col-span-4 text-right text-sm text-destructive"
+											>
+												{errors.alias}
+											</div>
+										{/if}
 									</div>
 								</div>
 								<Dialog.Footer>
 									<Button
-										disabled={!validateNewNode().nid ||
-											!validateNewNode().alias}
+										disabled={hasFormErrors(errors)}
 										type="submit"
 										variant="outline"
 										onclick={() => addNode(newNode.alias, newNode.nid)}

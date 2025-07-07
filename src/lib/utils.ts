@@ -225,3 +225,24 @@ export function parseNodeStatus(status: string) {
 		};
 	}
 }
+
+export function createFormValidator<T extends Record<string, any>>(
+	validators: Record<keyof T, (value: any) => string | null>
+) {
+	return function validate(data: T): Record<keyof T, string> {
+		const errors: Record<keyof T, string> = {} as Record<keyof T, string>;
+
+		for (const [field, validator] of Object.entries(validators)) {
+			const error = validator(data[field as keyof T]);
+			if (error) {
+				errors[field as keyof T] = error;
+			}
+		}
+
+		return errors;
+	};
+}
+
+export function hasFormErrors(errors: Record<string, string>): boolean {
+	return Object.keys(errors).length > 0;
+}

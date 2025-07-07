@@ -9,13 +9,21 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { user } from '$lib/state';
-	import { validateEmail } from '$lib/utils';
+	import {
+		validateEmail,
+		createFormValidator,
+		hasFormErrors
+	} from '$lib/utils';
 
 	// If the user is already logged in, redirect to the profile
 	if ($user) goto(`/${$user.handle}`);
 
-	let errors = $state<string[]>([]);
+	// Form state
+	let email = $state('');
+	let password = $state('');
 	let isLoggingIn = $state(false);
+	let errors = $state<Record<string, string>>({});
+
 	const { message } = page.state as {
 		message?: {
 			title: string;
@@ -25,38 +33,39 @@
 		};
 	};
 
+	// Validation schema
+	const validateLoginForm = createFormValidator({
+		email: (value: string) => {
+			if (!value.trim()) return 'Email is required';
+			if (!validateEmail(value)) return 'Invalid email address';
+			return null;
+		},
+		password: (value: string) => {
+			if (!value) return 'Password is required';
+			return null;
+		}
+	});
+
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
-		isLoggingIn = true;
-		const email = (document.getElementById('email') as HTMLInputElement).value;
-		const password = (document.getElementById('password') as HTMLInputElement)
-			.value;
 
-		errors = [];
-		if (!email) {
-			errors.push('Email is required');
-		}
-		if (!validateEmail(email)) {
-			errors.push('Invalid email address');
-		}
-		if (!password) {
-			errors.push('Password is required');
-		}
+		errors = validateLoginForm({ email, password });
 
-		if (errors.length > 0) {
-			isLoggingIn = false;
+		if (hasFormErrors(errors)) {
 			return;
 		}
+
+		isLoggingIn = true;
 
 		try {
 			const { success, error, user } = await login(email, password);
 			if (success) {
 				goto(`/${user!.handle}`);
 			} else {
-				throw error;
+				errors.general = error as string;
 			}
 		} catch (error) {
-			errors.push(error as string);
+			errors.general = error as string;
 		} finally {
 			isLoggingIn = false;
 		}
@@ -96,34 +105,38 @@
 						id="email"
 						type="email"
 						placeholder="email@example.com"
+						bind:value={email}
+						aria-invalid={!!errors.email}
 						required
 					/>
+					{#if errors.email}
+						<div class="text-sm text-destructive">{errors.email}</div>
+					{/if}
 				</div>
 				<div class="grid gap-2">
 					<Label for="password">Password</Label>
-					<Input id="password" type="password" required placeholder="******" />
+					<Input
+						id="password"
+						type="password"
+						bind:value={password}
+						aria-invalid={!!errors.password}
+						required
+						placeholder="******"
+					/>
+					{#if errors.password}
+						<div class="text-sm text-destructive">{errors.password}</div>
+					{/if}
 				</div>
-				{#if errors.length > 0}
+				{#if errors.general}
 					<Alert.Root variant="destructive">
 						<Alert.Title>Unable to login</Alert.Title>
-						<Alert.Description>
-							<ul class="list-inside list-disc text-sm">
-								{#each errors as error}
-									<li>{error}</li>
-								{/each}
-							</ul>
-						</Alert.Description>
+						<Alert.Description>{errors.general}</Alert.Description>
 					</Alert.Root>
 				{/if}
 			</div>
 		</Card.Content>
 		<Card.Footer class="flex-col gap-2">
-			<Button
-				class="w-full"
-				type="submit"
-				onclick={handleSubmit}
-				disabled={isLoggingIn}>Login</Button
-			>
+			<Button class="w-full" type="submit" disabled={isLoggingIn}>Login</Button>
 			{#if isLoggingIn}
 				<p>Logging in...</p>
 			{/if}

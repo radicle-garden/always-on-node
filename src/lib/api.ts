@@ -50,7 +50,13 @@ export const api = {
 
 		if (!response.ok) {
 			const error = await response.json();
-			throw new Error(error.message);
+			if (error.message) {
+				throw new Error(error.message);
+			} else if (error.error) {
+				throw new Error(error.error);
+			} else {
+				return error
+			}
 		}
 
 		return response.json();

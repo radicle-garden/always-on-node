@@ -36,6 +36,7 @@
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
 		"svelte-sonner": "^1.0.5",
+		"sveltekit-superforms": "^2.26.1",
 		"tailwind-merge": "^3.0.2",
 		"tailwind-variants": "^1.0.0",
 		"tailwindcss": "^4.0.0",
@@ -54,6 +55,7 @@
 	"dependencies": {
 		"@trivago/prettier-plugin-sort-imports": "^5.2.2",
 		"bs58": "^6.0.0",
+		"formsnap": "^2.0.1",
 		"remark-emoji": "^5.0.1",
 		"svelte-exmarkdown": "^5.0.1"
 	}

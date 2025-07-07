@@ -8,37 +8,49 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { user } from '$lib/state';
-	import { validateEmail } from '$lib/utils';
+	import {
+		validateEmail,
+		createFormValidator,
+		hasFormErrors
+	} from '$lib/utils';
 
 	// If the user is already logged in, redirect to the profile
 	if ($user) goto(`/${$user.handle}`);
 
-	let errors = $state<string[]>([]);
+	// Form state
+	let handle = $state('');
+	let email = $state('');
+	let password = $state('');
 	let isRegistering = $state(false);
+	let errors = $state<Record<string, string>>({});
+
+	// Validation schema
+	const validateRegisterForm = createFormValidator({
+		handle: (value: string) => {
+			if (!value.trim()) return 'Username is required';
+			return null;
+		},
+		email: (value: string) => {
+			if (!value.trim()) return 'Email is required';
+			if (!validateEmail(value)) return 'Invalid email address';
+			return null;
+		},
+		password: (value: string) => {
+			if (!value) return 'Password is required';
+			return null;
+		}
+	});
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
+
+		errors = validateRegisterForm({ handle, email, password });
+
+		if (hasFormErrors(errors)) {
+			return;
+		}
+
 		isRegistering = true;
-
-		const handle = (document.getElementById('handle') as HTMLInputElement)
-			.value;
-		const email = (document.getElementById('email') as HTMLInputElement).value;
-		const password = (document.getElementById('password') as HTMLInputElement)
-			.value;
-
-		errors = [];
-		if (!handle) {
-			errors.push('Username is required');
-		}
-		if (email && !validateEmail(email)) {
-			errors.push('Invalid email address');
-		}
-		if (!email) {
-			errors.push('Email is required');
-		}
-		if (!password) {
-			errors.push('Password is required');
-		}
 
 		try {
 			const response = await api.signup(handle, email, password);
@@ -53,10 +65,17 @@
 					}
 				});
 			} else {
-				throw response.error;
+				// If our client-side validation fails to catch an issue and the server
+				// returns a list of validation errors, we handle that here.
+				type SignupValidationError = {
+					msg: string;
+				};
+				errors.general = (response.error as SignupValidationError[])
+					?.map((e: SignupValidationError) => e.msg)
+					.join(', ') as string;
 			}
 		} catch (error) {
-			console.error(error);
+			errors.general = error as string;
 		} finally {
 			isRegistering = false;
 		}
@@ -75,7 +94,17 @@
 			<div class="flex flex-col gap-6">
 				<div class="grid gap-2">
 					<Label for="handle">Username (cannot be changed!)</Label>
-					<Input id="handle" type="text" placeholder="username" required />
+					<Input
+						id="handle"
+						type="text"
+						placeholder="username"
+						bind:value={handle}
+						aria-invalid={!!errors.handle}
+						required
+					/>
+					{#if errors.handle}
+						<p class="text-sm text-destructive">{errors.handle}</p>
+					{/if}
 				</div>
 				<div class="grid gap-2">
 					<Label for="email">Email</Label>
@@ -83,33 +112,39 @@
 						id="email"
 						type="email"
 						placeholder="email@example.com"
+						bind:value={email}
+						aria-invalid={!!errors.email}
 						required
 					/>
+					{#if errors.email}
+						<p class="text-sm text-destructive">{errors.email}</p>
+					{/if}
 				</div>
 				<div class="grid gap-2">
 					<Label for="password">Password</Label>
-					<Input id="password" type="password" required placeholder="******" />
+					<Input
+						id="password"
+						type="password"
+						bind:value={password}
+						aria-invalid={!!errors.password}
+						required
+						placeholder="******"
+					/>
+					{#if errors.password}
+						<p class="text-sm text-destructive">{errors.password}</p>
+					{/if}
 				</div>
-				{#if errors.length > 0}
+				{#if errors.general}
 					<Alert.Root variant="destructive">
-						<Alert.Title>Unable to login</Alert.Title>
-						<Alert.Description>
-							<ul class="list-inside list-disc text-sm">
-								{#each errors as error}
-									<li>{error}</li>
-								{/each}
-							</ul>
-						</Alert.Description>
+						<Alert.Title>Unable to create account</Alert.Title>
+						<Alert.Description>{errors.general}</Alert.Description>
 					</Alert.Root>
 				{/if}
 			</div>
 		</Card.Content>
 		<Card.Footer class="flex-col gap-2">
-			<Button
-				class="w-full"
-				type="submit"
-				onclick={handleSubmit}
-				disabled={isRegistering}>Create account</Button
+			<Button class="w-full" type="submit" disabled={isRegistering}
+				>Create account</Button
 			>
 			{#if isRegistering}
 				<p>Creating account...</p>
