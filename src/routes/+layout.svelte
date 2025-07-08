@@ -4,17 +4,21 @@
 
 	import { initialiseUser, initializeRadicleRepositoryList } from '$lib/auth';
 	import { Toaster } from '$lib/components/ui/sonner';
+	import { cn } from '$lib/utils';
 
 	import Header from '$components/Header.svelte';
 	import Icon from '$components/Icon.svelte';
+	import Loading from '$components/Loading.svelte';
 
 	let { children } = $props();
 
 	let initialised = $state(false);
 
 	onMount(async () => {
-		await initialiseUser();
-		await initializeRadicleRepositoryList();
+		await Promise.allSettled([
+			initialiseUser(),
+			initializeRadicleRepositoryList()
+		]);
 		initialised = true;
 	});
 </script>
@@ -25,12 +29,12 @@
 	<header class="w-full xl:w-2/3 px-2">
 		<Header />
 	</header>
-	<main class="w-full xl:w-2/3 px-2">
+	<main class={cn('w-full xl:w-2/3 px-2', !initialised && 'flex-auto')}>
 		{#if initialised}
 			{@render children()}
 		{:else}
 			<div class="flex h-full w-full items-center justify-center">
-				<Icon name="seedling" />
+				<Loading />
 			</div>
 		{/if}
 	</main>

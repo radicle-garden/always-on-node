@@ -4,7 +4,7 @@ import { setUser, clearUser, setRadicleRepositoryList } from './state';
 
 export const login = async (email: string, password: string) => {
 	try {
-		const { content: user, error } = await api.login(email, password);
+		const { content: user } = await api.login(email, password);
 		setUser(user);
 		return { success: true, user };
 	} catch (error) {
@@ -37,8 +37,12 @@ export const initialiseUser = async () => {
 };
 
 export const initializeRadicleRepositoryList = async () => {
-	const list = await api.getRadicleRepositoryList();
-	setRadicleRepositoryList(list);
+	try {
+		const list = await api.getRadicleRepositoryList();
+		setRadicleRepositoryList(list);
+	} catch (error) {
+		console.error('Error initializing radicle repository list:', error);
+	}
 };
 
 export const checkAuth = async () => {
