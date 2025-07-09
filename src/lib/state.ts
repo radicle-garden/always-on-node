@@ -4,6 +4,7 @@ import { derived, get, writable } from 'svelte/store';
 export const user = writable<User | null>(null);
 export const isLoggedIn = derived(user, ($user) => $user !== null);
 export const nodes = derived(user, ($user) => $user?.nodes);
+export const gardenNode = derived(nodes, ($nodes) => $nodes?.[0]);
 
 export const radicleRepositoryList = writable<RadicleRepositoryListItem[]>([]);
 

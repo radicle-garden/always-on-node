@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { Node } from '$types/app';
+
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { findRespositoryByRid, user } from '$lib/state';
@@ -9,12 +11,14 @@
 	const {
 		pinnedRepositories,
 		deletePinnedRepository,
+		gardenNode,
 		skeleton,
 		showEditLink,
 		showInfoTooltip
 	}: {
 		pinnedRepositories: Record<string, string[]>;
 		deletePinnedRepository?: (nid: string, rid: string) => void;
+		gardenNode: Node;
 		skeleton?: boolean;
 		showEditLink?: boolean;
 		showInfoTooltip?: boolean;
@@ -63,6 +67,7 @@
 						description={findRespositoryByRid(rid)?.desc ?? ''}
 						repositoryId={rid}
 						nodeId={nid}
+						nodeConnectAddress={gardenNode.connect_address}
 						onRemove={() => deletePinnedRepository?.(nid, rid)}
 					/>
 				</div>

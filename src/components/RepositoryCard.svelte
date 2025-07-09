@@ -4,7 +4,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import { truncateId } from '$lib/utils';
+	import { truncateText } from '$lib/utils';
 
 	import CopyableText from './CopyableText.svelte';
 	import Icon from './Icon.svelte';
@@ -17,6 +17,7 @@
 		description,
 		repositoryId,
 		nodeId,
+		nodeConnectAddress,
 		seedingStart,
 		onRemove
 	}: {
@@ -24,6 +25,7 @@
 		description: string;
 		repositoryId: string;
 		nodeId: string;
+		nodeConnectAddress: string;
 		seedingStart?: Date;
 		onRemove?: (repositoryId: string, nodeId: string) => void;
 	} = $props();
@@ -54,17 +56,17 @@
 			<div class="flex flex-col gap-2">
 				<div class="flex items-center gap-2">
 					Repository ID: <CopyableText text={repositoryId}
-						>{truncateId(repositoryId)}</CopyableText
+						>{truncateText(repositoryId)}</CopyableText
 					>
 				</div>
 				<div class="flex items-center gap-2">
 					Node ID: <CopyableText text={nodeId}
-						>{truncateId(nodeId)}</CopyableText
+						>{truncateText(nodeId)}</CopyableText
 					>
 				</div>
 				<div class="flex items-center gap-2">
 					Clone with: <CopyableText text={`rad clone ${repositoryId}`}
-						>rad clone {truncateId(repositoryId)}</CopyableText
+						>rad clone {truncateText(repositoryId)}</CopyableText
 					>
 				</div>
 			</div>
@@ -97,14 +99,17 @@
 								</div>
 								<div>
 									Next, connect to the seeding node:
-									<CopyableText text={`rad connect ${nodeId}`}
-										>rad node connect {truncateId(nodeId)}</CopyableText
+									<CopyableText
+										text={`rad node connect ${nodeId}@${nodeConnectAddress}`}
+										>rad node connect {truncateText(
+											`${nodeId}@${nodeConnectAddress}`
+										)}</CopyableText
 									>
 								</div>
 								<div>
 									Finally, clone the repository:
 									<CopyableText text={`rad clone ${repositoryId}`}
-										>rad clone {truncateId(repositoryId)}</CopyableText
+										>rad clone {truncateText(repositoryId)}</CopyableText
 									>
 								</div>
 							</Dialog.Description>

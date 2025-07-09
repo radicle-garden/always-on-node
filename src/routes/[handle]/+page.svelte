@@ -26,7 +26,7 @@
 		parseNodeStatus,
 		timeAgo,
 		truncateDid,
-		truncateId,
+		truncateText,
 		unescapeHtml
 	} from '$lib/utils';
 
@@ -130,7 +130,6 @@
 
 	function addNode(alias: string, nid: string) {
 		errors = validateNewNode({ nid, alias });
-		console.log({ ...errors });
 		if (hasFormErrors(errors)) {
 			return;
 		}
@@ -281,7 +280,8 @@
 				<span class="text-2xl font-bold">{profile.handle}</span>
 				{#each profile.nodes as node}
 					<div class="flex items-center gap-2">
-						<CopyableText text={node.did}>{truncateId(node.did)}</CopyableText>
+						<CopyableText text={node.did}>{truncateText(node.did)}</CopyableText
+						>
 						{#if isMe}
 							{#if !node.external && nodeStatuses[node.node_id]}
 								{#if nodeStatuses[node.node_id].isRunning}

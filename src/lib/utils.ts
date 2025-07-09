@@ -31,12 +31,13 @@ export function debounce(callback: (...args: any[]) => void, wait: number) {
 	};
 }
 
-export function truncateId(pubkey: string): string {
-	return `${pubkey.substring(0, 6)}…${pubkey.slice(-6)}`;
+export function truncateText(text: string, remaining?: number ): string {
+	remaining = remaining ?? 6;
+	return `${text.substring(0, remaining)}…${text.slice(-remaining)}`;
 }
 
 export function truncateDid(did: string): string {
-	return `did:key:${truncateId(publicKeyFromDid(did))}`;
+	return `did:key:${truncateText(publicKeyFromDid(did))}`;
 }
 
 export function didFromPublicKey(publicKey: string) {

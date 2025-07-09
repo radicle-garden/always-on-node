@@ -26,18 +26,19 @@
 	</NavigationMenu.Root>
 	<NavigationMenu.Root>
 		<NavigationMenu.List>
-			{#if $isLoggedIn && $user}
+			{#if $isLoggedIn}
+				<!-- $isLoggedIn === true implies $user !== null -->
 				<NavigationMenu.Item>
 					<NavigationMenu.Link class="hover:bg-transparent" tabindex={-1}>
-						<a href="/{$user?.handle}" class="flex items-center gap-2">
+						<a href="/{$user!.handle}" class="flex items-center gap-2">
 							<div class="h-8 w-8">
 								<Avatar
-									src={$user?.avatar_img}
+									src={$user!.avatar_img}
 									alt="Avatar"
-									fallbackText={$user?.handle.slice(0, 2)}
+									fallbackText={$user!.handle.slice(0, 2)}
 								/>
 							</div>
-							{$user?.handle}
+							{$user!.handle}
 						</a>
 					</NavigationMenu.Link>
 				</NavigationMenu.Item>

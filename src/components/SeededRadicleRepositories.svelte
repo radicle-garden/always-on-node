@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { SeededRadicleRepository } from '$types/app';
+	import type { Node, SeededRadicleRepository } from '$types/app';
 
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import * as Tooltip from '$lib/components/ui/tooltip';
@@ -11,11 +11,13 @@
 	const {
 		seededRepositories,
 		deleteSeededRepository,
+		gardenNode,
 		skeleton,
 		showInfoTooltip
 	}: {
 		seededRepositories: Record<string, SeededRadicleRepository[]>;
 		deleteSeededRepository: (nid: string, rid: string) => void;
+		gardenNode: Node;
 		skeleton: boolean;
 		showInfoTooltip?: boolean;
 	} = $props();
@@ -57,6 +59,7 @@
 						description={findRespositoryByRid(repository_id)?.desc ?? ''}
 						repositoryId={repository_id}
 						nodeId={nid}
+						nodeConnectAddress={gardenNode.connect_address}
 						seedingStart={new Date(seeding_start)}
 						onRemove={() => deleteSeededRepository(nid, repository_id)}
 					/>

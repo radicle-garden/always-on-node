@@ -15,7 +15,7 @@
 	import * as Popover from '$lib/components/ui/popover';
 	import {
 		findRepositoriesByFuzzyTerm,
-		nodes,
+		gardenNode,
 		radicleRepositoryList
 	} from '$lib/state';
 	import { cn, parseRepositoryId } from '$lib/utils';
@@ -32,7 +32,7 @@
 	let seedingRepository = $state(false);
 	let hasLoaded = $state(false);
 	let rid = $state('');
-	let nid = $derived($nodes?.[0]?.node_id);
+	let nid = $derived($gardenNode?.node_id);
 	let searchResults = $derived<RadicleRepositoryListItem[]>(
 		get(radicleRepositoryList).filter((repo) => {
 			const repoName = repo.name.toLowerCase();
@@ -47,39 +47,10 @@
 		hasLoaded = false;
 	}
 
-	async function getSeededRepositories(nid: string) {
-		return api.getSeededRepositories(nid);
-	}
-	async function addSeededRepository(nid: string, rid: string) {
-		return api.addSeededRepository(nid, rid);
-	}
-	async function deleteSeededRepository(nid: string, rid: string) {
-		await api.deleteSeededRepository(nid, rid);
-		refresh();
-	}
-
-	async function getPinnedRepositories(nid: string) {
-		return api.getPinnedRepositories(nid);
-	}
-	async function addPinnedRepository(nid: string, rid: string) {
-		return api.addPinnedRepository(nid, rid);
-	}
-	async function deletePinnedRepository(nid: string, rid: string) {
-		await api.deletePinnedRepository(nid, rid);
-		refresh();
-	}
-
-	$effect(() => {
-		if (nid && !hasLoaded) {
-			hasLoaded = true;
-			loadRepositories(nid);
-		}
-	});
-
 	async function loadRepositories(nid: string) {
 		const [seededResult, pinnedResult] = await Promise.allSettled([
-			getSeededRepositories(nid),
-			getPinnedRepositories(nid)
+			api.getSeededRepositories(nid),
+			api.getPinnedRepositories(nid)
 		]);
 
 		if (seededResult.status === 'fulfilled') {
@@ -98,6 +69,53 @@
 			pinnedRepositories[nid] = [];
 		}
 	}
+
+	async function seedRepository(nid: string, rid: string) {
+		seedingRepository = true;
+		toast.promise(api.addSeededRepository(nid, rid), {
+			loading: 'Seeding repository...',
+			success: () => {
+				rid = '';
+				refresh();
+				return 'Repository seeded';
+			},
+			error: 'Failed to seed repository',
+			finally: () => {
+				seedingRepository = false;
+			}
+		});
+	}
+	async function deleteSeededRepository(nid: string, rid: string) {
+		await api.deleteSeededRepository(nid, rid);
+		refresh();
+	}
+
+	async function pinRepository(nid: string, rid: string) {
+		pinningRepository = true;
+		toast.promise(api.addPinnedRepository(nid, rid), {
+			loading: 'Pinning repository...',
+			success: () => {
+				rid = '';
+				refresh();
+				return 'Repository pinned';
+			},
+			error: 'Failed to pin repository',
+			finally: () => {
+				pinningRepository = false;
+			}
+		});
+	}
+	async function deletePinnedRepository(nid: string, rid: string) {
+		await api.deletePinnedRepository(nid, rid);
+		refresh();
+	}
+
+	$effect(() => {
+		if (nid && !hasLoaded) {
+			hasLoaded = true;
+			loadRepositories($gardenNode!.node_id);
+		}
+	});
 
 	$effect(() => {
 		if (rid && rid.length > 0 && !parseRepositoryId(rid)) {
@@ -176,19 +194,7 @@
 			class={cn('min-w-24', !parseRepositoryId(rid) && 'cursor-not-allowed')}
 			onclick={async () => {
 				if (!nid || !rid) return;
-				seedingRepository = true;
-				toast.promise(addSeededRepository(nid, rid), {
-					loading: 'Seeding repository...',
-					success: () => {
-						rid = '';
-						refresh();
-						return 'Repository seeded';
-					},
-					error: 'Failed to seed repository',
-					finally: () => {
-						seedingRepository = false;
-					}
-				});
+				seedRepository(nid, rid);
 			}}><Icon name="seedling" />Seed</Button
 		>
 		<Button
@@ -196,19 +202,7 @@
 			class={cn('min-w-24', !parseRepositoryId(rid) && 'cursor-not-allowed')}
 			onclick={async () => {
 				if (!nid || !rid) return;
-				pinningRepository = true;
-				toast.promise(addPinnedRepository(nid, rid), {
-					loading: 'Pinning repository...',
-					success: () => {
-						rid = '';
-						refresh();
-						return 'Repository pinned';
-					},
-					error: 'Failed to pin repository',
-					finally: () => {
-						pinningRepository = false;
-					}
-				});
+				pinRepository(nid, rid);
 			}}><Icon name="pin" />Pin</Button
 		>
 	</div>
@@ -216,6 +210,7 @@
 	<SeededRadicleRepositories
 		{seededRepositories}
 		{deleteSeededRepository}
+		gardenNode={$gardenNode!}
 		skeleton={seedingRepository}
 		showInfoTooltip={true}
 	/>
@@ -223,6 +218,7 @@
 	<PinnedRadicleRepositories
 		{pinnedRepositories}
 		{deletePinnedRepository}
+		gardenNode={$gardenNode!}
 		skeleton={pinningRepository}
 		showInfoTooltip={true}
 	/>
