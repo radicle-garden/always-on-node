@@ -17,11 +17,10 @@ pnpm i
 pnpm dev
 ```
 
-## Docker
+## Containers
+
+Building a container image (used for production deployment):
 
 ```bash
 podman build -t radicle-garden .
-podman run -p 3000:80 radicle-garden
 ```
-
-Then visit `http://localhost:3000` in your browser.

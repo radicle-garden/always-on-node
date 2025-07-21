@@ -126,11 +126,11 @@ export function timeAgo(date: Date) {
 
 	// Months
 	if (days < 365) {
-		return `${days / 30} month${days / 30 === 1 ? '' : 's'}`;
+		return `${Math.floor(days / 30)} month${Math.floor(days / 30) === 1 ? '' : 's'}`;
 	}
 
 	// Years
-	return `${days / 365} year${days / 365 === 1 ? '' : 's'}`;
+	return `${Math.floor(days / 365)} year${Math.floor(days / 365) === 1 ? '' : 's'}`;
 }
 
 export function unescapeHtml(text: string): string {

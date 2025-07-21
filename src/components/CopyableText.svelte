@@ -1,36 +1,42 @@
-<script lang="ts">
+<script module lang="ts">
 	import { toast } from 'svelte-sonner';
 
+	export async function copyToClipboard(text: string) {
+		await navigator.clipboard.writeText(text);
+		toast.success('Copied to clipboard');
+	}
+</script>
+
+<script lang="ts">
 	import { debounce } from '$lib/utils';
 
 	import Icon from './Icon.svelte';
 
-	let icon = $state<'copy' | 'checkmark'>('copy');
 	let container: HTMLDivElement;
 
 	let { children, text } = $props();
 
+	let icon = $state<'link' | 'checkmark'>('link');
 	const restoreIcon = debounce(() => {
-		icon = 'copy';
+		icon = 'link';
 	}, 800);
 
-	async function copyToClipboard(text: string) {
-		await navigator.clipboard.writeText(text);
+	async function handleClick() {
+		copyToClipboard(text);
 		icon = 'checkmark';
-		toast.success('Copied to clipboard');
 		restoreIcon();
 	}
 </script>
 
-<div class="flex items-center gap-2">
+<div class="flex items-center gap-2 font-mono">
 	<div
 		role="button"
-		class="copyable-container flex cursor-pointer items-center gap-2 p-2 select-text"
-		onclick={() => copyToClipboard(text)}
+		class="copyable-container flex cursor-pointer items-center gap-2 rounded-xs bg-card p-1 text-muted-foreground select-text hover:bg-primary"
+		onclick={() => handleClick()}
 		tabindex="0"
 		onkeydown={(e) => {
 			if (e.key === 'Enter' || e.key === ' ') {
-				copyToClipboard(text);
+				handleClick();
 			}
 		}}
 		bind:this={container}
@@ -39,18 +45,3 @@
 		<Icon name={icon} size="16" />
 	</div>
 </div>
-
-<style>
-	.copyable-container {
-		background-color: var(--muted);
-		border-radius: 4px;
-		padding: 4px;
-		transition: background-color 0.2s ease-in-out;
-	}
-	.copyable-container:hover {
-		background-color: var(--primary);
-	}
-	div {
-		font-family: monospace;
-	}
-</style>

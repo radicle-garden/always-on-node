@@ -1,17 +1,15 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import emoji from 'remark-emoji';
-	import Markdown, { type Plugin } from 'svelte-exmarkdown';
-	import { gfmPlugin } from 'svelte-exmarkdown/gfm';
 	import { toast } from 'svelte-sonner';
 
-	import type { User } from '$types/app';
+	import type { SeededRadicleRepository, User } from '$types/app';
 
 	import { api } from '$lib/api';
 	import { initialiseUser } from '$lib/auth';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
+	import { Card } from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
@@ -32,15 +30,21 @@
 
 	import Avatar from '$components/Avatar.svelte';
 	import CopyableText from '$components/CopyableText.svelte';
+	import CreateOrganisationDialog from '$components/CreateOrganisationDialog.svelte';
 	import Icon from '$components/Icon.svelte';
 	import ImageWithFallback from '$components/ImageWithFallback.svelte';
+	import Markdown from '$components/Markdown.svelte';
 	import PinnedRadicleRepositories from '$components/PinnedRadicleRepositories.svelte';
+	import RepositoriesWithFilter from '$components/RepositoriesWithFilter.svelte';
 
 	const { handle } = $derived(page.params);
 
 	let profile: User | null = $state(null);
 	let isMe = $derived(handle === $user?.handle);
 	let pinnedRepositories: Record<string, string[]> = $state({});
+	let seededRepositories: Record<string, SeededRadicleRepository[]> = $state(
+		{}
+	);
 	let editing = $state(false);
 	let nodeStatuses: Record<
 		string,
@@ -58,9 +62,6 @@
 		nid: ''
 	});
 	let errors = $state<Record<string, string>>({});
-
-	let emojiPlugin = { remarkPlugin: [emoji, { emoticon: true }] } as Plugin;
-	let markdownPlugins = [gfmPlugin(), emojiPlugin];
 
 	$effect(() => {
 		if (isMe) {
@@ -98,8 +99,9 @@
 		const { content } = await api.getProfile(handle);
 		profile = content;
 		for (const node of profile.nodes) {
-			const { content } = await api.getPinnedRepositories(node.node_id);
-			pinnedRepositories[node.node_id] = content;
+			await loadRepositories(node.node_id);
+
+			// Then parse the node status from the node status api
 			try {
 				const { content: status } = await api.getNodeStatus(node.node_id);
 				const { isRunning, peers, sinceSeconds } = parseNodeStatus(status);
@@ -115,6 +117,29 @@
 					sinceSeconds: 0
 				};
 			}
+		}
+	}
+
+	async function loadRepositories(nid: string) {
+		const [seededResult, pinnedResult] = await Promise.allSettled([
+			api.getSeededRepositories(nid),
+			api.getPinnedRepositories(nid)
+		]);
+
+		if (seededResult.status === 'fulfilled') {
+			seededRepositories[nid] = seededResult.value.content.filter(
+				(repository: SeededRadicleRepository) => repository.seeding
+			);
+		} else {
+			console.warn('Failed to load seeded repositories:', seededResult.reason);
+			seededRepositories[nid] = [];
+		}
+
+		if (pinnedResult.status === 'fulfilled') {
+			pinnedRepositories[nid] = pinnedResult.value.content;
+		} else {
+			console.warn('Failed to load pinned repositories:', pinnedResult.reason);
+			pinnedRepositories[nid] = [];
 		}
 	}
 
@@ -212,46 +237,70 @@
 			}
 		);
 	}
+
+	function handleCreateOrganisation(name: string, invitees: string[]) {
+		console.log(name, invitees);
+	}
+
+	function handleCreateRepository(rid: string) {
+		toast.promise(api.addSeededRepository(profile!.nodes[0].node_id, rid), {
+			loading: 'Seeding repository...',
+			success: () => {
+				rid = '';
+				return 'Repository seeded';
+			},
+			error: 'Failed to seed repository',
+			finally: () => {
+				loadRepositories(profile!.nodes[0].node_id);
+			}
+		});
+	}
 </script>
 
+{#snippet createOrganisationTrigger()}
+	<Button><Icon name="plus" />New Organisation</Button>
+{/snippet}
+
 {#if profile}
-	<div class="mx-auto flex w-full flex-col items-start justify-center gap-4">
-		<div class="flex w-full w-full flex-col items-start justify-start gap-2">
-			<Tooltip.Provider disabled={!isMe}>
-				<Tooltip.Root delayDuration={0}>
-					<Tooltip.Trigger
-						class={cn(
-							isMe && 'cursor-pointer',
-							'flex h-80 w-full items-center overflow-hidden object-cover'
-						)}
-						onclick={handleClickBanner}
-						disabled={!isMe}
-					>
-						<ImageWithFallback
-							src={profile.banner_img}
-							alt="Banner"
-							fallbackSrc="/img/default-banner.png"
-							class="h-full w-full object-cover"
-						/>
-						<input
-							id="banner-input"
-							type="file"
-							class="hidden"
-							onchange={handleChangeBanner}
-							tabindex={-1}
-						/>
-					</Tooltip.Trigger>
-					<Tooltip.Content>
-						<p>Change Banner</p>
-					</Tooltip.Content>
-				</Tooltip.Root>
-			</Tooltip.Provider>
+	<Tooltip.Provider disabled={!isMe}>
+		<Tooltip.Root delayDuration={0}>
+			<Tooltip.Trigger
+				class={cn(
+					isMe && 'cursor-pointer',
+					'flex h-80 w-full items-center overflow-hidden object-cover'
+				)}
+				onclick={handleClickBanner}
+				disabled={!isMe}
+			>
+				<ImageWithFallback
+					src={profile.banner_img}
+					alt="Banner"
+					fallbackSrc="/img/default-banner.png"
+					class="absolute top-0 left-0 h-80 w-full object-cover"
+				/>
+				<input
+					id="banner-input"
+					type="file"
+					class="hidden"
+					onchange={handleChangeBanner}
+					tabindex={-1}
+				/>
+			</Tooltip.Trigger>
+			<Tooltip.Content>
+				<p>Change Banner</p>
+			</Tooltip.Content>
+		</Tooltip.Root>
+	</Tooltip.Provider>
+	<div class="grid w-full grid-cols-12 gap-4">
+		<div
+			class="col-span-12 flex w-full flex-col items-start justify-start gap-2 lg:col-span-2"
+		>
 			<div class="relative">
-				<div class="absolute -top-15">
+				<div class="absolute -top-20">
 					<Tooltip.Provider disabled={!isMe}>
 						<Tooltip.Root delayDuration={0}>
 							<Tooltip.Trigger
-								class={cn(isMe && 'cursor-pointer', 'h-24 w-24')}
+								class={cn(isMe && 'cursor-pointer', 'h-32 w-32')}
 								onclick={handleClickAvatar}
 								disabled={!isMe}
 							>
@@ -276,35 +325,40 @@
 					</Tooltip.Provider>
 				</div>
 			</div>
-			<div class="flex flex-col gap-1 pt-8">
-				<span class="text-2xl font-bold">{profile.handle}</span>
+			<div class="flex flex-col gap-1 pt-12">
+				<div class="flex flex-col">
+					<span class="text-2xl font-semibold">{profile.handle}</span>
+					<span class="text-sm font-light text-muted-foreground"
+						>Gardening for {timeAgo(new Date(profile.created_at))}</span
+					>
+				</div>
 				{#each profile.nodes as node}
 					<div class="flex items-center gap-2">
 						<CopyableText text={node.did}>{truncateText(node.did)}</CopyableText
 						>
 						{#if isMe}
 							{#if !node.external && nodeStatuses[node.node_id]}
-								{#if nodeStatuses[node.node_id].isRunning}
-									<Badge variant="success"
-										><Icon name="checkmark" />Node online</Badge
-									>
-								{:else if nodeStatuses[node.node_id].isRunning === false}
-									<Badge variant="destructive"
-										><Icon name="cross" />Node offline</Badge
-									>
-								{:else}
-									<Badge variant="outline"
-										><Icon name="clock" />Checking...</Badge
-									>
-								{/if}
 								<Dialog.Root>
 									<Dialog.Trigger>
-										<Icon name="info" />
+										{#if nodeStatuses[node.node_id].isRunning}
+											<span class="text-green-500">
+												<Icon name="seedling-filled" />
+											</span>
+										{:else if nodeStatuses[node.node_id].isRunning === false}
+											<span class="text-red-500">
+												<Icon name="seedling" />
+											</span>
+										{:else}
+											<span class="text-muted"
+												><Icon name="clock" />Checking...</span
+											>
+										{/if}
 									</Dialog.Trigger>
 									<Dialog.Content>
 										<Dialog.Header>
 											<Dialog.Title>Your Radicle Garden Node</Dialog.Title>
 											<Dialog.Description>
+												<!-- TODO: Add node status here -->
 												<p>This node is managed by Radicle Garden.</p>
 												<div>
 													To force a connection to this node, you can run
@@ -374,7 +428,7 @@
 								}, 500)}
 						>
 							<Dialog.Trigger>
-								<Button variant="outline"><Icon name="plus" />Add Node</Button>
+								<Button><Icon name="plus" />Add Node</Button>
 							</Dialog.Trigger>
 							<Dialog.Content>
 								<Dialog.Header>
@@ -391,12 +445,13 @@
 										in a shell where a radicle node is running.
 									</Dialog.Description>
 								</Dialog.Header>
-								<div class="grid gap-4 py-4 w-full">
+								<div class="grid w-full gap-4 py-4">
 									<div class="grid grid-cols-4 items-center gap-4">
 										<Label for="nid">Node ID</Label>
 										<Input
 											type="text"
 											name="nid"
+											placeholder="z..."
 											class={cn(
 												'col-span-3',
 												errors.nid && 'border-destructive'
@@ -416,6 +471,7 @@
 										<Input
 											type="text"
 											name="alias"
+											placeholder="My Laptop"
 											class={cn(
 												'col-span-3',
 												errors.alias && 'border-destructive'
@@ -444,81 +500,56 @@
 						</Dialog.Root>
 					</div>
 				{/if}
-				<span class="text-muted-foreground"
-					>Joined {timeAgo(new Date(profile.created_at))} ago</span
-				>
 			</div>
-
-			{#if editing}
-				<Textarea bind:value={unescapedDescription} />
-			{:else}
-				<div class="markdown">
-					<Markdown md={unescapedDescription} plugins={markdownPlugins} />
-				</div>
-			{/if}
-
-			{#if isMe}
+		</div>
+		<div class="col-span-12 flex w-full flex-col gap-8 pt-8 lg:col-span-8">
+			<PinnedRadicleRepositories
+				{pinnedRepositories}
+				showEditDialog={isMe}
+				gardenNode={profile.nodes[0]}
+				refresh={() => loadProfile(handle)}
+			/>
+			<div class="flex flex-col gap-1">
 				{#if editing}
-					<Button onclick={() => saveProfile(profile!)}>Save</Button>
+					<Textarea bind:value={unescapedDescription} />
 				{:else}
-					<Button onclick={() => (editing = true)}
-						><Icon name="pen" />Edit</Button
-					>
+					<Card class="px-4 py-2">
+						<div class="markdown">
+							<Markdown md={unescapedDescription} />
+						</div>
+					</Card>
 				{/if}
-			{/if}
+				{#if isMe}
+					<div class="flex w-full justify-end">
+						{#if editing}
+							<Button onclick={() => saveProfile(profile!)}>Save</Button>
+						{:else}
+							<Button onclick={() => (editing = true)}
+								><Icon name="pen" />Edit</Button
+							>
+						{/if}
+					</div>
+				{/if}
+			</div>
+			<RepositoriesWithFilter
+				namespace={profile.handle}
+				repositories={Object.values(seededRepositories).flat()}
+				showCreateDialog={isMe}
+				onCreate={handleCreateRepository}
+			/>
 		</div>
-		<div class="flex w-full flex-col gap-2">
-			<PinnedRadicleRepositories {pinnedRepositories} showEditLink={isMe} />
-		</div>
+		<!-- <div class="col-span-12 flex flex-col gap-2 pt-8 lg:col-span-2">
+			<Card variant="outline">
+				<span class="text-xl font-medium">Organisations</span>
+			</Card>
+			<div>
+				<CreateOrganisationDialog
+					trigger={createOrganisationTrigger}
+					onCreate={handleCreateOrganisation}
+				/>
+			</div>
+		</div> -->
 	</div>
 {:else}
 	<div>Loading...</div>
 {/if}
-
-<style>
-	@reference '../../app.css';
-
-	.markdown :global(h1) {
-		@apply text-2xl font-bold;
-	}
-	.markdown :global(h2) {
-		@apply text-xl font-bold;
-	}
-	.markdown :global(h3) {
-		@apply text-lg font-bold;
-	}
-	.markdown :global(pre),
-	.markdown :global(code) {
-		@apply bg-muted rounded-xs p-2;
-	}
-	.markdown :global(pre) {
-		@apply my-4 overflow-x-auto;
-	}
-	.markdown :global(ul li) {
-		@apply list-inside list-disc;
-	}
-	.markdown :global(ol li) {
-		@apply list-inside list-decimal;
-	}
-	.markdown :global(blockquote) {
-		@apply border-muted-foreground border-l-4 pl-2;
-	}
-	.markdown :global(table) {
-		@apply w-full;
-	}
-	.markdown :global(table th) {
-		@apply bg-muted p-2;
-	}
-	.markdown :global(table td) {
-		@apply border-border border p-2;
-	}
-	.markdown :global(.footnotes ol li) {
-		@apply list-none;
-	}
-	.markdown :global(.contains-task-list li) {
-		@apply list-none;
-	}
-	.markdown :global(.contains-task-list .task-list-item) {
-		@apply flex items-center gap-2;
-	}
-</style>

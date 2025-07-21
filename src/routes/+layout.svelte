@@ -26,17 +26,19 @@
 <Toaster />
 
 <div class="layout px-2 py-1">
-	<header class="w-full xl:w-2/3 px-2">
+	<header class="w-full px-2 2xl:w-3/4">
 		<Header />
 	</header>
-	<main class={cn('w-full xl:w-2/3 px-2', !initialised && 'flex-auto')}>
-		{#if initialised}
-			{@render children()}
-		{:else}
-			<div class="flex h-full w-full items-center justify-center">
-				<Loading />
-			</div>
-		{/if}
+	<main class={cn('relative w-full', !initialised && 'flex-auto')}>
+		<div class="w-full px-2 2xl:w-3/4">
+			{#if initialised}
+				{@render children()}
+			{:else}
+				<div class="flex h-full w-full items-center justify-center">
+					<Loading />
+				</div>
+			{/if}
+		</div>
 	</main>
 	<footer class="txt-small px-2">
 		&copy; {new Date().getFullYear()} Radicle <Icon name="seedling" />

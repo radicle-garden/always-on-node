@@ -52,6 +52,24 @@ export type RadicleRepositoryListItem = {
 	desc: string;
 };
 
+export enum OrganisationUserRole {
+	ADMIN = 'admin',
+	MEMBER = 'member'
+}
+
+export type OrganisationUser = {
+	handle: string;
+	avatar_img: string;
+	role: OrganisationUserRole;
+};
+
+export type Organisation = {
+	name: string;
+	members: OrganisationUser[];
+	admins: OrganisationUser[];
+	invited: string[]
+};
+
 export type ApiResponse<T> = {
 	content: T;
 	success: boolean;

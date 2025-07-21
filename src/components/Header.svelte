@@ -6,19 +6,21 @@
 	import Avatar from '$components/Avatar.svelte';
 </script>
 
-<div class="mx-auto flex max-w-screen-2xl justify-between">
+<div class="mx-auto flex min-h-16 justify-between">
 	<NavigationMenu.Root>
 		<NavigationMenu.List>
 			<NavigationMenu.Item>
-				<NavigationMenu.Link class="hover:bg-transparent p-0" tabindex={-1}>
+				<NavigationMenu.Link class="p-0 hover:bg-transparent" tabindex={-1}>
 					<a
 						href="/"
-						class="flex flex-col md:flex-row items-start md:items-center justify-start md:gap-2"
+						class="flex flex-col items-start justify-start md:flex-row md:items-center md:gap-2"
 					>
-						<img src="/img/radicle-logo.svg" alt="Radicle" />
-						<span class="text-sm md:text-4xl md:font-thin hover:no-underline"
-							>garden</span
-						>
+						<img
+							src="/img/radicle-logo.svg"
+							alt="Radicle"
+							class="h-full w-32"
+						/>
+						<span class="text-2xl font-extrabold text-garden-logo">garden</span>
 					</a>
 				</NavigationMenu.Link>
 			</NavigationMenu.Item>
@@ -31,7 +33,7 @@
 				<NavigationMenu.Item>
 					<NavigationMenu.Link class="hover:bg-transparent" tabindex={-1}>
 						<a href="/{$user!.handle}" class="flex items-center gap-2">
-							<div class="h-8 w-8">
+							<div class="h-8 w-8 border border-white">
 								<Avatar
 									src={$user!.avatar_img}
 									alt="Avatar"
@@ -40,11 +42,6 @@
 							</div>
 							{$user!.handle}
 						</a>
-					</NavigationMenu.Link>
-				</NavigationMenu.Item>
-				<NavigationMenu.Item>
-					<NavigationMenu.Link class="hover:bg-transparent" tabindex={-1}>
-						<a href="/garden">Garden</a>
 					</NavigationMenu.Link>
 				</NavigationMenu.Item>
 				<NavigationMenu.Item>
@@ -69,8 +66,6 @@
 	}
 	a:hover {
 		color: var(--foreground);
-	}
-	a:hover:no-underline {
 		text-decoration: none;
 	}
 </style>

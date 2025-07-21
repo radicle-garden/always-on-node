@@ -1,12 +1,21 @@
 import { env } from '$env/dynamic/public';
 import type {
 	ApiResponse,
+	Organisation,
+	OrganisationUserRole,
 	RadicleRepositoryListItem,
 	SeededRadicleRepository,
 	User
 } from '$types/app';
 
 const { PUBLIC_API_URL } = env;
+
+/**
+ * Open questions:
+ * - Does it make sense to have to provide my node id for every request? Garden
+ * is managing a single node per user (at the moment) so it would seem as though
+ * we only need the auth credentials.
+ */
 
 export const api = {
 	_getCsrfToken: async () => {
@@ -207,5 +216,40 @@ export const api = {
 	},
 	getNodeConfig: async (nodeId: string): Promise<ApiResponse<string>> => {
 		return await api.get(`${PUBLIC_API_URL}/nodes/${nodeId}/config`);
-	}
+	},
+
+	// These don't exist yet
+	createOrganisation: async (name: string, emails: string[]): Promise<ApiResponse<Organisation>> => {
+		return await api.post(`${PUBLIC_API_URL}/organisations`, {
+			name,
+			emails
+		});
+	},
+	getOrganisation: async (organisationName: string): Promise<ApiResponse<Organisation>> => {
+		return await api.get(`${PUBLIC_API_URL}/organisations/${organisationName}`);
+	},
+	inviteMembersToOrganisation: async (organisationName: string, emails: string[]): Promise<ApiResponse<Organisation>> => {
+		return await api.post(`${PUBLIC_API_URL}/organisations/${organisationName}/invite`, {
+			emails
+		});
+	},
+	acceptInvitationToOrganisation: async (organisationName: string): Promise<ApiResponse<Organisation>> => {
+		return await api.post(`${PUBLIC_API_URL}/organisations/${organisationName}/accept-invitation`);
+	},
+	setUserOrganisationRole: async (organisationName: string, handle: string, role: OrganisationUserRole): Promise<ApiResponse<Organisation>> => {
+		return await api.put(`${PUBLIC_API_URL}/organisations/${organisationName}/users/${handle}/role`, {
+			role
+		});
+	},
+	removeUserFromOrganisation: async (organisationName: string, handle: string): Promise<ApiResponse<Organisation>> => {
+		return await api.delete(`${PUBLIC_API_URL}/organisations/${organisationName}/users/${handle}`);
+	},
+
+	// Doesn't exist yet
+	setPinnedRepositories: async (nodeId: string, repositories: string[]): Promise<ApiResponse<string[]>> => {
+		return await api.put(`${PUBLIC_API_URL}/nodes/${nodeId}/pinned`, {
+			repositories
+		});
+	},
+
 };

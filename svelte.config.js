@@ -8,7 +8,8 @@ const config = {
 		}),
 		alias: {
 			$components: './src/components',
-			$types: './src/types'
+			$types: './src/types',
+			'@http-client': './http-client'
 		}
 	}
 };

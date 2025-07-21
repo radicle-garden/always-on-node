@@ -1,5 +1,10 @@
+@font-face {
+  font-family: 'Booton';
+  src: url('/fonts/Booton.woff2');
+}
+
 :root {
-  --font-family-sans-serif: sans-serif;
+  --font-family-sans-serif: 'Booton', sans-serif;
   --font-family-monospace: monospace;
   --font-weight-regular: 400;
   --font-weight-medium: 500;

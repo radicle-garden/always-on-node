@@ -168,17 +168,17 @@
 				>
 					{#each searchResults as result}
 						<button
-							class="hover:bg-muted flex w-full flex-row items-center rounded-sm px-1"
+							class="flex w-full flex-row items-center rounded-sm px-1 hover:bg-muted"
 							onclick={() => {
 								rid = result.rid;
 								isPopoverOpen = false;
 							}}
 						>
 							<div
-								class="flex flex-col text-left max-w-[-webkit-fill-available]"
+								class="flex max-w-[-webkit-fill-available] flex-col text-left"
 							>
-								<span class="font-bold truncate">{result.name}</span>
-								<span class="text-muted-foreground text-sm"
+								<span class="truncate font-bold">{result.name}</span>
+								<span class="text-sm text-muted-foreground"
 									>{result.desc || 'No description available'}</span
 								>
 							</div>
@@ -207,19 +207,7 @@
 		>
 	</div>
 
-	<SeededRadicleRepositories
-		{seededRepositories}
-		{deleteSeededRepository}
-		gardenNode={$gardenNode!}
-		skeleton={seedingRepository}
-		showInfoTooltip={true}
-	/>
+	<SeededRadicleRepositories {seededRepositories} />
 
-	<PinnedRadicleRepositories
-		{pinnedRepositories}
-		{deletePinnedRepository}
-		gardenNode={$gardenNode!}
-		skeleton={pinningRepository}
-		showInfoTooltip={true}
-	/>
+	<PinnedRadicleRepositories {pinnedRepositories} gardenNode={$gardenNode!} />
 </div>

@@ -23,8 +23,10 @@
 		"@sveltejs/kit": "^2.16.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
 		"@tailwindcss/vite": "^4.0.0",
+		"@trivago/prettier-plugin-sort-imports": "^5.2.2",
 		"bits-ui": "^2.8.8",
 		"clsx": "^2.1.1",
+		"compare-versions": "^6.1.1",
 		"eslint": "^9.18.0",
 		"eslint-config-prettier": "^10.0.1",
 		"eslint-plugin-svelte": "^3.0.0",
@@ -32,9 +34,10 @@
 		"mode-watcher": "^1.0.8",
 		"prettier": "^3.4.2",
 		"prettier-plugin-svelte": "^3.3.3",
-		"prettier-plugin-tailwindcss": "^0.6.11",
+		"prettier-plugin-tailwindcss": "^0.6.12",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
+		"svelte-exmarkdown": "^5.0.1",
 		"svelte-sonner": "^1.0.5",
 		"sveltekit-superforms": "^2.26.1",
 		"tailwind-merge": "^3.0.2",
@@ -53,10 +56,9 @@
 		]
 	},
 	"dependencies": {
-		"@trivago/prettier-plugin-sort-imports": "^5.2.2",
 		"bs58": "^6.0.0",
 		"formsnap": "^2.0.1",
 		"remark-emoji": "^5.0.1",
-		"svelte-exmarkdown": "^5.0.1"
+		"zod": "^4.0.5"
 	}
 }
