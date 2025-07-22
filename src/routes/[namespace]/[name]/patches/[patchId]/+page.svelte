@@ -114,10 +114,6 @@
 			diff = revisionDiffs.get(latestRevision.id) ?? null;
 		}
 	});
-
-	$inspect({ patch });
-	$inspect({ latestRevision });
-	$inspect({ diff });
 </script>
 
 {#if repo && patch && latestRevision}

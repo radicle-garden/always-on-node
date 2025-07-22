@@ -19,14 +19,14 @@
 
 	const { repository } = getContext<{ repository: Promise<Repo> }>('repo');
 
-	let rules = [
+	let rules = $state([
 		{
 			adapter: 'CircleCI',
 			location: 'https://circleci.com/radicle-garden/token',
 			event: 'On Push',
 			branch: 'master'
 		}
-	];
+	]);
 	function addRule() {
 		rules = [...rules, { adapter: '', location: '', event: '', branch: '' }];
 	}

@@ -94,7 +94,11 @@ export function validateEmail(email: string) {
 	);
 }
 
-export function timeAgo(date: Date) {
+export function getDaysPassed(from: Date, to: Date): number {
+  return Math.floor((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000));
+}
+
+export function timeAgo(date: Date, short = false) {
 
 	// We need to handle the user's timezone here
 	const userOffset = new Date().getTimezoneOffset();
@@ -109,28 +113,28 @@ export function timeAgo(date: Date) {
 	const days = Math.floor(hours / 24);
 
 	if (seconds < 60) {
-		return `${seconds} second${seconds === 1 ? '' : 's'}`;
+		return `${seconds}${short ? 's' : ' second'}${short || seconds === 1 ? '' : 's'}`;
 	}
 
 	if (minutes < 60) {
-		return `${minutes} minute${minutes === 1 ? '' : 's'}`;
+		return `${minutes}${short ? 'm' : ' minute'}${short || minutes === 1 ? '' : 's'}`;
 	}
 
 	if (hours < 24) {
-		return `${hours} hour${hours === 1 ? '' : 's'}`;
+		return `${hours}${short ? 'h' : ' hour'}${short || hours === 1 ? '' : 's'}`;
 	}
 
 	if (days < 30) {
-		return `${days} day${days === 1 ? '' : 's'}`;
+		return `${days}${short ? 'd' : ' day'}${short || days === 1 ? '' : 's'}`;
 	}
 
 	// Months
 	if (days < 365) {
-		return `${Math.floor(days / 30)} month${Math.floor(days / 30) === 1 ? '' : 's'}`;
+		return `${Math.floor(days / 30)}${short ? 'mo' : ' month'}${short || Math.floor(days / 30) === 1 ? '' : 's'}`;
 	}
 
 	// Years
-	return `${Math.floor(days / 365)} year${Math.floor(days / 365) === 1 ? '' : 's'}`;
+	return `${Math.floor(days / 365)}${short ? 'y' : ' year'}${short || Math.floor(days / 365) === 1 ? '' : 's'}`;
 }
 
 export function unescapeHtml(text: string): string {

@@ -179,26 +179,26 @@ export const api = {
 		return await api.post(`${PUBLIC_API_URL}/logout`, {});
 	},
 	getSeededRepositories: async (
-		nodeId: string
+		nid: string
 	): Promise<ApiResponse<SeededRadicleRepository[]>> => {
-		return await api.get(`${PUBLIC_API_URL}/nodes/${nodeId}/seeded`);
+		return await api.get(`${PUBLIC_API_URL}/nodes/${nid}/seeded`);
 	},
-	addSeededRepository: async (nodeId: string, rid: string) => {
-		return await api.post(`${PUBLIC_API_URL}/nodes/${nodeId}/seeded/${rid}`);
+	addSeededRepository: async (nid: string, rid: string) => {
+		return await api.post(`${PUBLIC_API_URL}/nodes/${nid}/seeded/${rid}`);
 	},
-	deleteSeededRepository: async (nodeId: string, rid: string) => {
-		return await api.delete(`${PUBLIC_API_URL}/nodes/${nodeId}/seeded/${rid}`);
+	deleteSeededRepository: async (nid: string, rid: string) => {
+		return await api.delete(`${PUBLIC_API_URL}/nodes/${nid}/seeded/${rid}`);
 	},
 	getPinnedRepositories: async (
-		nodeId: string
+		nid: string
 	): Promise<ApiResponse<string[]>> => {
-		return await api.get(`${PUBLIC_API_URL}/nodes/${nodeId}/pinned`);
+		return await api.get(`${PUBLIC_API_URL}/nodes/${nid}/pinned`);
 	},
-	addPinnedRepository: async (nodeId: string, rid: string) => {
-		return await api.post(`${PUBLIC_API_URL}/nodes/${nodeId}/pinned/${rid}`);
+	addPinnedRepository: async (nid: string, rid: string) => {
+		return await api.post(`${PUBLIC_API_URL}/nodes/${nid}/pinned/${rid}`);
 	},
-	deletePinnedRepository: async (nodeId: string, rid: string) => {
-		return await api.delete(`${PUBLIC_API_URL}/nodes/${nodeId}/pinned/${rid}`);
+	deletePinnedRepository: async (nid: string, rid: string) => {
+		return await api.delete(`${PUBLIC_API_URL}/nodes/${nid}/pinned/${rid}`);
 	},
 	getRadicleRepositoryList: async (): Promise<RadicleRepositoryListItem[]> => {
 		const response = await fetch('https://search.radicle.xyz/repolist.txt');
@@ -211,11 +211,11 @@ export const api = {
 			return { name, rid, desc };
 		});
 	},
-	getNodeStatus: async (nodeId: string): Promise<ApiResponse<string>> => {
-		return await api.get(`${PUBLIC_API_URL}/nodes/${nodeId}/status`);
+	getNodeStatus: async (nid: string): Promise<ApiResponse<string>> => {
+		return await api.get(`${PUBLIC_API_URL}/nodes/${nid}/status`);
 	},
-	getNodeConfig: async (nodeId: string): Promise<ApiResponse<string>> => {
-		return await api.get(`${PUBLIC_API_URL}/nodes/${nodeId}/config`);
+	getNodeConfig: async (nid: string): Promise<ApiResponse<string>> => {
+		return await api.get(`${PUBLIC_API_URL}/nodes/${nid}/config`);
 	},
 
 	// These don't exist yet
@@ -246,8 +246,8 @@ export const api = {
 	},
 
 	// Doesn't exist yet
-	setPinnedRepositories: async (nodeId: string, repositories: string[]): Promise<ApiResponse<string[]>> => {
-		return await api.put(`${PUBLIC_API_URL}/nodes/${nodeId}/pinned`, {
+	setPinnedRepositories: async (nid: string, repositories: string[]): Promise<ApiResponse<string[]>> => {
+		return await api.put(`${PUBLIC_API_URL}/nodes/${nid}/pinned`, {
 			repositories
 		});
 	},

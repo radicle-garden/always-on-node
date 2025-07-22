@@ -77,3 +77,10 @@ export type ApiResponse<T> = {
 	message?: string;
 	error?: string | [];
 };
+
+export type WeeklyActivity = {
+	date: string;
+	time: number;
+	commits: number[];
+	week: number;
+};

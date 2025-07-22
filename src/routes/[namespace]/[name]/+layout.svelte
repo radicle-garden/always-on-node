@@ -1,12 +1,20 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { onMount, setContext } from 'svelte';
+	import { toast } from 'svelte-sonner';
 
+	import { api } from '$lib/api';
+	import { refreshUser } from '$lib/auth';
 	import { Button } from '$lib/components/ui/button';
 	import { Card } from '$lib/components/ui/card';
 	import type { Repo } from '$lib/http-client/lib/repo';
 	import { httpdApi } from '$lib/httpdApi';
-	import { radicleRepositoryList } from '$lib/state';
+	import {
+		gardenNode,
+		radicleRepositoryList,
+		user,
+		mySeededRepositories
+	} from '$lib/state';
 	import { cn, truncateText } from '$lib/utils';
 
 	import CopyableText from '$components/CopyableText.svelte';
@@ -19,6 +27,11 @@
 	let rid = $state<string | undefined>(ridParam ?? undefined);
 	let repository: Promise<Repo> = $state(new Promise(() => {}));
 
+	function loadRepository(rid: string) {
+		repository = httpdApi.getByRid(rid);
+		setContext('repo', { repository });
+	}
+
 	onMount(() => {
 		if (!rid) {
 			rid = $radicleRepositoryList.find(
@@ -26,11 +39,10 @@
 			)?.rid;
 		}
 		if (rid) {
-			repository = httpdApi.getByRid(rid);
+			loadRepository(rid);
 		} else {
 			repository = Promise.reject(new Error('Repository not found'));
 		}
-		setContext('repo', { repository });
 	});
 
 	let pathname = $derived(page.url.pathname);
@@ -57,10 +69,54 @@
 					rad clone {truncateText(repo.rid, 6)}
 				</CopyableText>
 				<div>
-					<Button>
-						<Icon name="seedling-filled" />
-						Seed
-					</Button>
+					{#await $mySeededRepositories}
+						<Button>
+							<Icon name="seedling" />
+							Checking...
+						</Button>
+					{:then seededRepositories}
+						{#if seededRepositories.content.find((sr) => sr.repository_id === repo.rid)}
+							<Button
+								variant="success"
+								onclick={() => {
+									toast.promise(
+										api.deleteSeededRepository($gardenNode!.node_id, repo.rid),
+										{
+											loading: 'Unseeding repository...',
+											success: () => {
+												refreshUser();
+												return 'Repository unseeded';
+											},
+											error: 'Failed to unseed repository'
+										}
+									);
+								}}
+							>
+								<Icon name="seedling-filled" />
+								Seeding
+							</Button>
+						{:else}
+							<Button
+								onclick={() => {
+									console.log({ user: $user });
+									toast.promise(
+										api.addSeededRepository($gardenNode!.node_id, repo.rid),
+										{
+											loading: 'Seeding repository...',
+											success: () => {
+												refreshUser();
+												return 'Repository seeded';
+											},
+											error: 'Failed to seed repository'
+										}
+									);
+								}}
+							>
+								<Icon name="seedling" />
+								Seed
+							</Button>
+						{/if}
+					{/await}
 				</div>
 			</div>
 			<div class="flex flex-col gap-2">

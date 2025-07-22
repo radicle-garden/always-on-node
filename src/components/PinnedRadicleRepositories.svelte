@@ -56,6 +56,7 @@
 						namespace={$user!.handle}
 						name={findRespositoryByRid(rid)?.name ?? ''}
 						description={findRespositoryByRid(rid)?.desc ?? ''}
+						showActivity={true}
 					/>
 				</div>
 			{/each}

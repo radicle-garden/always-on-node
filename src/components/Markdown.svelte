@@ -3,7 +3,7 @@
 	import Markdown, { type Plugin } from 'svelte-exmarkdown';
 	import { gfmPlugin } from 'svelte-exmarkdown/gfm';
 
-	export let md: string;
+	let { md }: { md: string } = $props();
 
 	let emojiPlugin = { remarkPlugin: [emoji, { emoticon: false }] } as Plugin;
 	let plugins = [gfmPlugin(), emojiPlugin];

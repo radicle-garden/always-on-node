@@ -36,10 +36,18 @@ export const initialiseUser = async () => {
 	}
 };
 
+export const refreshUser = async () => {
+	try {
+		const { content: user } = await api.getMyProfile();
+		setUser(user);
+	} catch (error) {
+		clearUser();
+	}
+}
+
 export const initializeRadicleRepositoryList = async () => {
 	try {
-		const list = await api.getRadicleRepositoryList();
-		setRadicleRepositoryList(list);
+		setRadicleRepositoryList(await api.getRadicleRepositoryList())
 	} catch (error) {
 		console.error('Error initializing radicle repository list:', error);
 	}

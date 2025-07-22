@@ -1,5 +1,6 @@
 import type { RadicleRepositoryListItem, User } from '$types/app';
 import { derived, get, writable } from 'svelte/store';
+import { api } from './api';
 
 export const user = writable<User | null>(null);
 export const isLoggedIn = derived(user, ($user) => $user !== null);
@@ -33,3 +34,7 @@ export const findRepositoriesByFuzzyTerm = (term: string) => {
 		}) || []
 	);
 };
+
+export const mySeededRepositories = derived(gardenNode, ($gardenNode) => {
+	return api.getSeededRepositories($gardenNode!.node_id)
+})

@@ -24,6 +24,10 @@
 			<Dialog.Title>Add Repository</Dialog.Title>
 		</Dialog.Header>
 		<Dialog.Description>
+			<div class="text-sm text-muted-foreground">
+				Adding a repository here will seed it from your node and make it more
+				available to other users on Radicle.
+			</div>
 			<RepositorySearchBar bind:rid />
 		</Dialog.Description>
 		<Dialog.Footer>
