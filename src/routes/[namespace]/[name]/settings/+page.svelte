@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { getContext } from 'svelte';
+	import { getContext, onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
 	import { api } from '$lib/api';
 	import { Button } from '$lib/components/ui/button';
 	import { Card } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select';
 	import type { Repo } from '$lib/http-client';
 	import { user } from '$lib/state';
@@ -19,19 +18,51 @@
 
 	const { repository } = getContext<{ repository: Promise<Repo> }>('repo');
 
-	let rules = $state([
+	let webhooks = $state([
 		{
-			adapter: 'CircleCI',
-			location: 'https://circleci.com/radicle-garden/token',
-			event: 'On Push',
-			branch: 'master'
+			location: 'https://example.com/webhook',
+			triggers: [
+				{
+					event: 'Branch Updated',
+					branch: 'master'
+				}
+			]
 		}
 	]);
-	function addRule() {
-		rules = [...rules, { adapter: '', location: '', event: '', branch: '' }];
+
+	function addWebhook() {
+		webhooks = [
+			...webhooks,
+			{ location: '', triggers: [{ event: '', branch: '' }] }
+		];
 	}
-	function removeRule(index: number) {
-		rules = rules.filter((_, i) => i !== index);
+
+	function addTrigger(webhookIndex: number) {
+		webhooks = webhooks.map((wh, i) => {
+			if (i === webhookIndex) {
+				return {
+					...wh,
+					triggers: [...wh.triggers, { event: '', branch: '' }]
+				};
+			}
+			return wh;
+		});
+	}
+
+	function removeTrigger(webhookIndex: number, triggerIndex: number) {
+		webhooks = webhooks.map((wh, i) => {
+			if (i === webhookIndex) {
+				return {
+					...wh,
+					triggers: wh.triggers.filter((_, j) => j !== triggerIndex)
+				};
+			}
+			return wh;
+		});
+	}
+
+	function removeWebhook(index: number) {
+		webhooks = webhooks.filter((_, i) => i !== index);
 	}
 </script>
 
@@ -56,8 +87,10 @@
 					<Button
 						variant="ghost"
 						onclick={() => {
-							// FIXME
-							alert('Coming soon');
+							window.open(
+								'https://radicle-ci.liw.fi/radicle-ci-broker/userguide.html#ci-events',
+								'_blank'
+							);
 						}}
 					>
 						<Icon name="info" />
@@ -65,97 +98,82 @@
 					</Button>
 				</div>
 				<div>
-					Here you can configure CI for {repo.payloads['xyz.radicle.project']
-						.data.name}.
+					Here you can configure webhooks for {repo.payloads[
+						'xyz.radicle.project'
+					].data.name}. This can be used to trigger CI, for example.
 				</div>
-				{#each rules as rule, i}
+				{#each webhooks as webhook, i}
 					<Card variant="outline" class="p-4">
-						<div class="flex items-center justify-between">
-							<div class="flex flex-col gap-1">
-								<div class="flex flex-col gap-1">
-									<div class="flex items-center gap-4">
-										<div>Select CI Adapter</div>
-										<Select.Root
-											type="single"
-											onValueChange={(s) => (rule.adapter = s || '')}
-										>
-											<Select.Trigger id={`adapter-${i}`}>
-												{rule.adapter || 'CircleCI'}
-											</Select.Trigger>
-											<Select.Content>
-												<Select.Item value="CircleCI">CircleCI</Select.Item>
-												<Select.Item value="Ambient">Ambient</Select.Item>
-												<Select.Item value="Woodpecker">Woodpecker</Select.Item>
-											</Select.Content>
-										</Select.Root>
-									</div>
-									<div class="flex items-center gap-4">
-										<div>CI Location (URL)</div>
-										<Input
-											id={`location-${i}`}
-											bind:value={rule.location}
-											placeholder="https://circleci.com/radicle-garden/token"
-										/>
-									</div>
-								</div>
-								<div class="flex flex-col gap-1">
-									<div>When should CI run?</div>
-									<div class="flex items-center gap-4">
-										<Select.Root
-											type="single"
-											onValueChange={(s) => (rule.event = s || '')}
-										>
-											<Select.Trigger id={`event-${i}`}>
-												{rule.event || 'On Push'}
-											</Select.Trigger>
-											<Select.Content>
-												<Select.Item value="Patch created"
-													>Patch created</Select.Item
-												>
-												<Select.Item value="Patch updated"
-													>Patch updated</Select.Item
-												>
-												<Select.Item value="Patch deleted"
-													>Patch deleted</Select.Item
-												>
-												<Select.Item value="Branch created"
-													>Branch created</Select.Item
-												>
-												<Select.Item value="Branch updated"
-													>Branch updated</Select.Item
-												>
-												<Select.Item value="Branch deleted"
-													>Branch deleted</Select.Item
-												>
-												<Select.Item value="Manual">Manual</Select.Item>
-												<Select.Item value="On push">On push</Select.Item>
-											</Select.Content>
-										</Select.Root>
-										{#if rule.event.includes('Patch') || rule.event === 'On push'}
-											<div class="flex items-center gap-1 pb-1">
-												<span>to</span>
-												<Input
-													bind:value={rule.branch}
-													class="w-32"
-													placeholder="master"
-												/>
-											</div>
-										{/if}
-									</div>
-								</div>
+						<div class="flex w-full flex-col gap-4">
+							<div class="flex items-center gap-4">
+								<div class="w-1/4">Webhook URL</div>
+								<Input
+									id={`location-${i}`}
+									bind:value={webhook.location}
+									placeholder="https://example.com/webhook"
+								/>
+								{#if webhooks.length > 1}
+									<Button variant="ghost" onclick={() => removeWebhook(i)}
+										><Icon name="cross" /></Button
+									>
+								{/if}
 							</div>
-							{#if rules.length > 1}
-								<Button variant="ghost" onclick={() => removeRule(i)}
-									><Icon name="cross" /></Button
+							{#each webhook.triggers as trigger, j}
+								<div class="flex items-center gap-4">
+									<Select.Root
+										type="single"
+										onValueChange={(s) => (trigger.event = s || '')}
+									>
+										<Select.Trigger id={`event-${i}-${j}`}>
+											{trigger.event || 'Select Event'}
+										</Select.Trigger>
+										<Select.Content>
+											<Select.Item value="Patch Created"
+												>Patch Created</Select.Item
+											>
+											<Select.Item value="Patch Updated"
+												>Patch Updated</Select.Item
+											>
+											<Select.Item value="Branch Updated"
+												>Branch Updated</Select.Item
+											>
+											<Select.Item value="Branch Deleted"
+												>Branch Deleted</Select.Item
+											>
+											<Select.Item value="Tag Created">Tag Created</Select.Item>
+											<Select.Item value="Tag Updated">Tag Updated</Select.Item>
+											<Select.Item value="Tag Deleted">Tag Deleted</Select.Item>
+										</Select.Content>
+									</Select.Root>
+									{#if trigger.event.includes('Branch')}
+										<div class="flex items-center gap-1">
+											<span>branch name</span>
+											<Input
+												bind:value={trigger.branch}
+												class="w-32"
+												placeholder="master"
+											/>
+										</div>
+									{/if}
+									{#if webhook.triggers.length > 1}
+										<Button variant="ghost" onclick={() => removeTrigger(i, j)}
+											><Icon name="cross" /></Button
+										>
+									{/if}
+								</div>
+							{/each}
+							<div>
+								<Button variant="ghost" onclick={() => addTrigger(i)}
+									><Icon name="add" /> Add Trigger</Button
 								>
-							{/if}
+							</div>
 						</div>
 					</Card>
 				{/each}
 				<div class="flex justify-between">
 					<div>
-						<Button variant="ghost" onclick={addRule}
-							><Icon name="add" /> Add Rule</Button
+						<Button variant="ghost" onclick={addWebhook}
+							><Icon name="add" /> Add Webhook</Button
 						>
 					</div>
 					<div>
@@ -171,12 +189,12 @@
 					Remove {repo.payloads['xyz.radicle.project'].data.name} from your node.
 				</div>
 				<div>
-					This does not guarantee deletion of the repository from the Radicle
-					Network. <a
+					<!-- FIXME: The link is wrong -->
+					This does not guarantee deletion of the repository from the Radicle Network.
+					<a
 						href="https://docs.radicle.xyz/docs/radicle-network/how-to-delete-a-repository"
 						>Why not?</a
 					>
-					<!-- FIXME: The link is wrong -->
 				</div>
 				<div class="flex self-end">
 					<DeleteRepositoryDialog

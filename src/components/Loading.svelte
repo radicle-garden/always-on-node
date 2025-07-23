@@ -3,12 +3,14 @@
 
 	import Icon from './Icon.svelte';
 
+	let { small = false }: { small?: boolean } = $props();
+
 	let interval: number;
-	let flipBit = 0;
-	let numSeedlings = 0;
+	let flipBit = $state(0);
+	let numSeedlings = $state(0);
 
 	function redraw() {
-		if (numSeedlings === 9) {
+		if (numSeedlings === (small ? 3 : 9)) {
 			numSeedlings = 0;
 			flipBit = 1;
 		} else {
@@ -22,7 +24,7 @@
 	});
 </script>
 
-<div class="loading-grid">
+<div class="loading-grid" class:small>
 	{#each Array(numSeedlings) as _, index}
 		<Icon
 			name={index % 2 === flipBit ? 'seedling-filled' : 'seedling'}
@@ -31,7 +33,7 @@
 	{/each}
 </div>
 
-<style>
+<style lang="postcss">
 	.loading-grid {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
@@ -41,5 +43,9 @@
 		height: fit-content;
 		align-items: center;
 		justify-items: center;
+	}
+	.loading-grid.small {
+		grid-template-columns: repeat(3, 1fr);
+		grid-template-rows: repeat(1, 1fr);
 	}
 </style>

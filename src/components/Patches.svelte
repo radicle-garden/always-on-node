@@ -7,7 +7,7 @@
 	import type { Issue, Patch } from '$lib/http-client';
 	import type { Repo } from '$lib/http-client/lib/repo';
 	import { httpdApi } from '$lib/httpdApi';
-	import { cn } from '$lib/utils';
+	import { cn, timeAgo } from '$lib/utils';
 
 	import Icon from './Icon.svelte';
 
@@ -100,7 +100,12 @@
 				variant="navigable"
 				class="flex flex-col gap-2"
 				onclick={() => {
-					goto(`patches/${patch.id}?rid=${repo.rid}`);
+					// TODO: Develop our own patch viewer instead of linking out
+					// goto(`patches/${patch.id}?rid=${repo.rid}`);
+					window.open(
+						`https://app.radicle.xyz/nodes/ash.radicle.garden/${repo.rid}/patches/${patch.id}`,
+						'_blank'
+					);
 				}}
 			>
 				<div class="flex items-center justify-between gap-2">
@@ -126,8 +131,11 @@
 						{/if}
 					</div>
 				</div>
-				<div class="text-sm text-muted-foreground">
-					Opened by <span class="font-bold">{patch.author.alias}</span>
+				<div class="flex items-center justify-between gap-2">
+					<div class="text-sm text-muted-foreground">
+						Opened by <span class="font-bold">{patch.author.alias}</span> –
+						{timeAgo(new Date(patch.revisions[0].timestamp * 1000))} ago
+					</div>
 				</div>
 			</Card>
 		{/each}

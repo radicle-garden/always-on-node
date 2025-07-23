@@ -15,7 +15,7 @@
 		user,
 		mySeededRepositories
 	} from '$lib/state';
-	import { cn, truncateText } from '$lib/utils';
+	import { cn, parseNodeId, truncateText } from '$lib/utils';
 
 	import CopyableText from '$components/CopyableText.svelte';
 	import Icon from '$components/Icon.svelte';
@@ -174,9 +174,17 @@
 					<div class="flex flex-col gap-2">
 						{#each repo.delegates as delegate}
 							<div class="flex flex-row gap-2">
-								<div>
+								<!-- NOTE: using the full DID causes a lot of browsers to
+								     encode the colons, so we use the short form -->
+								<a
+									class="font-bold !text-white"
+									href={encodeURI(
+										`https://app.radicle.xyz/nodes/iris.radicle.xyz/users/${parseNodeId(delegate.id)?.pubkey}`
+									)}
+									target="_blank"
+								>
 									{delegate.alias}
-								</div>
+								</a>
 							</div>
 						{/each}
 					</div>

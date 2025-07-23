@@ -328,8 +328,13 @@
 			<div class="flex flex-col gap-1 pt-12">
 				<div class="flex flex-col">
 					<span class="text-2xl font-semibold">{profile.handle}</span>
+					<!-- NOTE: SQL does datetime(now) which is UTC, but it fails to
+					     save an ISO-format string, so we do a not very neat cludge here
+					     to turn it into an ISO-format string. -->
 					<span class="text-sm font-light text-muted-foreground"
-						>Gardening for {timeAgo(new Date(profile.created_at))}</span
+						>Gardening for {timeAgo(
+							new Date(profile.created_at.replace(' ', 'T') + 'Z')
+						)}</span
 					>
 				</div>
 				{#each profile.nodes as node}

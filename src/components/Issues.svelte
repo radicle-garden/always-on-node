@@ -8,7 +8,7 @@
 	import type { Issue } from '$lib/http-client';
 	import type { Repo } from '$lib/http-client/lib/repo';
 	import { httpdApi } from '$lib/httpdApi';
-	import { cn } from '$lib/utils';
+	import { cn, timeAgo } from '$lib/utils';
 
 	import Icon from './Icon.svelte';
 
@@ -151,7 +151,8 @@
 					</div>
 				</div>
 				<div class="text-sm text-muted-foreground">
-					Opened by <span class="font-bold">{issue.author.alias}</span>
+					Opened by <span class="font-bold">{issue.author.alias}</span> –
+					{timeAgo(new Date(issue.discussion[0].timestamp * 1000))} ago
 				</div>
 			</Card>
 		{/each}

@@ -3,7 +3,7 @@ export type User = {
 	email: string;
 	handle: string;
 	nodes: Node[];
-	created_at: Date;
+	created_at: string;
 	github_account_id: number;
 	deleted: boolean;
 	description: string;
