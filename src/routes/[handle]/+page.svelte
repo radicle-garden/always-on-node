@@ -522,6 +522,7 @@
 				{pinnedRepositories}
 				showEditDialog={isMe}
 				gardenNode={profile.nodes[0]}
+				namespace={profile.handle}
 				refresh={() => loadProfile(handle)}
 			/>
 			<div class="flex flex-col gap-1">

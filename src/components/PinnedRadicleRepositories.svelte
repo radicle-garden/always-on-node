@@ -10,11 +10,13 @@
 	const {
 		pinnedRepositories,
 		gardenNode,
+		namespace,
 		showEditDialog = false,
 		refresh
 	}: {
 		pinnedRepositories: Record<string, string[]>;
 		gardenNode: Node;
+		namespace: string;
 		showEditDialog?: boolean;
 		refresh?: () => void;
 	} = $props();
@@ -53,7 +55,7 @@
 				<div class="col-span-1">
 					<RepositoryCard
 						repositoryId={rid}
-						namespace={$user!.handle}
+						{namespace}
 						name={findRespositoryByRid(rid)?.name ?? ''}
 						description={findRespositoryByRid(rid)?.desc ?? ''}
 						showActivity={true}

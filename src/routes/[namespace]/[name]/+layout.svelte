@@ -23,6 +23,7 @@
 	let { children } = $props();
 
 	const { namespace, name } = page.params;
+	const isMe = $derived(namespace === $user?.handle);
 	const ridParam = page.url.searchParams.get('rid');
 	let rid = $state<string | undefined>(ridParam ?? undefined);
 	let repository: Promise<Repo> = $state(new Promise(() => {}));
@@ -69,54 +70,59 @@
 					rad clone {truncateText(repo.rid, 6)}
 				</CopyableText>
 				<div>
-					{#await $mySeededRepositories}
-						<Button>
-							<Icon name="seedling" />
-							Checking...
-						</Button>
-					{:then seededRepositories}
-						{#if seededRepositories.content.find((sr) => sr.repository_id === repo.rid)}
-							<Button
-								variant="success"
-								onclick={() => {
-									toast.promise(
-										api.deleteSeededRepository($gardenNode!.node_id, repo.rid),
-										{
-											loading: 'Unseeding repository...',
-											success: () => {
-												refreshUser();
-												return 'Repository unseeded';
-											},
-											error: 'Failed to unseed repository'
-										}
-									);
-								}}
-							>
-								<Icon name="seedling-filled" />
-								Seeding
-							</Button>
-						{:else}
-							<Button
-								onclick={() => {
-									console.log({ user: $user });
-									toast.promise(
-										api.addSeededRepository($gardenNode!.node_id, repo.rid),
-										{
-											loading: 'Seeding repository...',
-											success: () => {
-												refreshUser();
-												return 'Repository seeded';
-											},
-											error: 'Failed to seed repository'
-										}
-									);
-								}}
-							>
+					{#if isMe}
+						{#await $mySeededRepositories}
+							<Button>
 								<Icon name="seedling" />
-								Seed
+								Checking...
 							</Button>
-						{/if}
-					{/await}
+						{:then seededRepositories}
+							{#if seededRepositories.content.find((sr) => sr.repository_id === repo.rid)}
+								<Button
+									variant="success"
+									onclick={() => {
+										toast.promise(
+											api.deleteSeededRepository(
+												$gardenNode!.node_id,
+												repo.rid
+											),
+											{
+												loading: 'Unseeding repository...',
+												success: () => {
+													refreshUser();
+													return 'Repository unseeded';
+												},
+												error: 'Failed to unseed repository'
+											}
+										);
+									}}
+								>
+									<Icon name="seedling-filled" />
+									Seeding
+								</Button>
+							{:else}
+								<Button
+									onclick={() => {
+										console.log({ user: $user });
+										toast.promise(
+											api.addSeededRepository($gardenNode!.node_id, repo.rid),
+											{
+												loading: 'Seeding repository...',
+												success: () => {
+													refreshUser();
+													return 'Repository seeded';
+												},
+												error: 'Failed to seed repository'
+											}
+										);
+									}}
+								>
+									<Icon name="seedling" />
+									Seed
+								</Button>
+							{/if}
+						{/await}
+					{/if}
 				</div>
 			</div>
 			<div class="flex flex-col gap-2">
@@ -153,16 +159,21 @@
 					</div>
 				</Button>
 			</div>
-			<Button
-				href={`/${namespace}/${name}/settings?rid=${repo.rid}`}
-				class={cn('py-6 !text-white', isActive('settings') && 'bg-tab-active')}
-			>
-				<div class="flex w-full items-center justify-between">
-					<div class="flex items-center gap-2">
-						<Icon name="settings" /> Settings
+			{#if isMe}
+				<Button
+					href={`/${namespace}/${name}/settings?rid=${repo.rid}`}
+					class={cn(
+						'py-6 !text-white',
+						isActive('settings') && 'bg-tab-active'
+					)}
+				>
+					<div class="flex w-full items-center justify-between">
+						<div class="flex items-center gap-2">
+							<Icon name="settings" /> Settings
+						</div>
 					</div>
-				</div>
-			</Button>
+				</Button>
+			{/if}
 		</div>
 		<div class="col-span-8">
 			{@render children()}

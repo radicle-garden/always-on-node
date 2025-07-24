@@ -72,75 +72,81 @@
 	}
 </script>
 
-<form onsubmit={handleSubmit} class="w-full max-w-sm">
-	<Card.Root>
-		<Card.Header>
-			<Card.Title>Login to your account</Card.Title>
-			<Card.Description
-				>Enter your email below to login to your account</Card.Description
-			>
-			{#if message}
-				<Alert.Root variant={message.status || 'default'}>
-					<Alert.Title>{message.title}</Alert.Title>
-					<Alert.Description>{message.body}</Alert.Description>
-					{#if message.contactSupport}
-						<Alert.Description>
-							<div class="flex flex-row items-center gap-1">
-								Please contact support
-								<a
-									href="https://radicle.zulipchat.com/#narrow/channel/369873-support"
-									target="_blank">on Zulip.</a
-								>
-							</div>
-						</Alert.Description>
-					{/if}
-				</Alert.Root>
-			{/if}
-		</Card.Header>
-		<Card.Content>
-			<div class="flex flex-col gap-6">
-				<div class="grid gap-2">
-					<Label for="email">Email</Label>
-					<Input
-						id="email"
-						type="email"
-						placeholder="email@example.com"
-						bind:value={email}
-						aria-invalid={!!errors.email}
-						required
-					/>
-					{#if errors.email}
-						<div class="text-sm text-destructive">{errors.email}</div>
-					{/if}
-				</div>
-				<div class="grid gap-2">
-					<Label for="password">Password</Label>
-					<Input
-						id="password"
-						type="password"
-						bind:value={password}
-						aria-invalid={!!errors.password}
-						required
-						placeholder="******"
-					/>
-					{#if errors.password}
-						<div class="text-sm text-destructive">{errors.password}</div>
-					{/if}
-				</div>
-				{#if errors.general}
-					<Alert.Root variant="destructive">
-						<Alert.Title>Unable to login</Alert.Title>
-						<Alert.Description>{errors.general}</Alert.Description>
+<div class="flex h-screen flex-col items-center justify-center">
+	<form onsubmit={handleSubmit} class="w-full max-w-sm">
+		<Card.Root class="py-8">
+			<Card.Header>
+				<Card.Title>Login to your account</Card.Title>
+				<Card.Description
+					>Enter your email below to login to your account</Card.Description
+				>
+				{#if message}
+					<Alert.Root variant={message.status || 'default'}>
+						<Alert.Title>{message.title}</Alert.Title>
+						<Alert.Description>{message.body}</Alert.Description>
+						{#if message.contactSupport}
+							<Alert.Description>
+								<div class="flex flex-row items-center gap-1">
+									Please contact support
+									<a
+										href="https://radicle.zulipchat.com/#narrow/channel/369873-support"
+										target="_blank">on Zulip.</a
+									>
+								</div>
+							</Alert.Description>
+						{/if}
 					</Alert.Root>
 				{/if}
-			</div>
-		</Card.Content>
-		<Card.Footer class="flex-col gap-2">
-			<Button class="w-full" type="submit" disabled={isLoggingIn}>Login</Button>
-			{#if isLoggingIn}
-				<p>Logging in...</p>
-			{/if}
-			<a href="/register">Or create an account</a>
-		</Card.Footer>
-	</Card.Root>
-</form>
+			</Card.Header>
+			<Card.Content>
+				<div class="flex flex-col gap-6">
+					<div class="grid gap-2">
+						<Label for="email">Email</Label>
+						<Input
+							id="email"
+							type="email"
+							placeholder="email@example.com"
+							class="border"
+							bind:value={email}
+							aria-invalid={!!errors.email}
+							required
+						/>
+						{#if errors.email}
+							<div class="text-sm text-destructive">{errors.email}</div>
+						{/if}
+					</div>
+					<div class="grid gap-2">
+						<Label for="password">Password</Label>
+						<Input
+							id="password"
+							type="password"
+							class="border"
+							bind:value={password}
+							aria-invalid={!!errors.password}
+							required
+							placeholder="******"
+						/>
+						{#if errors.password}
+							<div class="text-sm text-destructive">{errors.password}</div>
+						{/if}
+					</div>
+					{#if errors.general}
+						<Alert.Root variant="destructive">
+							<Alert.Title>Unable to login</Alert.Title>
+							<Alert.Description>{errors.general}</Alert.Description>
+						</Alert.Root>
+					{/if}
+				</div>
+			</Card.Content>
+			<Card.Footer class="flex-col gap-2">
+				<Button class="w-full" type="submit" disabled={isLoggingIn}
+					>Login</Button
+				>
+				{#if isLoggingIn}
+					<p>Logging in...</p>
+				{/if}
+				<a href="/register">Or create an account</a>
+			</Card.Footer>
+		</Card.Root>
+	</form>
+</div>

@@ -99,13 +99,8 @@ export function getDaysPassed(from: Date, to: Date): number {
 }
 
 export function timeAgo(date: Date, short = false) {
-
-	// We need to handle the user's timezone here
-	const userOffset = new Date().getTimezoneOffset();
-	const userDate = new Date(date.getTime() - userOffset * 60000);
-
 	const now = new Date();
-	const then = userDate;
+	const then = date;
 	const diff = now.getTime() - then.getTime();
 	const seconds = Math.floor(diff / 1000);
 	const minutes = Math.floor(seconds / 60);

@@ -82,74 +82,79 @@
 	}
 </script>
 
-<form onsubmit={handleSubmit} class="w-full max-w-sm">
-	<Card.Root>
-		<Card.Header>
-			<Card.Title>Create an account</Card.Title>
-			<Card.Description
-				>Enter your details below to create an account</Card.Description
-			>
-		</Card.Header>
-		<Card.Content>
-			<div class="flex flex-col gap-6">
-				<div class="grid gap-2">
-					<Label for="handle">Username (cannot be changed!)</Label>
-					<Input
-						id="handle"
-						type="text"
-						placeholder="username"
-						bind:value={handle}
-						aria-invalid={!!errors.handle}
-						required
-					/>
-					{#if errors.handle}
-						<p class="text-sm text-destructive">{errors.handle}</p>
+<div class="flex h-screen flex-col items-center justify-center">
+	<form onsubmit={handleSubmit} class="w-full max-w-sm">
+		<Card.Root class="py-8">
+			<Card.Header>
+				<Card.Title>Create an account</Card.Title>
+				<Card.Description
+					>Enter your details below to create an account</Card.Description
+				>
+			</Card.Header>
+			<Card.Content>
+				<div class="flex flex-col gap-6">
+					<div class="grid gap-2">
+						<Label for="handle">Username (cannot be changed!)</Label>
+						<Input
+							id="handle"
+							type="text"
+							placeholder="username"
+							class="border"
+							bind:value={handle}
+							aria-invalid={!!errors.handle}
+							required
+						/>
+						{#if errors.handle}
+							<p class="text-sm text-destructive">{errors.handle}</p>
+						{/if}
+					</div>
+					<div class="grid gap-2">
+						<Label for="email">Email</Label>
+						<Input
+							id="email"
+							type="email"
+							class="border"
+							placeholder="email@example.com"
+							bind:value={email}
+							aria-invalid={!!errors.email}
+							required
+						/>
+						{#if errors.email}
+							<p class="text-sm text-destructive">{errors.email}</p>
+						{/if}
+					</div>
+					<div class="grid gap-2">
+						<Label for="password">Password</Label>
+						<Input
+							id="password"
+							type="password"
+							class="border"
+							bind:value={password}
+							aria-invalid={!!errors.password}
+							required
+							placeholder="******"
+						/>
+						{#if errors.password}
+							<p class="text-sm text-destructive">{errors.password}</p>
+						{/if}
+					</div>
+					{#if errors.general}
+						<Alert.Root variant="destructive">
+							<Alert.Title>Unable to create account</Alert.Title>
+							<Alert.Description>{errors.general}</Alert.Description>
+						</Alert.Root>
 					{/if}
 				</div>
-				<div class="grid gap-2">
-					<Label for="email">Email</Label>
-					<Input
-						id="email"
-						type="email"
-						placeholder="email@example.com"
-						bind:value={email}
-						aria-invalid={!!errors.email}
-						required
-					/>
-					{#if errors.email}
-						<p class="text-sm text-destructive">{errors.email}</p>
-					{/if}
-				</div>
-				<div class="grid gap-2">
-					<Label for="password">Password</Label>
-					<Input
-						id="password"
-						type="password"
-						bind:value={password}
-						aria-invalid={!!errors.password}
-						required
-						placeholder="******"
-					/>
-					{#if errors.password}
-						<p class="text-sm text-destructive">{errors.password}</p>
-					{/if}
-				</div>
-				{#if errors.general}
-					<Alert.Root variant="destructive">
-						<Alert.Title>Unable to create account</Alert.Title>
-						<Alert.Description>{errors.general}</Alert.Description>
-					</Alert.Root>
+			</Card.Content>
+			<Card.Footer class="flex-col gap-2">
+				<Button class="w-full" type="submit" disabled={isRegistering}
+					>Create account</Button
+				>
+				{#if isRegistering}
+					<p>Creating account...</p>
 				{/if}
-			</div>
-		</Card.Content>
-		<Card.Footer class="flex-col gap-2">
-			<Button class="w-full" type="submit" disabled={isRegistering}
-				>Create account</Button
-			>
-			{#if isRegistering}
-				<p>Creating account...</p>
-			{/if}
-			<a href="/login">Or login to an existing account</a>
-		</Card.Footer>
-	</Card.Root>
-</form>
+				<a href="/login">Or login to an existing account</a>
+			</Card.Footer>
+		</Card.Root>
+	</form>
+</div>
