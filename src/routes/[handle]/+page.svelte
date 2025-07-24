@@ -363,7 +363,17 @@
 										<Dialog.Header>
 											<Dialog.Title>Your Radicle Garden Node</Dialog.Title>
 											<Dialog.Description>
-												<!-- TODO: Add node status here -->
+												{#if nodeStatuses[node.node_id].isRunning}
+													<Badge variant="success">
+														<Icon name="seedling-filled" />
+														Online
+													</Badge>
+												{:else}
+													<Badge variant="destructive">
+														<Icon name="seedling" />
+														Offline
+													</Badge>
+												{/if}
 												<p>This node is managed by Radicle Garden.</p>
 												<div>
 													To force a connection to this node, you can run
