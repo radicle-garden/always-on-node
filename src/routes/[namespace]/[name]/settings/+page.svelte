@@ -189,12 +189,13 @@
 					Remove {repo.payloads['xyz.radicle.project'].data.name} from your node.
 				</div>
 				<div>
+					This does not guarantee deletion of the repository from the Radicle
+					Network.
 					<!-- FIXME: The link is wrong -->
-					This does not guarantee deletion of the repository from the Radicle Network.
-					<a
+					<!-- <a
 						href="https://docs.radicle.xyz/docs/radicle-network/how-to-delete-a-repository"
 						>Why not?</a
-					>
+					> -->
 				</div>
 				<div class="flex self-end">
 					<DeleteRepositoryDialog
