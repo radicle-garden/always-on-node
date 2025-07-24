@@ -103,7 +103,7 @@
 					// TODO: Develop our own patch viewer instead of linking out
 					// goto(`patches/${patch.id}?rid=${repo.rid}`);
 					window.open(
-						`https://app.radicle.xyz/nodes/ash.radicle.garden/${repo.rid}/patches/${patch.id}`,
+						`https://app.radicle.xyz/nodes/iris.radicle.xyz/${repo.rid}/patches/${patch.id}`,
 						'_blank'
 					);
 				}}
