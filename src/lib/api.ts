@@ -4,6 +4,8 @@ import type {
 	Organisation,
 	OrganisationUserRole,
 	RadicleRepositoryListItem,
+	RepositoryWebhookSettings,
+	SavedRepositoryWebhookSettings,
 	SeededRadicleRepository,
 	User
 } from '$types/app';
@@ -252,4 +254,15 @@ export const api = {
 		});
 	},
 
+	getWebhooks: async (rid: string): Promise<ApiResponse<SavedRepositoryWebhookSettings[]>> => {
+		return await api.get(`${PUBLIC_API_URL}/repositories/${rid}/webhooks`);
+	},
+	saveWebhooks: async (rid: string, webhooks: RepositoryWebhookSettings[]) => {
+		return await api.post(`${PUBLIC_API_URL}/repositories/${rid}/webhooks`, {
+			webhooks
+		});
+	},
+	deleteWebhook: async (rid: string, uuid: string) => {
+		return await api.delete(`${PUBLIC_API_URL}/repositories/${rid}/webhooks/${uuid}`);
+	}
 };

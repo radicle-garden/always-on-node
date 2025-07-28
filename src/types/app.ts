@@ -84,3 +84,32 @@ export type WeeklyActivity = {
 	commits: number[];
 	week: number;
 };
+
+export enum WebhookTriggerEvent {
+	PATCH_CREATED = 'Patch Created',
+	PATCH_UPDATED = 'Patch Updated',
+	BRANCH_UPDATED = 'Branch Updated',
+	BRANCH_DELETED = 'Branch Deleted',
+	TAG_CREATED = 'Tag Created',
+	TAG_UPDATED = 'Tag Updated',
+	TAG_DELETED = 'Tag Deleted',
+}
+
+export type RepositoryWebhookSettings = {
+	location: string;
+	secret: string;
+	triggers: {
+		event: WebhookTriggerEvent;
+		branch?: string;
+	}[];
+	createdAt?: string;
+}
+
+export type SavedRepositoryWebhookSettings = {
+	uuid: string;
+	content_type: string;
+	created_date: string;
+	repo_id: string;
+	triggers: string;
+	url: string;
+}
