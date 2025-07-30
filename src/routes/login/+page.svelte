@@ -16,6 +16,7 @@
 	} from '$lib/utils';
 
 	// If the user is already logged in, redirect to the profile
+	$inspect($user);
 	if ($user) goto(`/${$user.handle}`);
 
 	// Form state

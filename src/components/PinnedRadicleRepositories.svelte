@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Node } from '$types/app';
 
+	import { Button } from '$lib/components/ui/button';
 	import { findRespositoryByRid, user } from '$lib/state';
 
 	import EditPinnedRepositoriesDialog from './EditPinnedRepositoriesDialog.svelte';
@@ -49,6 +50,14 @@
 	<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 		{#if numPinnedRepositories === 0}
 			<div class="col-span-full">No pinned repositories.</div>
+			{#if showEditDialog}
+				<div class="col-span-full">
+					Click the edit button above to add repositories to your profile.
+				</div>
+				<div class="col-span-full">
+					You can pin any repository on the Radicle network!
+				</div>
+			{/if}
 		{/if}
 		{#each Object.entries(pinnedRepositories) as [_, repositories]}
 			{#each repositories as rid}

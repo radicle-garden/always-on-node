@@ -1,10 +1,13 @@
 <script lang="ts">
 	import type { SeededRadicleRepository } from '$types/app';
 
+	import { Button } from '$lib/components/ui/button';
 	import { Card } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
+	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { findRespositoryByRid } from '$lib/state';
 
+	import Icon from './Icon.svelte';
 	import NewRepositoryDialog from './NewRepositoryDialog.svelte';
 	import RepositoryCard from './RepositoryCard.svelte';
 
@@ -45,6 +48,20 @@
 			{#if showCreateDialog}
 				<div class="flex items-center gap-2">
 					<NewRepositoryDialog onSave={onCreate} />
+					<div>
+						<Tooltip.Provider>
+							<Tooltip.Root delayDuration={0}>
+								<Tooltip.Trigger>
+									<div class="col-span-full">
+										<Button disabled><Icon name="github" />Import</Button>
+									</div>
+								</Tooltip.Trigger>
+								<Tooltip.Content>
+									<p>Coming soon!</p>
+								</Tooltip.Content>
+							</Tooltip.Root>
+						</Tooltip.Provider>
+					</div>
 				</div>
 			{/if}
 		</div>

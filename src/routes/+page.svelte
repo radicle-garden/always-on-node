@@ -11,7 +11,7 @@
 		if (!user) {
 			goto('/login');
 		} else {
-			goto('/garden');
+			goto(`/${user.handle}`);
 		}
 	});
 </script>

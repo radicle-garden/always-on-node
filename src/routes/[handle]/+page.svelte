@@ -531,7 +531,10 @@
 				{:else}
 					<Card class="px-4 py-2">
 						<div class="markdown">
-							<Markdown md={unescapedDescription} />
+							<Markdown
+								md={unescapedDescription ||
+									'Welcome to your profile! Click the edit button below to customise this text.'}
+							/>
 						</div>
 					</Card>
 				{/if}

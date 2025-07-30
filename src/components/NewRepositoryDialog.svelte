@@ -16,15 +16,15 @@
 	<Dialog.Trigger>
 		<Button variant="outline">
 			<Icon name="add" />
-			Add Repository
+			Seed Repository
 		</Button>
 	</Dialog.Trigger>
 	<Dialog.Content>
 		<Dialog.Header>
-			<Dialog.Title>Add Repository</Dialog.Title>
+			<Dialog.Title>Seed Repository</Dialog.Title>
 		</Dialog.Header>
 		<Dialog.Description>
-			<div class="text-sm text-muted-foreground">
+			<div class="py-2 text-sm text-muted-foreground">
 				Adding a repository here will seed it from your node and make it more
 				available to other users on Radicle.
 			</div>

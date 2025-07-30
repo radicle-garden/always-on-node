@@ -29,7 +29,7 @@ export const initialiseUser = async () => {
 	try {
 		const { content: user } = await api.getMyProfile();
 		setUser(user);
-		return true;
+		return user;
 	} catch (error) {
 		clearUser();
 		return false;

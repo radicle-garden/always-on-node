@@ -7,8 +7,6 @@
 
 	const { token } = page.params;
 
-	const { data } = page.state as { data?: { message?: string } };
-
 	// Make a request to the API to verify the email
 	onMount(async () => {
 		try {
