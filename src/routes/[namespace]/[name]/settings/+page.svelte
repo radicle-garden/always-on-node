@@ -213,7 +213,7 @@
 									<Card variant="outline" class="p-4">
 										<div class="flex flex-col gap-2">
 											<div class="flex justify-between">
-												<div>URL: {wh.url}</div>
+												<div>{wh.url}</div>
 												<Button
 													variant="ghost"
 													onclick={() => removeWebhook(wh.uuid)}
@@ -221,8 +221,8 @@
 												>
 											</div>
 											<div>
-												Triggers:
-												<ul>
+												Triggered by
+												<ul class="list-disc pl-4">
 													{#each JSON.parse(wh.triggers) as t}
 														<li>
 															{t.event}
@@ -235,8 +235,8 @@
 													{/each}
 												</ul>
 											</div>
-											<div>
-												Created: {timeAgo(new Date(wh.created_date))} ago
+											<div class="text-sm text-muted-foreground">
+												Created {timeAgo(new Date(wh.created_date))} ago
 											</div>
 										</div>
 									</Card>
@@ -270,7 +270,7 @@
 											<Input
 												id={`secret-${i}`}
 												bind:value={webhook.secret}
-												placeholder="secret"
+												placeholder="secret (cannot be retrieved or changed)"
 												aria-invalid={!!formErrors[i]?.secret}
 												required
 											/>
