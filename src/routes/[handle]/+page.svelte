@@ -239,7 +239,7 @@
 	}
 
 	function handleCreateOrganisation(name: string, invitees: string[]) {
-		console.log(name, invitees);
+		// console.log(name, invitees);
 	}
 
 	function handleCreateRepository(rid: string) {

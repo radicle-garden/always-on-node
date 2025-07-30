@@ -103,7 +103,6 @@
 							{:else}
 								<Button
 									onclick={() => {
-										console.log({ user: $user });
 										toast.promise(
 											api.addSeededRepository($gardenNode!.node_id, repo.rid),
 											{

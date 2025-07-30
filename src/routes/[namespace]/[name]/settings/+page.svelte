@@ -43,7 +43,6 @@
 	async function refreshWebhooks() {
 		const { content: whks } = await api.getWebhooks(rid);
 		existingWebhooks = whks;
-		console.log({ existingWebhooks });
 	}
 
 	onMount(async () => {
