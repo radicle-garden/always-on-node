@@ -1,3 +1,18 @@
+export type UserProfile = {
+	handle: string;
+	description: string;
+	created_at: string;
+	nodes: PublicNodeInfo[];
+};
+
+export type PublicNodeInfo = {
+	node_id: string;
+	did: string;
+	alias: string;
+	ssh_public_key: string;
+	connect_address: string;
+};
+
 export type User = {
 	id: number;
 	email: string;

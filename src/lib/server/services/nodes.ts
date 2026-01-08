@@ -147,7 +147,7 @@ async function createNode(user: User): Promise<Node | null> {
 				{
 					Image: httpdImage,
 					Env: ['RUST_LOG=debug', 'RUST_BACKTRACE=1', 'RAD_HOME=/radicle'],
-					Cmd: ['--listen', '/radicle/radicle.httpd.sock'],
+					Cmd: ['--listen', `/radicle/${nodeAlias.replaceAll('_', '-')}.httpd.sock`],
 					HostConfig: {
 						Binds: [`${radHome}:/radicle`],
 						RestartPolicy: {
@@ -278,7 +278,7 @@ async function execNodeCommand(
 	const containerName = `${node.alias}-node`;
 
 	try {
-		const docker = await DockerClient.fromDockerHost('unix:///var/run/docker.sock');
+		const docker = await DockerClient.fromDockerHost(config.dockerHost);
 
 		const { Writable } = await import('stream');
 		let stdoutData = '';

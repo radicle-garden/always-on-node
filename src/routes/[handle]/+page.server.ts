@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import type { PublicNodeInfo, UserProfile } from '$types/app';
 
 import { usersService } from '$lib/server/services/users';
 import { nodesService } from '$lib/server/services/nodes';
@@ -9,19 +10,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const currentUser = locals.user;
 	const isMe = currentUser?.handle === handle;
 
-	// Get the profile - use current user if viewing own profile
-	let profile;
+	let profile: UserProfile;
 	if (isMe && currentUser) {
 		profile = {
 			handle: currentUser.handle,
-			description: currentUser.description,
+			description: currentUser.description ?? '',
 			created_at: currentUser.created_at,
-			nodes: currentUser.nodes.map((n) => ({
+			nodes: currentUser.nodes.map((n): PublicNodeInfo => ({
 				node_id: n.node_id,
 				did: n.did,
 				alias: n.alias,
 				ssh_public_key: n.ssh_public_key,
-				connect_address: n.connect_address
+				connect_address: n.connect_address ?? ''
 			}))
 		};
 	} else {
@@ -29,10 +29,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		if (!result.success || !result.content) {
 			throw error(result.statusCode, result.error || 'User not found');
 		}
-		profile = result.content;
+		profile = result.content as UserProfile;
 	}
 
-	// Load seeded repositories for each node
 	const seededRepositories: Record<string, Awaited<ReturnType<typeof nodesService.getSeededReposForNode>>['content']> = {};
 
 	for (const node of profile.nodes || []) {
