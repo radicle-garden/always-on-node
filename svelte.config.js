@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-static';
+import adapter from '@sveltejs/adapter-node';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -6,9 +6,7 @@ const config = {
 		runes: true
 	},
 	kit: {
-		adapter: adapter({
-			fallback: 'app.html'
-		}),
+		adapter: adapter(),
 		alias: {
 			$components: './src/components',
 			$types: './src/types',

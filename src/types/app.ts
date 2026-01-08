@@ -73,7 +73,7 @@ export type Organisation = {
 export type ApiResponse<T> = {
 	content: T;
 	success: boolean;
-	statusCode: number;
+	statusCode?: number;
 	message?: string;
 	error?: string | [];
 };

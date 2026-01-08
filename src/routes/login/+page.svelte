@@ -24,7 +24,28 @@
 	let isLoggingIn = $state(false);
 	let errors = $state<Record<string, string>>({});
 
-	const { message } = page.state as {
+	// Check for email verification status from query params
+	const verified = page.url.searchParams.get('verified');
+	const verificationMessage = $derived.by(() => {
+		if (verified === 'true') {
+			return {
+				title: 'Email verified',
+				body: 'You can now login',
+				status: 'success' as const
+			};
+		} else if (verified === 'false') {
+			return {
+				title: 'Email could not be verified',
+				body: 'Please try again or contact support',
+				contactSupport: true,
+				status: 'destructive' as const
+			};
+		}
+		return null;
+	});
+
+	// Also support legacy page.state messages
+	const { message: stateMessage } = page.state as {
 		message?: {
 			title: string;
 			body: string;
@@ -32,6 +53,8 @@
 			status: 'success' | 'destructive';
 		};
 	};
+
+	const message = $derived(verificationMessage || stateMessage);
 
 	// Validation schema
 	const validateLoginForm = createFormValidator({

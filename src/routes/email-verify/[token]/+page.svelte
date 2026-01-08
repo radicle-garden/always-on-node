@@ -1,41 +1,8 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
-	import { onMount } from 'svelte';
-
-	import { api } from '$lib/api';
-
-	const { token } = page.params;
-
-	// Make a request to the API to verify the email
-	onMount(async () => {
-		try {
-			const response = await api.verifyEmail(token);
-			if (response.statusCode === 200) {
-				goto('/login', {
-					state: {
-						message: {
-							title: 'Email verified',
-							body: 'You can now login',
-							status: 'success'
-						}
-					}
-				});
-			} else {
-				throw new Error('Email could not be verified');
-			}
-		} catch (error) {
-			goto('/login', {
-				state: {
-					message: {
-						title: 'Email could not be verified',
-						contactSupport: true,
-						status: 'destructive'
-					}
-				}
-			});
-		}
-	});
+	// This page redirects server-side before rendering
+	// This content is only shown briefly during the redirect
 </script>
 
-<div>Verifying email...</div>
+<div class="flex items-center justify-center p-8">
+	<p class="text-muted-foreground">Verifying email...</p>
+</div>

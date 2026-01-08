@@ -5,4 +5,5 @@ import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()]
+	// Don't configure SSR externals - let SvelteKit handle it automatically
 });

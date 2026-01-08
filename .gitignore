@@ -1,3 +1,5 @@
+profiles/*
+storage/*
 node_modules
 
 # Output

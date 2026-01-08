@@ -1,6 +1,6 @@
 import { goto } from '$app/navigation';
 import { api } from './api';
-import { setUser, clearUser, setRadicleRepositoryList } from './state';
+import { setUser, clearUser } from './state';
 
 export const login = async (email: string, password: string) => {
 	try {
@@ -44,14 +44,6 @@ export const refreshUser = async () => {
 		clearUser();
 	}
 }
-
-export const initializeRadicleRepositoryList = async () => {
-	try {
-		setRadicleRepositoryList(await api.getRadicleRepositoryList())
-	} catch (error) {
-		console.error('Error initializing radicle repository list:', error);
-	}
-};
 
 export const checkAuth = async () => {
 	try {

@@ -2,7 +2,7 @@
 	import '../app.css';
 	import { onMount } from 'svelte';
 
-	import { initialiseUser, initializeRadicleRepositoryList } from '$lib/auth';
+	import { initialiseUser } from '$lib/auth';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { cn } from '$lib/utils';
 
@@ -17,7 +17,6 @@
 	onMount(async () => {
 		await Promise.allSettled([
 			initialiseUser(),
-			initializeRadicleRepositoryList()
 		]);
 		initialised = true;
 	});
