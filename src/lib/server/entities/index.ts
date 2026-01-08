@@ -64,19 +64,8 @@ export function createNodeData(
 	};
 }
 
-export function getRadHome(node: Node): string | undefined {
-	if (node.id) {
-		// Docker requires absolute paths for bind mounts
-		return path.resolve(config.profileStoragePath, `node${padIdIfNecessary(node.id)}`);
-	}
-	return undefined;
-}
-
-function padIdIfNecessary(id: number): string {
-	if (id && id.toString().length < 2) {
-		return '0' + id.toString();
-	}
-	return id.toString();
+export function getRadHome(username: string): string | undefined {
+	return path.resolve(config.profileStoragePath, username);
 }
 
 function extractSshPublicKeyFromDid(nodeId: string): string {

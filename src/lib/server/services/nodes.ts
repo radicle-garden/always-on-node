@@ -54,13 +54,12 @@ async function createNode(user: User): Promise<Node | null> {
 
 			const nodeData = createNodeData(nodeId, nodeAlias, user.id);
 			const [persistedNode] = await db.insert(schema.nodes).values(nodeData).returning();
-			console.log({persistedNode})
 
 			const radPort = await assignAvailablePort(persistedNode);
 
-			const radHome = getRadHome(persistedNode);
+			const radHome = getRadHome(user.handle);
 			if (!radHome) {
-				console.error(`[Nodes] Failed to get RAD_HOME for node ${persistedNode.node_id}`);
+				console.error(`[Nodes] Failed to get RAD_HOME for user ${user.handle}`);
 				return null;
 			}
 
@@ -147,7 +146,7 @@ async function createNode(user: User): Promise<Node | null> {
 				{
 					Image: httpdImage,
 					Env: ['RUST_LOG=debug', 'RUST_BACKTRACE=1', 'RAD_HOME=/radicle'],
-					Cmd: ['--listen', `/radicle/${nodeAlias.replaceAll('_', '-')}.httpd.sock`],
+					Cmd: ['--listen', `/radicle/httpd.sock`],
 					HostConfig: {
 						Binds: [`${radHome}:/radicle`],
 						RestartPolicy: {
@@ -204,7 +203,7 @@ async function updateNodeConfig(
 	}
 
 	try {
-		const radHome = getRadHome(node);
+		const radHome = getRadHome(node.user?.handle ?? '');
 		await writeFile(`${radHome}/config.json`, JSON.stringify(nodeConfig, null, 2), 'utf8');
 
 		return {
@@ -226,6 +225,9 @@ async function getConfigForNode(nodeId: string): Promise<ServiceResult<any>> {
 		const node = await db.query.nodes.findFirst({
 			where: and(eq(schema.nodes.node_id, nodeId), eq(schema.nodes.deleted, false))
 		});
+		const user = await db.query.users.findFirst({
+			where: and(eq(schema.users.id, node?.user_id ?? 0), eq(schema.users.deleted, false))
+		});
 
 		if (!node) {
 			console.warn(`[Nodes] No active node found with node_id: ${nodeId}`);
@@ -236,7 +238,7 @@ async function getConfigForNode(nodeId: string): Promise<ServiceResult<any>> {
 			};
 		}
 
-		const radHome = getRadHome(node);
+		const radHome = getRadHome(user?.handle ?? '');
 		const nodeConfig = JSON.parse(await readFile(`${radHome}/config.json`, 'utf8'));
 
 		return { success: true, content: nodeConfig, statusCode: 200 };

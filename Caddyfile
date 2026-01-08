@@ -1,3 +1,3 @@
 http://*.localhost {
-  reverse_proxy unix//opt/{labels.1}.sock
+	reverse_proxy unix/./profiles/{labels.1}/httpd.sock
 }
