@@ -1,16 +1,11 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
-	import { toast } from 'svelte-sonner';
-
 	import type { UserProfile } from '$types/app';
 	import type { PageData } from './$types';
 
-	import { api } from '$lib/api';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Card } from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import {
-		parseNodeStatus,
 		timeAgo,
 		truncateDid,
 		truncateText,
@@ -26,65 +21,11 @@
 
 	let profile = $derived(data.profile as UserProfile);
 	let isMe = $derived(data.isMe);
-	let seededRepositories = $derived(data.seededRepositories);
+	let repositories = $derived(data.repositories);
+	let nodeStatuses = $derived(data.nodeStatuses);
+	let nodeId = $derived(profile?.nodes[0]?.node_id);
 
-	let nodeStatuses: Record<
-		string,
-		{
-			isRunning: boolean;
-			peers: number;
-			sinceSeconds: number;
-		}
-	> = $state({});
-	let unescapedDescription = $state('');
-
-	$effect(() => {
-		if (profile?.nodes) {
-			loadNodeStatuses();
-		}
-	});
-
-	$effect(() => {
-		unescapedDescription = unescapeHtml(profile?.description ?? '');
-	});
-
-	async function loadNodeStatuses() {
-		for (const node of profile.nodes) {
-			try {
-				const { content: status } = await api.getNodeStatus(node.node_id);
-				const { isRunning, peers, sinceSeconds } = parseNodeStatus(status);
-				nodeStatuses[node.node_id] = {
-					isRunning,
-					peers,
-					sinceSeconds: sinceSeconds ?? 0
-				};
-			} catch (error) {
-				nodeStatuses[node.node_id] = {
-					isRunning: false,
-					peers: 0,
-					sinceSeconds: 0
-				};
-			}
-		}
-	}
-
-	async function refresh() {
-		await invalidateAll();
-	}
-
-	function handleCreateRepository(rid: string) {
-		toast.promise(api.addSeededRepository(profile.nodes[0].node_id, rid), {
-			loading: 'Seeding repository...',
-			success: () => {
-				rid = '';
-				return 'Repository seeded';
-			},
-			error: 'Failed to seed repository',
-			finally: async () => {
-				await refresh();
-			}
-		});
-	}
+	let unescapedDescription = $derived(unescapeHtml(profile?.description ?? ''));
 </script>
 
 {#if profile}
@@ -114,13 +55,9 @@
 										<span class="text-green-500">
 											<Icon name="seedling-filled" />
 										</span>
-									{:else if nodeStatuses[node.node_id].isRunning === false}
+									{:else}
 										<span class="text-red-500">
 											<Icon name="seedling" />
-										</span>
-									{:else}
-										<span class="text-muted">
-											<Icon name="clock" />Checking...
 										</span>
 									{/if}
 								</Dialog.Trigger>
@@ -172,9 +109,9 @@
 			</Card>
 			<RepositoriesWithFilter
 				namespace={profile.handle}
-				repositories={Object.values(seededRepositories).flat().filter((r) => r != null) as any[]}
+				{repositories}
 				showCreateDialog={isMe}
-				onCreate={handleCreateRepository}
+				{nodeId}
 			/>
 		</div>
 	</div>

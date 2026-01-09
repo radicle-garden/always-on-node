@@ -1,89 +1,29 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { enhance } from '$app/forms';
 
-	import { api } from '$lib/api';
 	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { user } from '$lib/state';
-	import {
-		validateEmail,
-		createFormValidator,
-		hasFormErrors
-	} from '$lib/utils';
 
-	// If the user is already logged in, redirect to the profile
-	if ($user) goto(`/${$user.handle}`);
+	let { form } = $props();
 
-	// Form state
-	let handle = $state('');
-	let email = $state('');
-	let password = $state('');
-	let isRegistering = $state(false);
-	let errors = $state<Record<string, string>>({});
-
-	// Validation schema
-	const validateRegisterForm = createFormValidator({
-		handle: (value: string) => {
-			if (!value.trim()) return 'Username is required';
-			return null;
-		},
-		email: (value: string) => {
-			if (!value.trim()) return 'Email is required';
-			if (!validateEmail(value)) return 'Invalid email address';
-			return null;
-		},
-		password: (value: string) => {
-			if (!value) return 'Password is required';
-			return null;
-		}
-	});
-
-	async function handleSubmit(event: Event) {
-		event.preventDefault();
-
-		errors = validateRegisterForm({ handle, email, password });
-
-		if (hasFormErrors(errors)) {
-			return;
-		}
-
-		isRegistering = true;
-
-		try {
-			const response = await api.signup(handle, email, password);
-			if (response.success) {
-				goto('/login', {
-					state: {
-						message: {
-							title: 'Account Created',
-							body: 'Please check your email for a verification link',
-							status: 'success'
-						}
-					}
-				});
-			} else {
-				// If our client-side validation fails to catch an issue and the server
-				// returns a list of validation errors, we handle that here.
-				type SignupValidationError = {
-					msg: string;
-				};
-				errors.general = (response.error as SignupValidationError[])
-					?.map((e: SignupValidationError) => e.msg)
-					.join(', ') as string;
-			}
-		} catch (error) {
-			errors.general = error as string;
-		} finally {
-			isRegistering = false;
-		}
-	}
+	let isSubmitting = $state(false);
 </script>
 
 <div class="flex h-screen flex-col items-center justify-center">
-	<form onsubmit={handleSubmit} class="w-full max-w-sm">
+	<form
+		method="POST"
+		use:enhance={() => {
+			isSubmitting = true;
+			return async ({ update }) => {
+				await update();
+				isSubmitting = false;
+			};
+		}}
+		class="w-full max-w-sm"
+	>
 		<Card.Root class="py-8">
 			<Card.Header>
 				<Card.Title>Create an account</Card.Title>
@@ -97,60 +37,62 @@
 						<Label for="handle">Username (cannot be changed!)</Label>
 						<Input
 							id="handle"
+							name="handle"
 							type="text"
 							placeholder="username"
 							class="border"
-							bind:value={handle}
-							aria-invalid={!!errors.handle}
+							value={form?.handle ?? ''}
+							aria-invalid={!!form?.errors?.handle}
 							required
 						/>
-						{#if errors.handle}
-							<p class="text-sm text-destructive">{errors.handle}</p>
+						{#if form?.errors?.handle}
+							<p class="text-sm text-destructive">{form.errors.handle}</p>
 						{/if}
 					</div>
 					<div class="grid gap-2">
 						<Label for="email">Email</Label>
 						<Input
 							id="email"
+							name="email"
 							type="email"
 							class="border"
 							placeholder="email@example.com"
-							bind:value={email}
-							aria-invalid={!!errors.email}
+							value={form?.email ?? ''}
+							aria-invalid={!!form?.errors?.email}
 							required
 						/>
-						{#if errors.email}
-							<p class="text-sm text-destructive">{errors.email}</p>
+						{#if form?.errors?.email}
+							<p class="text-sm text-destructive">{form.errors.email}</p>
 						{/if}
 					</div>
 					<div class="grid gap-2">
 						<Label for="password">Password</Label>
 						<Input
 							id="password"
+							name="password"
 							type="password"
 							class="border"
-							bind:value={password}
-							aria-invalid={!!errors.password}
+							aria-invalid={!!form?.errors?.password}
 							required
 							placeholder="******"
 						/>
-						{#if errors.password}
-							<p class="text-sm text-destructive">{errors.password}</p>
+						{#if form?.errors?.password}
+							<p class="text-sm text-destructive">{form.errors.password}</p>
 						{/if}
 					</div>
-					{#if errors.general}
+					{#if form?.errors?.general}
 						<Alert.Root variant="destructive">
 							<Alert.Title>Unable to create account</Alert.Title>
-							<Alert.Description>{errors.general}</Alert.Description>
+							<Alert.Description>{form.errors.general}</Alert.Description>
 						</Alert.Root>
 					{/if}
 				</div>
 			</Card.Content>
 			<Card.Footer class="flex-col gap-2">
-				<Button class="w-full" type="submit" disabled={isRegistering}
+				<Button class="w-full" type="submit" disabled={isSubmitting}
 					>Create account</Button
 				>
-				{#if isRegistering}
+				{#if isSubmitting}
 					<p>Creating account...</p>
 				{/if}
 				<a href="/login">Or login to an existing account</a>

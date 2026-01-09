@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	import type { WeeklyActivity } from '$types/app';
+	import type { WeeklyActivity } from '$lib/commit';
 
 	let {
 		id,

@@ -8,10 +8,8 @@ export const load: PageServerLoad = async ({ params }) => {
 	const result = await usersService.verifyEmailAddress(token);
 
 	if (result.success) {
-		// Redirect to login with success message
 		throw redirect(303, '/login?verified=true');
 	} else {
-		// Redirect to login with error message
 		throw redirect(303, '/login?verified=false');
 	}
 };

@@ -14,6 +14,9 @@ export interface AppConfig {
 	emailSenderAddress: string | undefined;
 	jwtExpiresIn: string;
 	frontendUrl: string | undefined;
+	fqdn: string | undefined;
+	httpdScheme: string;
+	httpdPort: number;
 	nodesConnectFQDN: string | undefined;
 	nodeEnv: string;
 	dockerHost: string;
@@ -31,6 +34,9 @@ export function getConfig(): AppConfig {
 		emailSenderAddress: process.env.EMAIL_SENDER_ADDRESS,
 		jwtExpiresIn: process.env.JWT_EXPIRES_IN || '15m',
 		frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+		fqdn: process.env.FQDN || 'localhost',
+		httpdScheme: process.env.HTTPD_SCHEME || 'http',
+		httpdPort: Number(process.env.HTTPD_PORT) || 80,
 		nodesConnectFQDN: process.env.NODES_CONNECT_FQDN,
 		nodeEnv: process.env.NODE_ENV || 'production',
 		dockerHost: process.env.DOCKER_HOST || 'unix:///var/run/docker.sock',

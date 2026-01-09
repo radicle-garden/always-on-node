@@ -8,7 +8,7 @@
 		fallbackText,
 		border
 	}: {
-		src: string;
+		src?: string;
 		alt: string;
 		fallbackText: string;
 		border?: boolean;

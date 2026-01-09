@@ -1,42 +1,24 @@
-<script>
+<script lang="ts">
 	import '../app.css';
-	import { onMount } from 'svelte';
 
-	import { initialiseUser } from '$lib/auth';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { cn } from '$lib/utils';
 
 	import Header from '$components/Header.svelte';
 	import Icon from '$components/Icon.svelte';
-	import Loading from '$components/Loading.svelte';
 
-	let { children } = $props();
-
-	let initialised = $state(false);
-
-	onMount(async () => {
-		await Promise.allSettled([
-			initialiseUser(),
-		]);
-		initialised = true;
-	});
+	let { children, data } = $props();
 </script>
 
 <Toaster />
 
 <div class="layout px-2 py-1">
 	<header class="w-full px-2 2xl:w-3/4">
-		<Header />
+		<Header user={data.user} />
 	</header>
-	<main class={cn('relative w-full', !initialised && 'flex-auto')}>
+	<main class={cn('relative w-full')}>
 		<div class="w-full px-2 2xl:w-3/4">
-			{#if initialised}
-				{@render children()}
-			{:else}
-				<div class="flex h-full w-full items-center justify-center">
-					<Loading />
-				</div>
-			{/if}
+			{@render children()}
 		</div>
 	</main>
 	<footer class="txt-small px-2">

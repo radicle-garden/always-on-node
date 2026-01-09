@@ -1,11 +1,10 @@
 <script lang="ts">
-	import type { SeededRadicleRepository } from '$types/app';
+	import type { RepoInfo } from '../routes/[handle]/+page.server';
 
 	import { Button } from '$lib/components/ui/button';
 	import { Card } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import * as Tooltip from '$lib/components/ui/tooltip';
-	import { findRespositoryByRid } from '$lib/state';
 
 	import Icon from './Icon.svelte';
 	import NewRepositoryDialog from './NewRepositoryDialog.svelte';
@@ -15,29 +14,24 @@
 		namespace,
 		repositories,
 		showCreateDialog,
-		onCreate
+		nodeId
 	}: {
 		namespace: string;
-		repositories: SeededRadicleRepository[];
+		repositories: RepoInfo[];
 		showCreateDialog: boolean;
-		onCreate: (rid: string) => void;
+		nodeId?: string;
 	} = $props();
 
 	let filter = $state('');
 
 	let filteredRepositories = $derived(
-		repositories.filter((repository) => {
-			const repoName =
-				findRespositoryByRid(repository.repository_id)?.name.toLowerCase() ??
-				'';
-			const repoDescription =
-				findRespositoryByRid(repository.repository_id)?.desc.toLowerCase() ??
-				'';
-			return (
-				repoName.includes(filter.toLowerCase()) ||
-				repoDescription.includes(filter.toLowerCase())
-			);
-		})
+		filter
+			? repositories.filter((repo) =>
+					repo.name.toLowerCase().includes(filter.toLowerCase()) ||
+					repo.description.toLowerCase().includes(filter.toLowerCase()) ||
+					repo.rid.toLowerCase().includes(filter.toLowerCase())
+				)
+			: repositories
 	);
 </script>
 
@@ -45,9 +39,9 @@
 	<div class="flex flex-col gap-2">
 		<div class="flex items-center justify-between">
 			<div class="text-2xl font-medium">{namespace}'s repositories</div>
-			{#if showCreateDialog}
+			{#if showCreateDialog && nodeId}
 				<div class="flex items-center gap-2">
-					<NewRepositoryDialog onSave={onCreate} />
+					<NewRepositoryDialog {nodeId} />
 					<div>
 						<Tooltip.Provider>
 							<Tooltip.Root delayDuration={0}>
@@ -76,13 +70,8 @@
 			{#if filteredRepositories.length === 0}
 				<div class="text-sm text-muted-foreground">No repositories found</div>
 			{/if}
-			{#each filteredRepositories as { repository_id }}
-				<RepositoryCard
-					repositoryId={repository_id}
-					{namespace}
-					name={findRespositoryByRid(repository_id)?.name ?? ''}
-					description={findRespositoryByRid(repository_id)?.desc ?? ''}
-				/>
+			{#each filteredRepositories as repo}
+				<RepositoryCard {repo} />
 			{/each}
 		</div>
 	</div>

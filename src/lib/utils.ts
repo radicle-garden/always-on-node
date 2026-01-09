@@ -133,8 +133,19 @@ export function timeAgo(date: Date, short = false) {
 }
 
 export function unescapeHtml(text: string): string {
-	// Use the browser's native HTML entity decoding
-	return new DOMParser().parseFromString(text, 'text/html').body.textContent || '';
+	const entities: Record<string, string> = {
+		'&amp;': '&',
+		'&lt;': '<',
+		'&gt;': '>',
+		'&quot;': '"',
+		'&#39;': "'",
+		'&apos;': "'",
+		'&nbsp;': ' ',
+		'&#x27;': "'",
+		'&#x2F;': '/',
+		'&#32;': ' ',
+	};
+	return text.replace(/&[#\w]+;/g, (entity) => entities[entity] || entity);
 }
 
 export function parseNodeStatus(status: string) {
