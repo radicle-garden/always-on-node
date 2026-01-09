@@ -1,7 +1,12 @@
-import { fail, redirect, isRedirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
-import { authenticateUser, setSessionCookie, getUserFromSession } from '$lib/server/services/auth';
+import {
+	authenticateUser,
+	setSessionCookie,
+	getUserFromSession
+} from '$lib/server/services/auth';
+
+import { fail, redirect, isRedirect } from '@sveltejs/kit';
 
 interface LoginFormErrors {
 	email?: string;
@@ -58,7 +63,9 @@ export const actions = {
 			console.error('[Login] Error:', err);
 			return fail(500, {
 				email,
-				errors: { general: 'Login failed. Please try again.' } as LoginFormErrors
+				errors: {
+					general: 'Login failed. Please try again.'
+				} as LoginFormErrors
 			});
 		}
 	}

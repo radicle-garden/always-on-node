@@ -40,8 +40,12 @@ export function getConfig(): AppConfig {
 		nodesConnectFQDN: process.env.NODES_CONNECT_FQDN,
 		nodeEnv: process.env.NODE_ENV || 'production',
 		dockerHost: process.env.DOCKER_HOST || 'unix:///var/run/docker.sock',
-		radicleNodeContainer: process.env.RADICLE_NODE_CONTAINER || 'quay.io/radicle_garden/radicle-node:1.5.0',
-		radicleHttpdContainer: process.env.RADICLE_HTTPD_CONTAINER || 'quay.io/radicle_garden/radicle-httpd:0.22.0',
+		radicleNodeContainer:
+			process.env.RADICLE_NODE_CONTAINER ||
+			'quay.io/radicle_garden/radicle-node:1.5.0',
+		radicleHttpdContainer:
+			process.env.RADICLE_HTTPD_CONTAINER ||
+			'quay.io/radicle_garden/radicle-httpd:0.22.0'
 	};
 }
 

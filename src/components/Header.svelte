@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+
 	import type { User } from '$types/app';
+
 	import * as NavigationMenu from '$lib/components/ui/navigation-menu';
 
 	import Avatar from '$components/Avatar.svelte';
@@ -37,17 +39,19 @@
 					<NavigationMenu.Link class="hover:bg-transparent" tabindex={-1}>
 						<a href="/{user.handle}" class="flex items-center gap-2">
 							<div class="h-8 w-8 border border-white">
-								<Avatar
-									alt="Avatar"
-									fallbackText={user.handle.slice(0, 2)}
-								/>
+								<Avatar alt="Avatar" fallbackText={user.handle.slice(0, 2)} />
 							</div>
 							{user.handle}
 						</a>
 					</NavigationMenu.Link>
 				</NavigationMenu.Item>
 				<NavigationMenu.Item>
-					<form method="POST" action="/logout" use:enhance class="flex items-center">
+					<form
+						method="POST"
+						action="/logout"
+						use:enhance
+						class="flex items-center"
+					>
 						<button type="submit" class="logout-link">Logout</button>
 					</form>
 				</NavigationMenu.Item>
@@ -63,7 +67,8 @@
 </div>
 
 <style>
-	a, .logout-link {
+	a,
+	.logout-link {
 		color: var(--foreground);
 		background: none;
 		border: none;
@@ -71,7 +76,8 @@
 		font: inherit;
 		padding: 0;
 	}
-	a:hover, .logout-link:hover {
+	a:hover,
+	.logout-link:hover {
 		color: var(--foreground);
 		text-decoration: none;
 	}

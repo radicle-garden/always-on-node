@@ -1,7 +1,7 @@
-import type { Handle } from '@sveltejs/kit';
-
 import { initializeDatabase } from '$lib/server/db';
 import { getUserFromSession } from '$lib/server/services/auth';
+
+import type { Handle } from '@sveltejs/kit';
 
 // Initialize database on server start
 let dbInitialized = false;

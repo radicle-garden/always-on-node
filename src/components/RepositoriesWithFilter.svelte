@@ -26,10 +26,11 @@
 
 	let filteredRepositories = $derived(
 		filter
-			? repositories.filter((repo) =>
-					repo.name.toLowerCase().includes(filter.toLowerCase()) ||
-					repo.description.toLowerCase().includes(filter.toLowerCase()) ||
-					repo.rid.toLowerCase().includes(filter.toLowerCase())
+			? repositories.filter(
+					(repo) =>
+						repo.name.toLowerCase().includes(filter.toLowerCase()) ||
+						repo.description.toLowerCase().includes(filter.toLowerCase()) ||
+						repo.rid.toLowerCase().includes(filter.toLowerCase())
 				)
 			: repositories
 	);

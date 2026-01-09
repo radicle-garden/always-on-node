@@ -1,10 +1,9 @@
-import { Buffer } from 'buffer';
-import bcrypt from 'bcrypt';
-import { base58btc } from 'multiformats/bases/base58';
-import path from 'path';
-
 import { config } from '../config';
 import type { Node, SeededRadicleRepository, User } from '../db/schema';
+import bcrypt from 'bcrypt';
+import { Buffer } from 'buffer';
+import { base58btc } from 'multiformats/bases/base58';
+import path from 'path';
 
 export type { Node, SeededRadicleRepository, User };
 
@@ -28,7 +27,10 @@ export function setPassword(password: string): string {
 	return bcrypt.hashSync(password, 10);
 }
 
-export function verifyPassword(password: string, passwordHash: string): boolean {
+export function verifyPassword(
+	password: string,
+	passwordHash: string
+): boolean {
 	return bcrypt.compareSync(password, passwordHash);
 }
 
@@ -92,13 +94,17 @@ function encodeSshEd25519(publicKey: Uint8Array): string {
 	const keyType = 'ssh-ed25519';
 
 	const writeSshString = (data: string | Uint8Array): Buffer => {
-		const buf = typeof data === 'string' ? Buffer.from(data, 'utf8') : Buffer.from(data);
+		const buf =
+			typeof data === 'string' ? Buffer.from(data, 'utf8') : Buffer.from(data);
 		const len = Buffer.alloc(4);
 		len.writeUInt32BE(buf.length, 0);
 		return Buffer.concat([len, buf]);
 	};
 
-	const sshBuf = Buffer.concat([writeSshString(keyType), writeSshString(publicKey)]);
+	const sshBuf = Buffer.concat([
+		writeSshString(keyType),
+		writeSshString(publicKey)
+	]);
 
 	return `${keyType} ${sshBuf.toString('base64')}`;
 }

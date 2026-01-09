@@ -1,7 +1,6 @@
+import { config } from '../config';
 import jwt from 'jsonwebtoken';
 import { Resend } from 'resend';
-
-import { config } from '../config';
 
 class EmailService {
 	private resend: Resend | null = null;
@@ -92,7 +91,10 @@ class EmailService {
 		const senderAddress = config.emailSenderAddress;
 		if (!senderAddress) {
 			console.error('[Email] EMAIL_SENDER_ADDRESS is not configured');
-			return { success: false, error: 'EMAIL_SENDER_ADDRESS is not configured' };
+			return {
+				success: false,
+				error: 'EMAIL_SENDER_ADDRESS is not configured'
+			};
 		}
 
 		const resend = this.getResendClient();

@@ -1,12 +1,14 @@
-import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+
 import type { PublicNodeInfo, UserProfile } from '$types/app';
 
 import { ResponseError } from '$lib/http-client/lib/fetcher';
 import { createHttpdClient } from '$lib/server/httpdClient';
-import { usersService } from '$lib/server/services/users';
 import { nodesService } from '$lib/server/services/nodes';
+import { usersService } from '$lib/server/services/users';
 import { parseNodeStatus } from '$lib/utils';
+
+import { error, fail } from '@sveltejs/kit';
 
 export interface NodeStatus {
 	isRunning: boolean;
@@ -36,13 +38,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			handle: currentUser.handle,
 			description: currentUser.description ?? '',
 			created_at: currentUser.created_at,
-			nodes: currentUser.nodes.map((n): PublicNodeInfo => ({
-				node_id: n.node_id,
-				did: n.did,
-				alias: n.alias,
-				ssh_public_key: n.ssh_public_key,
-				connect_address: n.connect_address ?? ''
-			}))
+			nodes: currentUser.nodes.map(
+				(n): PublicNodeInfo => ({
+					node_id: n.node_id,
+					did: n.did,
+					alias: n.alias,
+					ssh_public_key: n.ssh_public_key,
+					connect_address: n.connect_address ?? ''
+				})
+			)
 		};
 	} else {
 		const result = await usersService.retrieveUserByHandle(handle, true);
@@ -64,19 +68,32 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 		if (isMe && currentUser) {
 			try {
-				const statusResult = await nodesService.getNodeStatus(node.node_id, currentUser);
+				const statusResult = await nodesService.getNodeStatus(
+					node.node_id,
+					currentUser
+				);
 				if (statusResult.success && statusResult.content) {
-					const { isRunning, peers, sinceSeconds } = parseNodeStatus(statusResult.content);
+					const { isRunning, peers, sinceSeconds } = parseNodeStatus(
+						statusResult.content
+					);
 					nodeStatuses[node.node_id] = {
 						isRunning,
 						peers,
 						sinceSeconds: sinceSeconds ?? 0
 					};
 				} else {
-					nodeStatuses[node.node_id] = { isRunning: false, peers: 0, sinceSeconds: 0 };
+					nodeStatuses[node.node_id] = {
+						isRunning: false,
+						peers: 0,
+						sinceSeconds: 0
+					};
 				}
 			} catch {
-				nodeStatuses[node.node_id] = { isRunning: false, peers: 0, sinceSeconds: 0 };
+				nodeStatuses[node.node_id] = {
+					isRunning: false,
+					peers: 0,
+					sinceSeconds: 0
+				};
 			}
 		}
 	}
@@ -91,7 +108,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 			let lastCommitTime: number | undefined;
 			try {
-				const commitInfo = await httpdClient.getCommitBySha(rid, projectData.meta.head);
+				const commitInfo = await httpdClient.getCommitBySha(
+					rid,
+					projectData.meta.head
+				);
 				lastCommitTime = commitInfo.commit.committer.time;
 			} catch {
 				// Ignore commit fetch errors

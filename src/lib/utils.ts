@@ -1,6 +1,6 @@
+import bs58 from 'bs58';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import bs58 from 'bs58';
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -31,7 +31,7 @@ export function debounce(callback: (...args: any[]) => void, wait: number) {
 	};
 }
 
-export function truncateText(text: string, remaining?: number ): string {
+export function truncateText(text: string, remaining?: number): string {
 	remaining = remaining ?? 6;
 	return `${text.substring(0, remaining)}…${text.slice(-remaining)}`;
 }
@@ -49,27 +49,27 @@ export function publicKeyFromDid(did: string) {
 }
 
 export function parseNodeId(
-  nid: string,
+	nid: string
 ): { prefix: string; pubkey: string } | undefined {
-  const match = /^(did:key:)?(z[a-zA-Z0-9]+)$/.exec(nid);
-  if (match) {
-    let hex: Uint8Array | undefined = undefined;
-    try {
-      hex = bs58.decode(match[2].substring(1));
-    } catch (error) {
-      console.error("utils.parseNodId: Not able to decode received NID", error);
-      return undefined;
-    }
-    // This checks also that the first 2 bytes are equal
-    // to the ed25519 public key type used.
-    if (hex && !(hex.byteLength === 34 && hex[0] === 0xed && hex[1] === 1)) {
-      return undefined;
-    }
+	const match = /^(did:key:)?(z[a-zA-Z0-9]+)$/.exec(nid);
+	if (match) {
+		let hex: Uint8Array | undefined = undefined;
+		try {
+			hex = bs58.decode(match[2].substring(1));
+		} catch (error) {
+			console.error('utils.parseNodId: Not able to decode received NID', error);
+			return undefined;
+		}
+		// This checks also that the first 2 bytes are equal
+		// to the ed25519 public key type used.
+		if (hex && !(hex.byteLength === 34 && hex[0] === 0xed && hex[1] === 1)) {
+			return undefined;
+		}
 
-    return { prefix: match[1] || "did:key:", pubkey: match[2] };
-  }
+		return { prefix: match[1] || 'did:key:', pubkey: match[2] };
+	}
 
-  return undefined;
+	return undefined;
 }
 
 export function parseRepositoryId(
@@ -95,7 +95,7 @@ export function validateEmail(email: string) {
 }
 
 export function getDaysPassed(from: Date, to: Date): number {
-  return Math.floor((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000));
+	return Math.floor((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000));
 }
 
 export function timeAgo(date: Date, short = false) {
@@ -143,13 +143,12 @@ export function unescapeHtml(text: string): string {
 		'&nbsp;': ' ',
 		'&#x27;': "'",
 		'&#x2F;': '/',
-		'&#32;': ' ',
+		'&#32;': ' '
 	};
 	return text.replace(/&[#\w]+;/g, (entity) => entities[entity] || entity);
 }
 
 export function parseNodeStatus(status: string) {
-
 	/**
 	 * Example Node status output:
 	 *
@@ -177,7 +176,6 @@ export function parseNodeStatus(status: string) {
    *
 	 */
 
-
 	// We want to know:
 	// - Is the node running? (3 or more lines containing ✓)
 	// - How many peers is the node connected to? (Lines that contain ✓ minus 2)
@@ -196,28 +194,49 @@ export function parseNodeStatus(status: string) {
 	}
 
 	try {
-
 		const lines = status.split('\n');
 		const isRunning = lines.filter((line) => line.includes('✓')).length >= 3;
 		const peers = lines.filter((line) => line.includes('✓')).length - 2;
 
 		// Parse time values from lines containing time units
 		const timeUnits = ['second', 'minute', 'hour', 'day', 'month', 'year'];
-		const timeUnitValues = { second: 1, minute: 60, hour: 3600, day: 86400, month: 2592000, year: 31536000 };
+		const timeUnitValues = {
+			second: 1,
+			minute: 60,
+			hour: 3600,
+			day: 86400,
+			month: 2592000,
+			year: 31536000
+		};
 
-		const timeLines = lines.filter((line) => timeUnits.some((unit) => line.includes(unit)));
+		const timeLines = lines.filter((line) =>
+			timeUnits.some((unit) => line.includes(unit))
+		);
 
 		// Extract and parse time values
-		const timeValues = timeLines.map(line => {
-			for (const unit of timeUnits) {
-				const match = line.match(new RegExp(`(\\d+(?:\\.\\d+)?)\\s*${unit}s?`));
-				if (match) {
-					const value = parseFloat(match[1]);
-					return { value, unit, seconds: value * timeUnitValues[unit as keyof typeof timeUnitValues] };
+		const timeValues = timeLines
+			.map((line) => {
+				for (const unit of timeUnits) {
+					const match = line.match(
+						new RegExp(`(\\d+(?:\\.\\d+)?)\\s*${unit}s?`)
+					);
+					if (match) {
+						const value = parseFloat(match[1]);
+						return {
+							value,
+							unit,
+							seconds:
+								value * timeUnitValues[unit as keyof typeof timeUnitValues]
+						};
+					}
 				}
-			}
-			return null;
-		}).filter(Boolean) as Array<{ value: number; unit: string; seconds: number }>;
+				return null;
+			})
+			.filter(Boolean) as Array<{
+			value: number;
+			unit: string;
+			seconds: number;
+		}>;
 
 		// Sort by seconds (longest first) and take the first one
 		const longestTime = timeValues.sort((a, b) => b.seconds - a.seconds)[0];

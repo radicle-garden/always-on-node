@@ -1,11 +1,3 @@
-import { DockerClient } from '@docker/node-sdk';
-import { and, eq } from 'drizzle-orm';
-import { exec } from 'child_process';
-import fs from 'fs';
-import { readFile, writeFile } from 'fs/promises';
-import path from 'path';
-import util from 'util';
-
 import { config } from '../config';
 import { getDb, schema } from '../db';
 import {
@@ -15,6 +7,13 @@ import {
 	type SeededRadicleRepository,
 	type User
 } from '../entities';
+import { DockerClient } from '@docker/node-sdk';
+import { exec } from 'child_process';
+import { and, eq } from 'drizzle-orm';
+import fs from 'fs';
+import { readFile, writeFile } from 'fs/promises';
+import path from 'path';
+import util from 'util';
 
 const execAsync = util.promisify(exec);
 
@@ -29,7 +28,10 @@ interface ServiceResult<T> {
 async function createNode(user: User): Promise<Node | null> {
 	const nodeAlias = `${user.handle}_seed`;
 
-	const temporaryRadHome = path.resolve(config.profileStoragePath, `radicle_${nodeAlias}`);
+	const temporaryRadHome = path.resolve(
+		config.profileStoragePath,
+		`radicle_${nodeAlias}`
+	);
 	const radBinary = config.radBinaryPath;
 
 	const env = {
@@ -43,17 +45,27 @@ async function createNode(user: User): Promise<Node | null> {
 
 		await execAsync(`${radBinary} auth --alias ${nodeAlias}`, { env });
 
-		const nodeId = (await execAsync(`${radBinary} self --nid`, { env })).stdout.trim();
-		const { stdout: sshPublicKey } = await execAsync(`${radBinary} self --ssh-key`, { env });
+		const nodeId = (
+			await execAsync(`${radBinary} self --nid`, { env })
+		).stdout.trim();
+		const { stdout: sshPublicKey } = await execAsync(
+			`${radBinary} self --ssh-key`,
+			{ env }
+		);
 
-		console.log(`[Nodes] Created a new profile! Public Key: ${sshPublicKey}, Node ID: ${nodeId}`);
+		console.log(
+			`[Nodes] Created a new profile! Public Key: ${sshPublicKey}, Node ID: ${nodeId}`
+		);
 
 		try {
 			const db = getDb();
 			console.log(`[Nodes] Creating new node with id: ${nodeId}`);
 
 			const nodeData = createNodeData(nodeId, nodeAlias, user.id);
-			const [persistedNode] = await db.insert(schema.nodes).values(nodeData).returning();
+			const [persistedNode] = await db
+				.insert(schema.nodes)
+				.values(nodeData)
+				.returning();
 
 			const radPort = await assignAvailablePort(persistedNode);
 
@@ -73,13 +85,17 @@ async function createNode(user: User): Promise<Node | null> {
 				);
 				return null;
 			}
-			const currentConfig = configResult.content as { node: { externalAddresses: string[] } };
+			const currentConfig = configResult.content as {
+				node: { externalAddresses: string[] };
+			};
 
 			console.log(
 				`[Nodes] Updating node config for ${persistedNode.node_id}: ${JSON.stringify(currentConfig)}`
 			);
 			if (persistedNode.connect_address) {
-				currentConfig.node.externalAddresses.push(persistedNode.connect_address);
+				currentConfig.node.externalAddresses.push(
+					persistedNode.connect_address
+				);
 			}
 
 			const nodeConfigResult = await updateNodeConfig(
@@ -88,7 +104,9 @@ async function createNode(user: User): Promise<Node | null> {
 				currentConfig
 			);
 			if (!nodeConfigResult.success) {
-				console.warn(`[Nodes] Failed to update node config for node ${persistedNode.node_id}`);
+				console.warn(
+					`[Nodes] Failed to update node config for node ${persistedNode.node_id}`
+				);
 				return null;
 			}
 
@@ -98,11 +116,21 @@ async function createNode(user: User): Promise<Node | null> {
 
 			const nodeImage = config.radicleNodeContainer;
 			const httpdImage = config.radicleHttpdContainer;
-			const [nodeImageName, nodeImageTag] = config.radicleNodeContainer.split(':');
-			const [httpdImageName, httpdImageTag] = config.radicleHttpdContainer.split(':');
+			const [nodeImageName, nodeImageTag] =
+				config.radicleNodeContainer.split(':');
+			const [httpdImageName, httpdImageTag] =
+				config.radicleHttpdContainer.split(':');
 
-			const nodeImagePull = docker.imageCreate({ fromImage: nodeImageName, tag: nodeImageTag, platform: 'linux/amd64' });
-			const httpdImagePull = docker.imageCreate({ fromImage: httpdImageName, tag: httpdImageTag, platform: 'linux/amd64' });
+			const nodeImagePull = docker.imageCreate({
+				fromImage: nodeImageName,
+				tag: nodeImageTag,
+				platform: 'linux/amd64'
+			});
+			const httpdImagePull = docker.imageCreate({
+				fromImage: httpdImageName,
+				tag: httpdImageTag,
+				platform: 'linux/amd64'
+			});
 
 			await nodeImagePull.wait();
 			await httpdImagePull.wait();
@@ -169,11 +197,15 @@ async function createNode(user: User): Promise<Node | null> {
 
 			return persistedNode;
 		} catch (nodeInsertErr) {
-			console.error(`[Nodes] Failed to insert node into database:`, nodeInsertErr);
+			console.error(
+				`[Nodes] Failed to insert node into database:`,
+				nodeInsertErr
+			);
 			return null;
 		}
 	} catch (cliError) {
-		const message = cliError instanceof Error ? cliError.message : String(cliError);
+		const message =
+			cliError instanceof Error ? cliError.message : String(cliError);
 		console.error('[Nodes] Error during CLI steps:', message);
 		return null;
 	}
@@ -186,15 +218,22 @@ async function updateNodeConfig(
 	nodeConfig: any
 ): Promise<ServiceResult<void>> {
 	const db = getDb();
-	console.log(`[Nodes] Updating node config for ${nodeId}: ${JSON.stringify(nodeConfig)}`);
+	console.log(
+		`[Nodes] Updating node config for ${nodeId}: ${JSON.stringify(nodeConfig)}`
+	);
 
 	const node = await db.query.nodes.findFirst({
-		where: and(eq(schema.nodes.node_id, nodeId), eq(schema.nodes.deleted, false)),
+		where: and(
+			eq(schema.nodes.node_id, nodeId),
+			eq(schema.nodes.deleted, false)
+		),
 		with: { user: true }
 	});
 
 	if (!node || node.user?.id !== user.id) {
-		console.warn(`[Nodes] No active node found with node_id: ${nodeId} for user`);
+		console.warn(
+			`[Nodes] No active node found with node_id: ${nodeId} for user`
+		);
 		return {
 			success: false,
 			error: `No active node found with node_id: ${nodeId}`,
@@ -204,7 +243,11 @@ async function updateNodeConfig(
 
 	try {
 		const radHome = getRadHome(node.user?.handle ?? '');
-		await writeFile(`${radHome}/config.json`, JSON.stringify(nodeConfig, null, 2), 'utf8');
+		await writeFile(
+			`${radHome}/config.json`,
+			JSON.stringify(nodeConfig, null, 2),
+			'utf8'
+		);
 
 		return {
 			success: true,
@@ -223,10 +266,16 @@ async function getConfigForNode(nodeId: string): Promise<ServiceResult<any>> {
 	try {
 		const db = getDb();
 		const node = await db.query.nodes.findFirst({
-			where: and(eq(schema.nodes.node_id, nodeId), eq(schema.nodes.deleted, false))
+			where: and(
+				eq(schema.nodes.node_id, nodeId),
+				eq(schema.nodes.deleted, false)
+			)
 		});
 		const user = await db.query.users.findFirst({
-			where: and(eq(schema.users.id, node?.user_id ?? 0), eq(schema.users.deleted, false))
+			where: and(
+				eq(schema.users.id, node?.user_id ?? 0),
+				eq(schema.users.deleted, false)
+			)
 		});
 
 		if (!node) {
@@ -239,7 +288,9 @@ async function getConfigForNode(nodeId: string): Promise<ServiceResult<any>> {
 		}
 
 		const radHome = getRadHome(user?.handle ?? '');
-		const nodeConfig = JSON.parse(await readFile(`${radHome}/config.json`, 'utf8'));
+		const nodeConfig = JSON.parse(
+			await readFile(`${radHome}/config.json`, 'utf8')
+		);
 
 		return { success: true, content: nodeConfig, statusCode: 200 };
 	} catch (error) {
@@ -253,7 +304,10 @@ async function getNodeById(nodeId: string): Promise<ServiceResult<Node>> {
 	try {
 		const db = getDb();
 		const node = await db.query.nodes.findFirst({
-			where: and(eq(schema.nodes.node_id, nodeId), eq(schema.nodes.deleted, false))
+			where: and(
+				eq(schema.nodes.node_id, nodeId),
+				eq(schema.nodes.deleted, false)
+			)
 		});
 
 		if (!node) {
@@ -318,17 +372,24 @@ async function execNodeCommand(
 
 		return { stdout: stdoutData, stderr: stderrData };
 	} catch (cliError: unknown) {
-		const errorMessage = cliError instanceof Error ? cliError.message : String(cliError);
+		const errorMessage =
+			cliError instanceof Error ? cliError.message : String(cliError);
 		console.warn(`[Nodes] Failed to run command in container: ${errorMessage}`);
 		return null;
 	}
 }
 
-async function getNodeStatus(nodeId: string, user: User): Promise<ServiceResult<string>> {
+async function getNodeStatus(
+	nodeId: string,
+	user: User
+): Promise<ServiceResult<string>> {
 	try {
 		const db = getDb();
 		const node = await db.query.nodes.findFirst({
-			where: and(eq(schema.nodes.node_id, nodeId), eq(schema.nodes.deleted, false)),
+			where: and(
+				eq(schema.nodes.node_id, nodeId),
+				eq(schema.nodes.deleted, false)
+			),
 			with: { user: true }
 		});
 
@@ -364,7 +425,10 @@ async function getSeededReposForNode(
 	try {
 		const db = getDb();
 		const node = await db.query.nodes.findFirst({
-			where: and(eq(schema.nodes.node_id, nodeId), eq(schema.nodes.deleted, false)),
+			where: and(
+				eq(schema.nodes.node_id, nodeId),
+				eq(schema.nodes.deleted, false)
+			),
 			with: {
 				seededRepositories: {
 					where: eq(schema.seededRadicleRepositories.seeding, true)
@@ -398,10 +462,16 @@ async function getSeededReposForNode(
 	}
 }
 
-async function seedRepo(nodeId: string, repositoryId: string): Promise<ServiceResult<void>> {
+async function seedRepo(
+	nodeId: string,
+	repositoryId: string
+): Promise<ServiceResult<void>> {
 	const db = getDb();
 	const node = await db.query.nodes.findFirst({
-		where: and(eq(schema.nodes.node_id, nodeId), eq(schema.nodes.deleted, false))
+		where: and(
+			eq(schema.nodes.node_id, nodeId),
+			eq(schema.nodes.deleted, false)
+		)
 	});
 
 	if (!node) {
@@ -452,10 +522,16 @@ async function seedRepo(nodeId: string, repositoryId: string): Promise<ServiceRe
 	};
 }
 
-async function unseedRepo(nodeId: string, repositoryId: string): Promise<ServiceResult<void>> {
+async function unseedRepo(
+	nodeId: string,
+	repositoryId: string
+): Promise<ServiceResult<void>> {
 	const db = getDb();
 	const node = await db.query.nodes.findFirst({
-		where: and(eq(schema.nodes.node_id, nodeId), eq(schema.nodes.deleted, false))
+		where: and(
+			eq(schema.nodes.node_id, nodeId),
+			eq(schema.nodes.deleted, false)
+		)
 	});
 
 	if (!node) {

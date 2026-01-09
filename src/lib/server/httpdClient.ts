@@ -1,6 +1,7 @@
+import { config } from './config';
+
 import { Fetcher } from '$lib/http-client/lib/fetcher';
 import { Client } from '$lib/http-client/lib/repo';
-import { config } from './config';
 
 export function createHttpdClient(handle: string) {
 	const scheme = config.httpdScheme;

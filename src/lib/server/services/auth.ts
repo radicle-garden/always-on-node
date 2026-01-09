@@ -1,10 +1,10 @@
-import type { Cookies } from '@sveltejs/kit';
-import { eq, and } from 'drizzle-orm';
-import jwt from 'jsonwebtoken';
-
 import { config } from '../config';
 import { getDb, schema } from '../db';
 import { verifyPassword, type Node, type User } from '../entities';
+import { eq, and } from 'drizzle-orm';
+import jwt from 'jsonwebtoken';
+
+import type { Cookies } from '@sveltejs/kit';
 
 const SESSION_COOKIE_NAME = 'garden_session';
 const SESSION_MAX_AGE = 60 * 60 * 24 * 14; // 2 weeks in seconds
@@ -22,7 +22,10 @@ export async function authenticateUser(
 
 	try {
 		const user = await db.query.users.findFirst({
-			where: and(eq(schema.users.email, email), eq(schema.users.deleted, false)),
+			where: and(
+				eq(schema.users.email, email),
+				eq(schema.users.deleted, false)
+			),
 			with: {
 				nodes: {
 					where: eq(schema.nodes.deleted, false)
@@ -35,7 +38,10 @@ export async function authenticateUser(
 		}
 
 		if (!user.email_verified) {
-			return { user: null, error: 'Please verify your email address to login.' };
+			return {
+				user: null,
+				error: 'Please verify your email address to login.'
+			};
 		}
 
 		if (!verifyPassword(password, user.password_hash)) {
@@ -85,7 +91,10 @@ export async function getUserFromSession(
 
 	const db = getDb();
 	const user = await db.query.users.findFirst({
-		where: and(eq(schema.users.id, sessionData.userId), eq(schema.users.deleted, false)),
+		where: and(
+			eq(schema.users.id, sessionData.userId),
+			eq(schema.users.deleted, false)
+		),
 		with: {
 			nodes: {
 				where: eq(schema.nodes.deleted, false)

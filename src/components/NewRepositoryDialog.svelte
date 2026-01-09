@@ -36,7 +36,10 @@
 						open = false;
 						await update();
 					} else if (result.type === 'failure') {
-						toast.error((result.data as { error?: string })?.error || 'Failed to seed repository');
+						toast.error(
+							(result.data as { error?: string })?.error ||
+								'Failed to seed repository'
+						);
 					}
 				};
 			}}
@@ -60,8 +63,10 @@
 			<Dialog.Footer>
 				<div class="flex w-full items-center justify-between">
 					<div>
-						<Button type="button" variant="outline" onclick={() => (open = false)}
-							>Cancel</Button
+						<Button
+							type="button"
+							variant="outline"
+							onclick={() => (open = false)}>Cancel</Button
 						>
 					</div>
 					<div>

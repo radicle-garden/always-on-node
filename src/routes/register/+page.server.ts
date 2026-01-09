@@ -1,8 +1,9 @@
-import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 import { getUserFromSession } from '$lib/server/services/auth';
 import { usersService } from '$lib/server/services/users';
+
+import { fail, redirect } from '@sveltejs/kit';
 
 interface RegisterFormErrors {
 	handle?: string;

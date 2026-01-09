@@ -1,16 +1,12 @@
 <script lang="ts">
-	import type { UserProfile } from '$types/app';
 	import type { PageData } from './$types';
+
+	import type { UserProfile } from '$types/app';
 
 	import { Badge } from '$lib/components/ui/badge';
 	import { Card } from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import {
-		timeAgo,
-		truncateDid,
-		truncateText,
-		unescapeHtml
-	} from '$lib/utils';
+	import { timeAgo, truncateDid, truncateText, unescapeHtml } from '$lib/utils';
 
 	import CopyableText from '$components/CopyableText.svelte';
 	import Icon from '$components/Icon.svelte';
@@ -47,7 +43,8 @@
 				</div>
 				{#each profile.nodes as node}
 					<div class="flex items-center gap-2">
-						<CopyableText text={node.did}>{truncateText(node.did)}</CopyableText>
+						<CopyableText text={node.did}>{truncateText(node.did)}</CopyableText
+						>
 						{#if isMe && nodeStatuses[node.node_id]}
 							<Dialog.Root>
 								<Dialog.Trigger>
@@ -101,10 +98,7 @@
 		<div class="col-span-12 flex w-full flex-col gap-8 pt-8 lg:col-span-8">
 			<Card class="px-4 py-2">
 				<div class="markdown">
-					<Markdown
-						md={unescapedDescription ||
-							'Welcome to my profile!'}
-					/>
+					<Markdown md={unescapedDescription || 'Welcome to my profile!'} />
 				</div>
 			</Card>
 			<RepositoriesWithFilter

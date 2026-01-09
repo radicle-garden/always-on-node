@@ -1,11 +1,15 @@
-import { eq, and, or } from 'drizzle-orm';
-import jwt, { type JwtPayload } from 'jsonwebtoken';
-
 import { config } from '../config';
 import { getDb, schema } from '../db';
-import { profileFromUser, setPassword, type Node, type User } from '../entities';
+import {
+	profileFromUser,
+	setPassword,
+	type Node,
+	type User
+} from '../entities';
 import { emailService } from './email';
 import { nodesService } from './nodes';
+import { eq, and, or } from 'drizzle-orm';
+import jwt, { type JwtPayload } from 'jsonwebtoken';
 
 interface ServiceResult<T> {
 	success: boolean;
@@ -22,7 +26,10 @@ export async function retrieveUserByHandle(
 	try {
 		const db = getDb();
 		const user = await db.query.users.findFirst({
-			where: and(eq(schema.users.handle, username), eq(schema.users.deleted, false)),
+			where: and(
+				eq(schema.users.handle, username),
+				eq(schema.users.deleted, false)
+			),
 			with: {
 				nodes: {
 					where: eq(schema.nodes.deleted, false)
@@ -98,7 +105,9 @@ export async function createNewUser(
 			};
 		}
 
-		console.log(`[Users] Creating user with handle: ${handle} and email: ${email}`);
+		console.log(
+			`[Users] Creating user with handle: ${handle} and email: ${email}`
+		);
 
 		const [savedUser] = await db
 			.insert(schema.users)
@@ -121,7 +130,9 @@ export async function createNewUser(
 			};
 		}
 
-		console.log(`[Users] New user: ${savedUser.email} signed up with id: ${savedUser.id}`);
+		console.log(
+			`[Users] New user: ${savedUser.email} signed up with id: ${savedUser.id}`
+		);
 
 		const emailResult = await emailService.sendVerificationEmail(
 			savedUser.id.toString(),
@@ -130,7 +141,9 @@ export async function createNewUser(
 		);
 
 		if (!emailResult.success) {
-			console.warn(`[Users] Failed to send email verification code to ${savedUser.email}`);
+			console.warn(
+				`[Users] Failed to send email verification code to ${savedUser.email}`
+			);
 			// Don't fail the registration, but log the error
 		}
 
@@ -151,10 +164,15 @@ export async function createNewUser(
 	}
 }
 
-export async function verifyEmailAddress(jsonWebToken: string): Promise<ServiceResult<void>> {
+export async function verifyEmailAddress(
+	jsonWebToken: string
+): Promise<ServiceResult<void>> {
 	try {
 		const db = getDb();
-		const userToVerify = jwt.verify(jsonWebToken, config.appSecret) as JwtPayload;
+		const userToVerify = jwt.verify(
+			jsonWebToken,
+			config.appSecret
+		) as JwtPayload;
 
 		const user = await db.query.users.findFirst({
 			where: eq(schema.users.id, userToVerify.id)
@@ -189,7 +207,9 @@ export async function verifyEmailAddress(jsonWebToken: string): Promise<ServiceR
 			};
 		}
 
-		console.log(`[Users] Successfully verified email address for user: ${user.id}`);
+		console.log(
+			`[Users] Successfully verified email address for user: ${user.id}`
+		);
 		return {
 			success: true,
 			message: `Email verified successfully`,
