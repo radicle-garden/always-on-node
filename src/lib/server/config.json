@@ -1,0 +1,20 @@
+{
+  "databaseStoragePath": "./storage",
+  "profileStoragePath": "/home/vagrant/.local/share/radicle/profiles/",
+  "radBinaryPath": "/home/vagrant/.radicle/bin/rad",
+  "jwtExpiresIn": "15m",
+  "frontendUrl": "http://localhost:5173",
+  "fqdn": "localhost",
+  "httpdScheme": "http",
+  "httpdPort": 80,
+  "nodesConnectFQDN": "localhost",
+  "nodeEnv": "development",
+  "dockerHost": "unix:///run/user/1000/podman/podman.sock",
+  "radicleNodeContainer": "quay.io/radicle_garden/radicle-node:1.5.0-arm64",
+  "radicleHttpdContainer": "quay.io/radicle_garden/radicle-httpd:feat-arm-builds",
+  "public": {
+    "defaultHttpdApiHostname": "localhost",
+    "defaultHttpdApiPort": 9999,
+    "defaultHttpdApiScheme": "http"
+  }
+}

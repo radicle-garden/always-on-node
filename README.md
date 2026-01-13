@@ -4,23 +4,16 @@ A web app for managing your radicle garden.
 
 ## Development
 
-Requires a radicle-gardener instance running.
-
 ```bash
-cp .env.example .env.local
+cp .env.example .env
+vagrant up
+vagrant ssh
 ```
 
-Edit `.env.local` to set the `PUBLIC_API_URL` to the URL of your radicle-gardener instance.
+In vagrant:
 
 ```bash
+cd /vagrant
 pnpm i
 pnpm dev
-```
-
-## Containers
-
-Building a container image (used for production deployment):
-
-```bash
-podman build -t radicle-garden .
 ```
