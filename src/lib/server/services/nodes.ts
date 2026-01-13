@@ -152,6 +152,12 @@ async function createNode(user: User): Promise<Node | null> {
 					ExposedPorts: {
 						'8776/tcp': {}
 					},
+					Healthcheck: {
+						Test: ['CMD-SHELL', '/usr/local/bin/radicle-healthcheck'],
+						Interval: 10_000_000_000, // ns
+						Timeout: 5_000_000_000, // ns
+						Retries: 10,
+					},
 					HostConfig: {
 						Binds: [`${radHome}:/radicle`],
 						PortBindings: {
@@ -183,7 +189,6 @@ async function createNode(user: User): Promise<Node | null> {
 						},
 						UsernsMode: 'keep-id:uid=11011,gid=11011'
 					},
-					User: '11011:11011'
 				},
 				{ name: httpdContainerName, platform: 'linux/arm64' }
 			);
@@ -337,43 +342,16 @@ async function execNodeCommand(
 	const containerName = `${node.alias}-node`;
 
 	try {
-		const docker = await DockerClient.fromDockerHost(config.dockerHost);
+		const { stdout, stderr } = await execAsync(
+			`podman exec -e RAD_PASSPHRASE= -e RAD_HOME=/radicle ${containerName} rad ${command}`
+		);
 
-		const { Writable } = await import('stream');
-		let stdoutData = '';
-		let stderrData = '';
-
-		const stdoutStream = new Writable({
-			write(chunk, _encoding, callback) {
-				stdoutData += chunk.toString();
-				callback();
-			}
-		});
-
-		const stderrStream = new Writable({
-			write(chunk, _encoding, callback) {
-				stderrData += chunk.toString();
-				callback();
-			}
-		});
-
-		const execInstance = await docker.containerExec(containerName, {
-			Cmd: ['rad', ...command.split(' ')],
-			AttachStdout: true,
-			AttachStderr: true,
-			Env: ['RAD_PASSPHRASE=', 'RAD_HOME=/radicle']
-		});
-
-		await docker.execStart(execInstance.Id, stdoutStream, stderrStream, {
-			Detach: false
-		});
-
-		console.log(`[Nodes] Node command output:\n${stdoutData}`);
-		if (stderrData) {
-			console.warn(`[Nodes] Node command stderr:\n${stderrData}`);
+		console.log(`[Nodes] Node command output:\n${stdout}`);
+		if (stderr) {
+			console.warn(`[Nodes] Node command stderr:\n${stderr}`);
 		}
 
-		return { stdout: stdoutData, stderr: stderrData };
+		return { stdout, stderr };
 	} catch (cliError: unknown) {
 		const errorMessage =
 			cliError instanceof Error ? cliError.message : String(cliError);
