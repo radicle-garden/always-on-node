@@ -12,7 +12,7 @@ steps:
     when:
       - event: pull_request
         path:
-          include: ['Containerfile', '.woodpecker/container_image.yaml']
+          include: ["Containerfile", ".woodpecker/container_image.yaml"]
 
   - name: publish-image
     image: woodpeckerci/plugin-docker-buildx:5.2.1

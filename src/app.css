@@ -1,167 +1,167 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
-@import 'tw-animate-css';
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-	--radius: 0.625rem;
-	--background: oklch(0.1176 0.0289 243.78);
-	--foreground: oklch(1 0 0);
-	--card: oklch(0.171 0.0193 255.79);
-	--card-foreground: oklch(1 0 0);
-	--popover: oklch(0.171 0.0193 255.79);
-	--popover-foreground: oklch(1 0 0);
-	--primary: oklch(0.1716 0.0211 258.32);
-	--primary-foreground: oklch(0.984 0.003 247.858);
-	--secondary: oklch(0.968 0.007 247.896);
-	--secondary-foreground: oklch(0.1716 0.0211 258.32);
-	--muted: oklch(0.3671 0.0081 248.36);
-	--muted-foreground: oklch(0.5411 0.01 264.48);
-	--accent: oklch(0.3671 0.0081 248.36);
-	--accent-foreground: oklch(0.984 0.003 247.858);
-	--destructive: oklch(0.577 0.245 27.325);
-	--success: oklch(0.2978 0.0441 158.72);
-	--success-foreground: oklch(0.7116 0.2361 141.39);
-	--border: oklch(0.2547 0.0168 259.77);
-	--input: oklch(0, 0, 0, 0);
-	--ring: oklch(0.704 0.04 256.788);
-	--chart-1: oklch(0.646 0.222 41.116);
-	--chart-2: oklch(0.6 0.118 184.704);
-	--chart-3: oklch(0.398 0.07 227.392);
-	--chart-4: oklch(0.828 0.189 84.429);
-	--chart-5: oklch(0.769 0.188 70.08);
-	--sidebar: oklch(0.984 0.003 247.858);
-	--sidebar-foreground: oklch(0.129 0.042 264.695);
-	--sidebar-primary: oklch(0.1716 0.0211 258.32);
-	--sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-	--sidebar-accent: oklch(0.968 0.007 247.896);
-	--sidebar-accent-foreground: oklch(0.1716 0.0211 258.32);
-	--sidebar-border: oklch(0.929 0.013 255.508);
-	--sidebar-ring: oklch(0.704 0.04 256.788);
-	--garden-logo: oklch(0.7092 0.2184 144.89);
-	--radicle-blue: oklch(0.5995 0.2186 259.49);
-	--tab-active: oklch(0.2588 0.0168 259.77);
-	--merged: oklch(0.5414 0.2851 293.93);
-	--merged-foreground: oklch(0.984 0.003 247.858);
+  --radius: 0.625rem;
+  --background: oklch(0.1176 0.0289 243.78);
+  --foreground: oklch(1 0 0);
+  --card: oklch(0.171 0.0193 255.79);
+  --card-foreground: oklch(1 0 0);
+  --popover: oklch(0.171 0.0193 255.79);
+  --popover-foreground: oklch(1 0 0);
+  --primary: oklch(0.1716 0.0211 258.32);
+  --primary-foreground: oklch(0.984 0.003 247.858);
+  --secondary: oklch(0.968 0.007 247.896);
+  --secondary-foreground: oklch(0.1716 0.0211 258.32);
+  --muted: oklch(0.3671 0.0081 248.36);
+  --muted-foreground: oklch(0.5411 0.01 264.48);
+  --accent: oklch(0.3671 0.0081 248.36);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.577 0.245 27.325);
+  --success: oklch(0.2978 0.0441 158.72);
+  --success-foreground: oklch(0.7116 0.2361 141.39);
+  --border: oklch(0.2547 0.0168 259.77);
+  --input: oklch(0, 0, 0, 0);
+  --ring: oklch(0.704 0.04 256.788);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.984 0.003 247.858);
+  --sidebar-foreground: oklch(0.129 0.042 264.695);
+  --sidebar-primary: oklch(0.1716 0.0211 258.32);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.968 0.007 247.896);
+  --sidebar-accent-foreground: oklch(0.1716 0.0211 258.32);
+  --sidebar-border: oklch(0.929 0.013 255.508);
+  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --garden-logo: oklch(0.7092 0.2184 144.89);
+  --radicle-blue: oklch(0.5995 0.2186 259.49);
+  --tab-active: oklch(0.2588 0.0168 259.77);
+  --merged: oklch(0.5414 0.2851 293.93);
+  --merged-foreground: oklch(0.984 0.003 247.858);
 }
 
 .dark {
-	--background: oklch(0.1176 0.0289 243.78);
-	--foreground: oklch(0.984 0.003 247.858);
-	--card: oklch(0.171 0.0193 255.79);
-	--card-foreground: oklch(0.984 0.003 247.858);
-	--popover: oklch(0.171 0.0193 255.79);
-	--popover-foreground: oklch(0.984 0.003 247.858);
-	--primary: oklch(0.929 0.013 255.508);
-	--primary-foreground: oklch(0.171 0.0193 255.79);
-	--secondary: oklch(0.279 0.041 260.031);
-	--secondary-foreground: oklch(0.984 0.003 247.858);
-	--muted: oklch(0.279 0.041 260.031);
-	--muted-foreground: oklch(0.5411 0.01 264.48);
-	--accent: oklch(0.279 0.041 260.031);
-	--accent-foreground: oklch(0.984 0.003 247.858);
-	--destructive: oklch(0.704 0.191 22.216);
-	--success: oklch(0.2978 0.0441 158.72);
-	--success-foreground: oklch(0.7116 0.2361 141.39);
-	--border: oklch(0.2547 0.0168 259.77);
-	--input: oklch(0, 0, 0, 0);
-	--ring: oklch(0.551 0.027 264.364);
-	--chart-1: oklch(0.488 0.243 264.376);
-	--chart-2: oklch(0.696 0.17 162.48);
-	--chart-3: oklch(0.769 0.188 70.08);
-	--chart-4: oklch(0.627 0.265 303.9);
-	--chart-5: oklch(0.645 0.246 16.439);
-	--sidebar: rgba(255, 255, 255, 0.04);
-	--sidebar-foreground: oklch(0.984 0.003 247.858);
-	--sidebar-primary: oklch(0.488 0.243 264.376);
-	--sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-	--sidebar-accent: oklch(0.279 0.041 260.031);
-	--sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-	--sidebar-border: oklch(1 0 0 / 10%);
-	--sidebar-ring: oklch(0.551 0.027 264.364);
-	--garden-logo: oklch(0.7092 0.2184 144.89);
-	--radicle-blue: oklch(0.5995 0.2186 259.49);
-	--tab-active: oklch(0.2588 0.0168 259.77);
-	--merged: oklch(0.5414 0.2851 293.93);
-	--merged-foreground: oklch(0.984 0.003 247.858);
+  --background: oklch(0.1176 0.0289 243.78);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.171 0.0193 255.79);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --popover: oklch(0.171 0.0193 255.79);
+  --popover-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.929 0.013 255.508);
+  --primary-foreground: oklch(0.171 0.0193 255.79);
+  --secondary: oklch(0.279 0.041 260.031);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.5411 0.01 264.48);
+  --accent: oklch(0.279 0.041 260.031);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.704 0.191 22.216);
+  --success: oklch(0.2978 0.0441 158.72);
+  --success-foreground: oklch(0.7116 0.2361 141.39);
+  --border: oklch(0.2547 0.0168 259.77);
+  --input: oklch(0, 0, 0, 0);
+  --ring: oklch(0.551 0.027 264.364);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: rgba(255, 255, 255, 0.04);
+  --sidebar-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.279 0.041 260.031);
+  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --garden-logo: oklch(0.7092 0.2184 144.89);
+  --radicle-blue: oklch(0.5995 0.2186 259.49);
+  --tab-active: oklch(0.2588 0.0168 259.77);
+  --merged: oklch(0.5414 0.2851 293.93);
+  --merged-foreground: oklch(0.984 0.003 247.858);
 }
 
 @theme inline {
-	--radius-sm: calc(var(--radius) - 4px);
-	--radius-md: calc(var(--radius) - 2px);
-	--radius-lg: var(--radius);
-	--radius-xl: calc(var(--radius) + 4px);
-	--color-background: var(--background);
-	--color-foreground: var(--foreground);
-	--color-card: var(--card);
-	--color-card-foreground: var(--card-foreground);
-	--color-popover: var(--popover);
-	--color-popover-foreground: var(--popover-foreground);
-	--color-primary: var(--primary);
-	--color-primary-foreground: var(--primary-foreground);
-	--color-secondary: var(--secondary);
-	--color-secondary-foreground: var(--secondary-foreground);
-	--color-muted: var(--muted);
-	--color-muted-foreground: var(--muted-foreground);
-	--color-accent: var(--accent);
-	--color-accent-foreground: var(--accent-foreground);
-	--color-destructive: var(--destructive);
-	--color-success: var(--success);
-	--color-success-foreground: var(--success-foreground);
-	--color-border: var(--border);
-	--color-input: var(--input);
-	--color-ring: var(--ring);
-	--color-chart-1: var(--chart-1);
-	--color-chart-2: var(--chart-2);
-	--color-chart-3: var(--chart-3);
-	--color-chart-4: var(--chart-4);
-	--color-chart-5: var(--chart-5);
-	--color-sidebar: var(--sidebar);
-	--color-sidebar-foreground: var(--sidebar-foreground);
-	--color-sidebar-primary: var(--sidebar-primary);
-	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-	--color-sidebar-accent: var(--sidebar-accent);
-	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-	--color-sidebar-border: var(--sidebar-border);
-	--color-sidebar-ring: var(--sidebar-ring);
-	--color-garden-logo: var(--garden-logo);
-	--color-radicle-blue: var(--radicle-blue);
-	--color-tab-active: var(--tab-active);
-	--color-merged: var(--merged);
-	--color-merged-foreground: var(--merged-foreground);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-garden-logo: var(--garden-logo);
+  --color-radicle-blue: var(--radicle-blue);
+  --color-tab-active: var(--tab-active);
+  --color-merged: var(--merged);
+  --color-merged-foreground: var(--merged-foreground);
 }
 
 @layer base {
-	* {
-		@apply border-border outline-ring/50;
-	}
-	body {
-		@apply bg-background text-foreground;
-	}
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
 @layer utilities {
-	.popover-content-width-full {
-		width: var(--bits-floating-anchor-width);
-		max-height: var(--bits-popover-content-available-height);
-	}
-	.no-scrollbar::-webkit-scrollbar {
-		display: none;
-	}
-	.no-scrollbar {
-		-ms-overflow-style: none;
-		scrollbar-width: none;
-	}
+  .popover-content-width-full {
+    width: var(--bits-floating-anchor-width);
+    max-height: var(--bits-popover-content-available-height);
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 /* No idea why this isn't the default, in my browser at least */
 button {
-	cursor: pointer;
+  cursor: pointer;
 }
 
 /* The default for this is not great */
 ::selection {
-	background: var(--foreground);
-	color: var(--background);
+  background: var(--foreground);
+  color: var(--background);
 }

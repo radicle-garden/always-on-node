@@ -1,77 +1,78 @@
-import { config } from '../config';
-import jwt from 'jsonwebtoken';
-import { Resend } from 'resend';
+import jwt from "jsonwebtoken";
+import { Resend } from "resend";
+
+import { config } from "../config";
 
 class EmailService {
-	private resend: Resend | null = null;
+  private resend: Resend | null = null;
 
-	private getResendClient(): Resend | null {
-		if (!config.resendApiKey) {
-			console.warn('[Email] RESEND_API_KEY is not configured');
-			return null;
-		}
-		if (!this.resend) {
-			this.resend = new Resend(config.resendApiKey);
-		}
-		return this.resend;
-	}
+  private getResendClient(): Resend | null {
+    if (!config.resendApiKey) {
+      console.warn("[Email] RESEND_API_KEY is not configured");
+      return null;
+    }
+    if (!this.resend) {
+      this.resend = new Resend(config.resendApiKey);
+    }
+    return this.resend;
+  }
 
-	public async sendEmail(
-		emailRecipient: string,
-		emailSubject: string,
-		emailBody: string
-	): Promise<boolean> {
-		const senderAddress = config.emailSenderAddress;
-		if (!senderAddress) {
-			console.error('[Email] EMAIL_SENDER_ADDRESS is not configured');
-			return false;
-		}
+  public async sendEmail(
+    emailRecipient: string,
+    emailSubject: string,
+    emailBody: string,
+  ): Promise<boolean> {
+    const senderAddress = config.emailSenderAddress;
+    if (!senderAddress) {
+      console.error("[Email] EMAIL_SENDER_ADDRESS is not configured");
+      return false;
+    }
 
-		const resend = this.getResendClient();
-		if (!resend) {
-			return false;
-		}
+    const resend = this.getResendClient();
+    if (!resend) {
+      return false;
+    }
 
-		const { error } = await resend.emails.send({
-			from: senderAddress,
-			to: [emailRecipient],
-			subject: emailSubject,
-			html: emailBody
-		});
+    const { error } = await resend.emails.send({
+      from: senderAddress,
+      to: [emailRecipient],
+      subject: emailSubject,
+      html: emailBody,
+    });
 
-		if (error) {
-			console.warn(
-				`[Email] Failed to send email with subject: "${emailSubject}" to ${emailRecipient}:`,
-				error
-			);
-			return false;
-		}
-		return true;
-	}
+    if (error) {
+      console.warn(
+        `[Email] Failed to send email with subject: "${emailSubject}" to ${emailRecipient}:`,
+        error,
+      );
+      return false;
+    }
+    return true;
+  }
 
-	public async sendVerificationEmail(
-		userId: string,
-		recipientEmail: string,
-		recipientName: string
-	): Promise<{ success: boolean; error?: string }> {
-		console.log(`[Email] Sending email verification code to ${recipientEmail}`);
+  public async sendVerificationEmail(
+    userId: string,
+    recipientEmail: string,
+    recipientName: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    console.log(`[Email] Sending email verification code to ${recipientEmail}`);
 
-		const token = jwt.sign(
-			{
-				id: userId,
-				email: recipientEmail
-			},
-			config.appSecret,
-			{
-				expiresIn: config.jwtExpiresIn as jwt.SignOptions['expiresIn']
-			}
-		);
+    const token = jwt.sign(
+      {
+        id: userId,
+        email: recipientEmail,
+      },
+      config.appSecret,
+      {
+        expiresIn: config.jwtExpiresIn as jwt.SignOptions["expiresIn"],
+      },
+    );
 
-		const url = this.buildVerificationLink(token);
-		console.log(`[Email] Verification link: ${url}`);
+    const url = this.buildVerificationLink(token);
+    console.log(`[Email] Verification link: ${url}`);
 
-		const VERIFICATION_EMAIL_SUBJECT = `[Radicle Garden] Please verify your email address.`;
-		const VERIFICATION_EMAIL_BODY = `
+    const VERIFICATION_EMAIL_SUBJECT = `[Radicle Garden] Please verify your email address.`;
+    const VERIFICATION_EMAIL_BODY = `
 			<html lang="en">
 				<body style="font-family: Arial, sans-serif; padding: 20px;">
 					<h2>Email Verification</h2>
@@ -88,38 +89,38 @@ class EmailService {
 			</html>
 		`;
 
-		const senderAddress = config.emailSenderAddress;
-		if (!senderAddress) {
-			console.error('[Email] EMAIL_SENDER_ADDRESS is not configured');
-			return {
-				success: false,
-				error: 'EMAIL_SENDER_ADDRESS is not configured'
-			};
-		}
+    const senderAddress = config.emailSenderAddress;
+    if (!senderAddress) {
+      console.error("[Email] EMAIL_SENDER_ADDRESS is not configured");
+      return {
+        success: false,
+        error: "EMAIL_SENDER_ADDRESS is not configured",
+      };
+    }
 
-		const resend = this.getResendClient();
-		if (!resend) {
-			return { success: false, error: 'Email service not configured' };
-		}
+    const resend = this.getResendClient();
+    if (!resend) {
+      return { success: false, error: "Email service not configured" };
+    }
 
-		const { error } = await resend.emails.send({
-			from: senderAddress,
-			to: [recipientEmail],
-			subject: VERIFICATION_EMAIL_SUBJECT,
-			html: VERIFICATION_EMAIL_BODY
-		});
+    const { error } = await resend.emails.send({
+      from: senderAddress,
+      to: [recipientEmail],
+      subject: VERIFICATION_EMAIL_SUBJECT,
+      html: VERIFICATION_EMAIL_BODY,
+    });
 
-		if (error) {
-			console.warn(`[Email] Failed to send verification email:`, error);
-			return { success: false, error: 'Failed to send verification email' };
-		}
+    if (error) {
+      console.warn(`[Email] Failed to send verification email:`, error);
+      return { success: false, error: "Failed to send verification email" };
+    }
 
-		return { success: true };
-	}
+    return { success: true };
+  }
 
-	private buildVerificationLink(token: string): string {
-		return `${config.frontendUrl}/email-verify/${token}`;
-	}
+  private buildVerificationLink(token: string): string {
+    return `${config.frontendUrl}/email-verify/${token}`;
+  }
 }
 
 export const emailService = new EmailService();

@@ -1,28 +1,30 @@
-import { config } from '../config';
-import * as schema from './schema';
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import Database from "better-sqlite3";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+
+import { config } from "../config";
+
+import * as schema from "./schema";
 
 let db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 let sqliteDb: Database.Database | null = null;
 
 export function initializeDatabase() {
-	if (db) {
-		return db;
-	}
+  if (db) {
+    return db;
+  }
 
-	const dbPath = config.databaseStoragePath + '/garden_app.sqlite';
-	console.log(`[Database] Initializing database at ${dbPath}`);
+  const dbPath = config.databaseStoragePath + "/garden_app.sqlite";
+  console.log(`[Database] Initializing database at ${dbPath}`);
 
-	sqliteDb = new Database(dbPath);
+  sqliteDb = new Database(dbPath);
 
-	// Enable WAL mode for better concurrency
-	sqliteDb.pragma('journal_mode = WAL');
+  // Enable WAL mode for better concurrency
+  sqliteDb.pragma("journal_mode = WAL");
 
-	db = drizzle(sqliteDb, { schema });
+  db = drizzle(sqliteDb, { schema });
 
-	// Create tables if they don't exist
-	sqliteDb.exec(`
+  // Create tables if they don't exist
+  sqliteDb.exec(`
 		CREATE TABLE IF NOT EXISTS user (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			email TEXT NOT NULL UNIQUE,
@@ -56,16 +58,16 @@ export function initializeDatabase() {
 		);
 	`);
 
-	console.log('[Database] Database initialized successfully');
+  console.log("[Database] Database initialized successfully");
 
-	return db;
+  return db;
 }
 
 export function getDb() {
-	if (!db) {
-		return initializeDatabase();
-	}
-	return db;
+  if (!db) {
+    return initializeDatabase();
+  }
+  return db;
 }
 
 export { schema };

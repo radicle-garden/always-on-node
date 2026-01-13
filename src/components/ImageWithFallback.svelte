@@ -1,20 +1,19 @@
 <script lang="ts">
-	let { src, alt, fallbackSrc, class: className } = $props();
+  let { src, alt, fallbackSrc, class: className } = $props();
 
-	let imgSrc = $state(src ?? fallbackSrc);
+  let imgSrc = $state(src ?? fallbackSrc);
 
-	$effect(() => {
-		if (src) {
-			imgSrc = src;
-		} else {
-			imgSrc = fallbackSrc;
-		}
-	});
+  $effect(() => {
+    if (src) {
+      imgSrc = src;
+    } else {
+      imgSrc = fallbackSrc;
+    }
+  });
 </script>
 
 <img
-	src={imgSrc}
-	{alt}
-	class={className}
-	onerror={() => (imgSrc = fallbackSrc)}
-/>
+  src={imgSrc}
+  {alt}
+  class={className}
+  onerror={() => (imgSrc = fallbackSrc)} />

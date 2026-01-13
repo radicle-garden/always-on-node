@@ -5,7 +5,6 @@
   hosts: all
   gather_facts: no
   tasks:
-
     # Setup Application Environment
     - name: Create necessary directories
       file:
@@ -34,7 +33,7 @@
       get_url:
         url: https://radicle.xyz/install
         dest: /tmp/radicle_install.sh
-        mode: '0755'
+        mode: "0755"
       when: not rad_installed.stat.exists
 
     - name: Install latest radicle binaries
@@ -81,4 +80,3 @@
         owner: "{{ system_username }}"
         group: "{{ system_group }}"
         mode: 0770
-

@@ -48,7 +48,7 @@
         dest: "{{ config_dir }}/containers/containers.conf"
         owner: "{{ system_username }}"
         group: "{{ system_group }}"
-        mode: '0644'
+        mode: "0644"
 
     - name: Install podman user systemd service to wait for network to come online
       template:
@@ -56,7 +56,7 @@
         dest: "{{ config_dir }}/systemd/user/podman-user-wait-network-online.service"
         owner: "{{ system_username }}"
         group: "{{ system_group }}"
-        mode: '0644'
+        mode: "0644"
       notify:
         - reload systemd
         - restart podman-user-wait-network-online

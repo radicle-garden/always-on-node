@@ -1,28 +1,30 @@
-import { authorSchema } from '../shared.js';
-import { commentSchema } from './comment.js';
-import type { ZodSchema } from 'zod';
-import * as z from 'zod';
+import type { ZodSchema } from "zod";
+import * as z from "zod";
+
+import { authorSchema } from "../shared.js";
+
+import { commentSchema } from "./comment.js";
 
 export type IssueState =
-	| { status: 'open' }
-	| { status: 'closed'; reason: 'other' | 'solved' };
+  | { status: "open" }
+  | { status: "closed"; reason: "other" | "solved" };
 
 const issueStateSchema = z.union([
-	z.object({ status: z.literal('open') }),
-	z.object({
-		status: z.literal('closed'),
-		reason: z.union([z.literal('other'), z.literal('solved')])
-	})
+  z.object({ status: z.literal("open") }),
+  z.object({
+    status: z.literal("closed"),
+    reason: z.union([z.literal("other"), z.literal("solved")]),
+  }),
 ]) satisfies ZodSchema<IssueState>;
 
 export const issueSchema = z.object({
-	id: z.string(),
-	author: authorSchema,
-	title: z.string(),
-	state: issueStateSchema,
-	discussion: z.array(commentSchema),
-	labels: z.array(z.string()),
-	assignees: z.array(authorSchema)
+  id: z.string(),
+  author: authorSchema,
+  title: z.string(),
+  state: issueStateSchema,
+  discussion: z.array(commentSchema),
+  labels: z.array(z.string()),
+  assignees: z.array(authorSchema),
 });
 
 export type Issue = z.infer<typeof issueSchema>;
