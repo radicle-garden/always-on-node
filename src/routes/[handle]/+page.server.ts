@@ -1,4 +1,5 @@
 import { ResponseError } from "$lib/http-client/lib/fetcher";
+import { config } from "$lib/server/config";
 import { createHttpdClient } from "$lib/server/httpdClient";
 import { nodesService } from "$lib/server/services/nodes";
 import { usersService } from "$lib/server/services/users";
@@ -156,6 +157,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     repositories,
     nodeStatuses,
     isMe,
+    publicServiceHostPort: config.public.publicServiceHostPort,
   };
 };
 

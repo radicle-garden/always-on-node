@@ -7,7 +7,10 @@
   import { copyToClipboard } from "./CopyableText.svelte";
   import Icon from "./Icon.svelte";
 
-  let { repo }: { repo: RepoInfo } = $props();
+  let {
+    repo,
+    nodeHttpdHostPort,
+  }: { repo: RepoInfo; nodeHttpdHostPort: string } = $props();
 </script>
 
 <Card class="h-full">
@@ -46,7 +49,11 @@
       <div class="flex flex-col gap-2">
         <div class="flex w-full justify-between">
           <div class="max-w-80 truncate font-medium md:max-w-60 lg:max-w-80">
-            {repo.name || "Untitled"}
+            <a
+              href="https://app.radicle.xyz/nodes/{nodeHttpdHostPort}/{repo.rid}"
+              target="_blank">
+              {repo.name || "Untitled"}
+            </a>
           </div>
           <div class="flex items-center gap-2">
             <Icon name="seedling-filled" />

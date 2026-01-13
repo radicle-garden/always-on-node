@@ -27,6 +27,9 @@ export interface AppConfig {
     defaultHttpdApiHostname: string;
     defaultHttpdApiPort: number;
     defaultHttpdApiScheme: string;
+    // Override this in production via PUBLIC_SERVICE_HOST_PORT to
+    // radicle.garden or whatever domain we'll use.
+    publicServiceHostPort: string;
   };
 }
 
@@ -64,6 +67,9 @@ export function getConfig(): AppConfig {
       defaultHttpdApiScheme:
         process.env.DEFAULT_HTTPD_API_SCHEME ||
         configJson.public.defaultHttpdApiScheme,
+      publicServiceHostPort:
+        process.env.PUBLIC_SERVICE_HOST_PORT ||
+        configJson.public.publicServiceHostPort,
     },
   };
 }

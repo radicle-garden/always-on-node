@@ -20,6 +20,9 @@
   let nodeId = $derived(profile?.nodes[0]?.node_id);
 
   let unescapedDescription = $derived(unescapeHtml(profile?.description ?? ""));
+  let nodeHttpdHostPort = $derived(
+    `${data.user?.handle}.${data.publicServiceHostPort}`,
+  );
 </script>
 
 {#if profile}
@@ -30,8 +33,8 @@
         <div class="flex flex-col">
           <span class="text-2xl font-semibold">{profile.handle}</span>
           <!-- NOTE: SQL does datetime(now) which is UTC, but it fails to
-					     save an ISO-format string, so we do a not very neat cludge here
-					     to turn it into an ISO-format string. -->
+            save an ISO-format string, so we do a not very neat cludge here
+            to turn it into an ISO-format string. -->
           <span class="text-sm font-light text-muted-foreground">
             Gardening for {timeAgo(
               new Date(profile.created_at.replace(" ", "T") + "Z"),
@@ -61,11 +64,17 @@
                     <Dialog.Title>Your Radicle Garden Node</Dialog.Title>
                     <Dialog.Description>
                       {#if nodeStatuses[node.node_id].isRunning}
+                        <a
+                          href="https://app.radicle.xyz/nodes/{nodeHttpdHostPort}"
+                          target="_blank">
+                          {nodeHttpdHostPort}
+                        </a>
                         <Badge variant="success">
                           <Icon name="seedling-filled" />
                           Online
                         </Badge>
                       {:else}
+                        {nodeHttpdHostPort}
                         <Badge variant="destructive">
                           <Icon name="seedling" />
                           Offline
@@ -100,6 +109,7 @@
         </div>
       </Card>
       <RepositoriesWithFilter
+        {nodeHttpdHostPort}
         namespace={profile.handle}
         {repositories}
         showCreateDialog={isMe}

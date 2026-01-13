@@ -15,6 +15,7 @@
   "public": {
     "defaultHttpdApiHostname": "localhost",
     "defaultHttpdApiPort": 9999,
-    "defaultHttpdApiScheme": "http"
+    "defaultHttpdApiScheme": "http",
+    "publicServiceHostPort": "localhost:3080"
   }
 }

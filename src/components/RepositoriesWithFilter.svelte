@@ -15,7 +15,9 @@
     repositories,
     showCreateDialog,
     nodeId,
+    nodeHttpdHostPort,
   }: {
+    nodeHttpdHostPort: string;
     namespace: string;
     repositories: RepoInfo[];
     showCreateDialog: boolean;
@@ -71,7 +73,7 @@
         <div class="text-sm text-muted-foreground">No repositories found</div>
       {/if}
       {#each filteredRepositories as repo}
-        <RepositoryCard {repo} />
+        <RepositoryCard {repo} {nodeHttpdHostPort} />
       {/each}
     </div>
   </div>
