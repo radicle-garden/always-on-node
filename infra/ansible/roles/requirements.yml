@@ -1,0 +1,29 @@
+# Ansible Galaxy requirements file
+# This file lists external roles and collections needed for the provisioning
+
+roles:
+  - name: oefenweb.locales
+  - name: geerlingguy.security
+  - name: geerlingguy.firewall
+  - name: geerlingguy.nodejs
+  - name: caddy_ansible.caddy_ansible
+    src: https://github.com/gsaslis/caddy-ansible
+#  - name: alvistack.crun
+#    src: https://github.com/alvistack/ansible-role-crun
+#    version: 12.2.1
+#  - name: alvistack.containers_common
+#    src: https://github.com/alvistack/ansible-role-containers_common
+#    version: 12.2.1
+#  - name: alvistack.containernetworking_plugins
+#    src: https://github.com/alvistack/ansible-role-containernetworking_plugins
+#    version: 12.2.1
+#  - name: alvistack.conmon
+#    src: https://github.com/alvistack/ansible-role-conmon
+#    version: 12.2.1
+#  - name: alvistack.podman
+#    src: https://github.com/alvistack/ansible-role-podman
+#    version: 12.2.1
+
+collections:
+  - community.general
+  - ansible.posix

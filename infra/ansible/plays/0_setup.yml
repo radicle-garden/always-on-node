@@ -1,0 +1,61 @@
+---
+- name: Base setup
+  hosts: all
+  become: true
+  roles:
+    - role: oefenweb.locales
+      when: ansible_os_family == "Debian"
+    - role: geerlingguy.nodejs
+    - role: geerlingguy.security
+    - role: geerlingguy.firewall
+    - role: caddy_ansible.caddy_ansible
+
+  tasks:
+    - name: Run the equivalent of "apt-get update" as a separate step
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: "install important additional packages for Radicle"
+      package:
+        name:
+          # For the Radicle installer
+          - curl
+
+          # Radicle is built on git.
+          - git
+
+          # helps debug out of disk space issues
+          - ncdu
+
+          - btop
+          - make
+          - unzip
+          - sqlite3
+          - libsqlite3-dev
+  handlers:
+    - name: reload systemd
+      systemd:
+        daemon_reload: yes
+
+- name: User setup
+  hosts: gardener
+  become: true
+  tasks:
+    - name: Create user that will run gardener apps
+      ansible.builtin.user:
+        name: "{{ system_username }}"
+        generate_ssh_key: no
+        shell: /bin/bash
+        create_home: true
+        state: present
+        uid: "{{ unix_user_id }}"
+
+    - name: Set up authorized keys
+      ansible.posix.authorized_key:
+        user: "{{ system_username }}"
+        state: present
+        key: '{{ item }}'
+      with_file:
+        - ../files/public_keys/yorgos.pub
+        - ../files/public_keys/tom.pub

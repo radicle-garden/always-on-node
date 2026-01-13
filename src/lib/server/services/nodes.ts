@@ -124,12 +124,12 @@ async function createNode(user: User): Promise<Node | null> {
 			const nodeImagePull = docker.imageCreate({
 				fromImage: nodeImageName,
 				tag: nodeImageTag,
-				platform: 'linux/amd64'
+				platform: 'linux/arm64'
 			});
 			const httpdImagePull = docker.imageCreate({
 				fromImage: httpdImageName,
 				tag: httpdImageTag,
-				platform: 'linux/amd64'
+				platform: 'linux/arm64'
 			});
 
 			await nodeImagePull.wait();
@@ -159,10 +159,11 @@ async function createNode(user: User): Promise<Node | null> {
 						},
 						RestartPolicy: {
 							Name: 'always'
-						}
-					}
+						},
+						UsernsMode: 'keep-id:uid=11011,gid=11011'
+					},
 				},
-				{ name: nodeContainerName, platform: 'linux/amd64' }
+				{ name: nodeContainerName, platform: 'linux/arm64' }
 			);
 
 			console.log(
@@ -179,10 +180,12 @@ async function createNode(user: User): Promise<Node | null> {
 						Binds: [`${radHome}:/radicle`],
 						RestartPolicy: {
 							Name: 'always'
-						}
-					}
+						},
+						UsernsMode: 'keep-id:uid=11011,gid=11011'
+					},
+					User: '11011:11011'
 				},
-				{ name: httpdContainerName, platform: 'linux/amd64' }
+				{ name: httpdContainerName, platform: 'linux/arm64' }
 			);
 
 			console.log(

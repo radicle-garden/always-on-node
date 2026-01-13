@@ -54,7 +54,11 @@
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
-			"esbuild"
+			"bcrypt",
+			"better-sqlite3",
+			"cpu-features",
+			"esbuild",
+			"ssh2"
 		],
 		"ignoredBuiltDependencies": [
 			"@tailwindcss/oxide"

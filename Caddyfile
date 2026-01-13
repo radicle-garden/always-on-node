@@ -1,3 +1,3 @@
 http://*.localhost {
-  reverse_proxy unix//profiles/{http.request.host.labels.1}/httpd.sock
+  reverse_proxy unix//home/vagrant/.local/share/radicle/profiles/{labels.1}/httpd.sock
 }

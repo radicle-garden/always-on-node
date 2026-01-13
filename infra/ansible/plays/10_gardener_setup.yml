@@ -1,0 +1,84 @@
+- name: Ensure podman is installed
+  ansible.builtin.import_playbook: 2_podman.yml
+
+- name: Prepare Setup for Gardener node
+  hosts: all
+  gather_facts: no
+  tasks:
+
+    # Setup Application Environment
+    - name: Create necessary directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ system_username }}"
+        group: "{{ system_group }}"
+        mode: 0755
+      with_items:
+        - "{{ config_dir }}"
+        - "{{ config_dir }}/systemd/user"
+        - "{{ config_dir }}/radicle"
+        - "{{ data_dir }}"
+        - "{{ data_dir }}/radicle"
+        - "{{ data_dir }}/radicle/db"
+        - "{{ data_dir }}/radicle/profiles"
+        - "{{ bin_dir }}"
+
+    # Install Radicle CLI
+    - name: Check if Radicle CLI is installed
+      stat:
+        path: /home/{{ system_username }}/.radicle/bin/rad
+      register: rad_installed
+
+    - name: Fetch radicle installation script
+      get_url:
+        url: https://radicle.xyz/install
+        dest: /tmp/radicle_install.sh
+        mode: '0755'
+      when: not rad_installed.stat.exists
+
+    - name: Install latest radicle binaries
+      command: /tmp/radicle_install.sh
+      when: not rad_installed.stat.exists
+
+    - name: Update PATH in .bashrc
+      lineinfile:
+        path: /home/{{ system_username }}/.bashrc
+        line: 'export PATH="$HOME/.radicle/bin:$PATH"'
+        create: yes
+        owner: "{{ system_username }}"
+        group: "{{ system_group }}"
+
+    - name: Update PATH in .profile
+      lineinfile:
+        path: /home/{{ system_username }}/.profile
+        line: 'export PATH="$HOME/.radicle/bin:$PATH"'
+        create: yes
+        owner: "{{ system_username }}"
+        group: "{{ system_group }}"
+
+    # Install Node.js dependencies
+    - name: Install Node.js dependencies with pnpm
+      shell: |
+        /usr/local/lib/npm/bin/pnpm install
+      become_user: "{{ system_username }}"
+      args:
+        chdir: "{{ app_dir }}"
+
+    # Setup systemd user service directory
+    - name: Create systemd user directory
+      file:
+        path: /home/{{ system_username }}/.config/systemd/user
+        state: directory
+        owner: "{{ system_username }}"
+        group: "{{ system_group }}"
+        mode: 0755
+
+    - name: Create directory for caddy / httpd sockets
+      file:
+        path: "{{ data_dir }}/gardener"
+        state: directory
+        owner: "{{ system_username }}"
+        group: "{{ system_group }}"
+        mode: 0770
+

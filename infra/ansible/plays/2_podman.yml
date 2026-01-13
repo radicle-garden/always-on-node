@@ -1,0 +1,87 @@
+- name: Setup tools, etc.
+  hosts: all
+  become: true
+  gather_facts: yes
+  pre_tasks:
+    - name: Gather the package facts
+      ansible.builtin.package_facts:
+        manager: auto
+
+  tasks:
+    - name: "install podman"
+      package:
+        name:
+          - podman
+      when: "'podman' not in ansible_facts.packages"
+
+    - name: "Enable Linger for {{ system_username }} user to allow systemd services to run even after user logs out"
+      ansible.builtin.command:
+        argv:
+          - "/usr/bin/loginctl"
+          - "enable-linger"
+          - "{{ system_username }}"
+        creates: "/var/lib/systemd/linger/{{ system_username }}"
+
+- name: Podman setup
+  hosts: all
+  become_user: "{{ system_username }}"
+  tasks:
+    - name: Debug running user
+      debug:
+        msg: "The playbook is running as user: {{ ansible_user_id }} (Effective UID: {{ ansible_effective_user_id }})"
+
+    - name: Create necessary directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ system_username }}"
+        group: "{{ system_group }}"
+        mode: 0755
+      with_items:
+        - "{{ config_dir }}"
+        - "{{ config_dir }}/containers/systemd"
+        - "{{ config_dir }}/systemd/user"
+
+    - name: Generic podman config
+      template:
+        src: ../templates/containers.conf.j2
+        dest: "{{ config_dir }}/containers/containers.conf"
+        owner: "{{ system_username }}"
+        group: "{{ system_group }}"
+        mode: '0644'
+
+    - name: Install podman user systemd service to wait for network to come online
+      template:
+        src: ../templates/podman-user-wait-network-online.service
+        dest: "{{ config_dir }}/systemd/user/podman-user-wait-network-online.service"
+        owner: "{{ system_username }}"
+        group: "{{ system_group }}"
+        mode: '0644'
+      notify:
+        - reload systemd
+        - restart podman-user-wait-network-online
+
+    - name: Ensure systemd has reloaded services
+      meta: flush_handlers
+
+    - name: Enable systemd service for user
+      systemd:
+        name: "{{ item }}"
+        enabled: yes
+        state: started
+        scope: user
+      loop:
+        - "podman-user-wait-network-online.service"
+        - "podman-restart.service"
+        - "podman.socket"
+
+  handlers:
+    - name: reload systemd
+      systemd:
+        daemon_reload: yes
+        scope: user
+    - name: restart podman-user-wait-network-online
+      systemd:
+        name: "podman-user-wait-network-online.service"
+        scope: user
+        state: restarted
