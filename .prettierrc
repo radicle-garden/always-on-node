@@ -1,29 +1,16 @@
 {
-	"useTabs": true,
-	"singleQuote": true,
-	"trailingComma": "none",
-	"printWidth": 80,
-	"plugins": [
-		"prettier-plugin-svelte",
-		"@trivago/prettier-plugin-sort-imports",
-		"prettier-plugin-tailwindcss"
-	],
-	"importOrder": [
-		"<THIRD_PARTY_MODULES>",
-		"^\\$types/(.*)$",
-		"^\\$lib/(.*)$",
-		"^\\$lib/components",
-		"^\\$components/(.*)$",
-		".svelte"
-	],
-	"importOrderSeparation": true,
-	"overrides": [
-		{
-			"files": "*.svelte",
-			"options": {
-				"parser": "svelte"
-			}
-		}
-	],
-	"tailwindStylesheet": "./src/app.css"
+  "arrowParens": "avoid",
+  "bracketSameLine": true,
+  "proseWrap": "never",
+  "htmlWhitespaceSensitivity": "ignore",
+  "plugins": [
+    "prettier-plugin-svelte",
+    "@trivago/prettier-plugin-sort-imports",
+    "prettier-plugin-tailwindcss"
+  ],
+  "importOrder": ["^reflect-metadata$", "^[a-z]", "^@", "^\\.\\./", "^\\./"],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "importOrderParserPlugins": ["typescript", "decorators-legacy"],
+  "tailwindStylesheet": "./src/app.css"
 }
