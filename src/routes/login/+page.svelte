@@ -11,11 +11,11 @@
 
   let isSubmitting = $state(false);
 
-  // Check for status from query params
   const verified = page.url.searchParams.get("verified");
   const registered = page.url.searchParams.get("registered");
+  const pwReset = page.url.searchParams.get("pw-reset");
 
-  const queryMessage = $derived.by(() => {
+  const message = $derived.by(() => {
     if (registered === "true") {
       return {
         title: "Account created",
@@ -37,20 +37,21 @@
         status: "destructive" as const,
       };
     }
+    if (pwReset === "success") {
+      return {
+        title: "Password reset",
+        body: "Your password has been reset. You can now login with your new password.",
+        status: "success" as const,
+      };
+    } else if (pwReset === "invalid") {
+      return {
+        title: "Invalid reset link",
+        body: "This password reset link is invalid or has expired. Please request a new one.",
+        status: "destructive" as const,
+      };
+    }
     return null;
   });
-
-  // Also support legacy page.state messages
-  const { message: stateMessage } = page.state as {
-    message?: {
-      title: string;
-      body: string;
-      contactSupport?: boolean;
-      status: "success" | "destructive";
-    };
-  };
-
-  const message = $derived(queryMessage || stateMessage);
 </script>
 
 <div class="flex h-screen flex-col items-center justify-center">
@@ -107,7 +108,14 @@
             {/if}
           </div>
           <div class="grid gap-2">
-            <Label for="password">Password</Label>
+            <div class="flex items-center justify-between">
+              <Label for="password">Password</Label>
+              <a
+                href="/forgot-password"
+                class="text-sm underline-offset-4 hover:underline">
+                Forgot password?
+              </a>
+            </div>
             <Input
               id="password"
               name="password"

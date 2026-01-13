@@ -227,8 +227,156 @@ export async function verifyEmailAddress(
   }
 }
 
+export async function verifyPasswordResetToken(
+  jsonWebToken: string,
+): Promise<ServiceResult<{ userId: number; email: string }>> {
+  try {
+    const decoded = jwt.verify(jsonWebToken, config.appSecret) as JwtPayload;
+
+    const db = getDb();
+    const user = await db.query.users.findFirst({
+      where: eq(schema.users.id, decoded.id),
+    });
+
+    if (!user) {
+      console.warn(`[Users] User not found with id: ${decoded.id}`);
+      return {
+        success: false,
+        error: "Invalid or expired reset link",
+        statusCode: 404,
+      };
+    }
+
+    if (user.email !== decoded.email) {
+      console.warn(`[Users] Token email mismatch for user: ${user.id}`);
+      return {
+        success: false,
+        error: "Invalid or expired reset link",
+        statusCode: 400,
+      };
+    }
+
+    return {
+      success: true,
+      content: { userId: user.id, email: user.email },
+      statusCode: 200,
+    };
+  } catch (e) {
+    console.warn(`[Users] Failed to verify password reset token:`, e);
+    return {
+      success: false,
+      error: "Invalid or expired reset link",
+      statusCode: 400,
+    };
+  }
+}
+
+export async function resetPassword(
+  jsonWebToken: string,
+  newPassword: string,
+): Promise<ServiceResult<void>> {
+  try {
+    const tokenResult = await verifyPasswordResetToken(jsonWebToken);
+    if (!tokenResult.success || !tokenResult.content) {
+      return {
+        success: false,
+        error: tokenResult.error || "Invalid or expired reset link",
+        statusCode: tokenResult.statusCode,
+      };
+    }
+
+    const { userId } = tokenResult.content;
+
+    if (!newPassword || newPassword.length < 4) {
+      return {
+        success: false,
+        error: "Password must be at least 4 characters",
+        statusCode: 400,
+      };
+    }
+
+    const db = getDb();
+    await db
+      .update(schema.users)
+      .set({ password_hash: setPassword(newPassword) })
+      .where(eq(schema.users.id, userId));
+
+    console.log(`[Users] Successfully reset password for user: ${userId}`);
+    return {
+      success: true,
+      message: "Password reset successfully",
+      statusCode: 200,
+    };
+  } catch (e) {
+    console.warn(`[Users] Failed to reset password:`, e);
+    return {
+      success: false,
+      error: "Failed to reset password",
+      statusCode: 500,
+    };
+  }
+}
+
+export async function requestPasswordReset(
+  email: string,
+): Promise<ServiceResult<void>> {
+  try {
+    const db = getDb();
+    const user = await db.query.users.findFirst({
+      where: and(
+        eq(schema.users.email, email),
+        eq(schema.users.deleted, false),
+      ),
+    });
+
+    if (!user) {
+      console.log(
+        `[Users] Password reset requested for non-existent email: ${email}`,
+      );
+      return {
+        success: true,
+        message:
+          "If an account exists with this email, a reset link has been sent",
+        statusCode: 200,
+      };
+    }
+
+    const emailResult = await emailService.sendPasswordResetEmail(
+      user.id.toString(),
+      user.email,
+    );
+
+    if (!emailResult.success) {
+      console.warn(`[Users] Failed to send password reset email to ${email}`);
+      return {
+        success: false,
+        error: "Failed to send password reset email",
+        statusCode: 500,
+      };
+    }
+
+    console.log(`[Users] Password reset email sent to: ${email}`);
+    return {
+      success: true,
+      message:
+        "If an account exists with this email, a reset link has been sent",
+      statusCode: 200,
+    };
+  } catch (e) {
+    console.warn(`[Users] Failed to process password reset request:`, e);
+    return {
+      success: false,
+      error: "Failed to process password reset request",
+      statusCode: 500,
+    };
+  }
+}
+
 export const usersService = {
   retrieveUserByHandle,
   createNewUser,
   verifyEmailAddress,
+  verifyPasswordResetToken,
+  resetPassword,
+  requestPasswordReset,
 };
