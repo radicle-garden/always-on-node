@@ -1,0 +1,30 @@
+ARG ALPINE_VERSION
+FROM alpine:${ALPINE_VERSION} AS runtime
+
+RUN apk add git git-daemon 
+
+ARG RADICLE_HTTPD_VERSION
+ENV PLATFORM=x86_64-unknown-linux-musl
+ENV BINARY_NAME="radicle-httpd_${RADICLE_HTTPD_VERSION}+${PLATFORM}"
+ENV RADICLE_USER_ID=11011 RADICLE_GROUP_ID=11011
+
+# Fetch and extract binaries
+WORKDIR /tmp
+ADD https://files.radicle.xyz/releases/radicle-httpd/${RADICLE_HTTPD_VERSION}/radicle-httpd-${RADICLE_HTTPD_VERSION}-${PLATFORM}.tar.xz /tmp/
+RUN tar xf /tmp/radicle-httpd-${RADICLE_HTTPD_VERSION}-${PLATFORM}.tar.xz && \
+    mv /tmp/radicle-httpd-${RADICLE_HTTPD_VERSION}-${PLATFORM}/bin/radicle-httpd /usr/local/bin/ && \
+    rm -rf /tmp/radicle*
+
+# Create a non-root user
+RUN addgroup -S radicle -g $RADICLE_GROUP_ID  && adduser -S radicle -G radicle -u $RADICLE_USER_ID
+
+# Change ownership of necessary directories/files
+RUN chown -R radicle:radicle /home/radicle /usr/local/bin/radicle-httpd
+
+USER radicle
+
+WORKDIR /home/radicle
+
+EXPOSE 8080
+
+ENTRYPOINT ["/usr/local/bin/radicle-httpd"]
