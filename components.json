@@ -12,7 +12,7 @@
     "lib": "$lib"
   },
   "typescript": {
-    "config": "./jsconfig.json"
+    "config": "./tsconfig.json"
   },
   "registry": "https://shadcn-svelte.com/registry"
 }
