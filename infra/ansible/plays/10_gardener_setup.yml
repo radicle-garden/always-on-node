@@ -64,11 +64,3 @@
         owner: "{{ system_username }}"
         group: "{{ system_group }}"
         mode: 0755
-
-    - name: Create directory for caddy / httpd sockets
-      file:
-        path: "{{ data_dir }}/gardener"
-        state: directory
-        owner: "{{ system_username }}"
-        group: "{{ system_group }}"
-        mode: 0770
