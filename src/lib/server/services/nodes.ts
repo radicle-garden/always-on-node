@@ -1,9 +1,8 @@
-import { exec } from "child_process";
 import { and, eq } from "drizzle-orm";
+import { execa } from "execa";
 import fs from "fs";
-import { readFile, writeFile } from "fs/promises";
+import { readFile, readdir, rename, writeFile } from "fs/promises";
 import path from "path";
-import util from "util";
 
 import { DockerClient } from "@docker/node-sdk";
 
@@ -17,8 +16,6 @@ import {
   getRadHome,
   userStoragePath,
 } from "../entities";
-
-const execAsync = util.promisify(exec);
 
 interface ServiceResult<T> {
   success: boolean;
@@ -46,13 +43,14 @@ async function createNode(user: User): Promise<Node | null> {
   try {
     console.log(`[Nodes] Creating radicle identity for ${user.handle}`);
 
-    await execAsync(`${radBinary} auth --alias ${nodeAlias}`, { env });
+    await execa(radBinary, ["auth", "--alias", nodeAlias], { env });
 
     const nodeId = (
-      await execAsync(`${radBinary} self --nid`, { env })
+      await execa(radBinary, ["self", "--nid"], { env })
     ).stdout.trim();
-    const { stdout: sshPublicKey } = await execAsync(
-      `${radBinary} self --ssh-key`,
+    const { stdout: sshPublicKey } = await execa(
+      radBinary,
+      ["self", "--ssh-key"],
       { env },
     );
 
@@ -79,7 +77,12 @@ async function createNode(user: User): Promise<Node | null> {
       }
 
       fs.mkdirSync(radHome, { recursive: true });
-      await execAsync(`mv ${temporaryRadHome}/* ${radHome}/`);
+      const files = await readdir(temporaryRadHome);
+      await Promise.all(
+        files.map(file =>
+          rename(path.join(temporaryRadHome, file), path.join(radHome, file)),
+        ),
+      );
 
       const configResult = await getConfigForNode(persistedNode.node_id);
       if (!configResult.success) {
@@ -340,14 +343,23 @@ async function getNodeById(nodeId: string): Promise<ServiceResult<Node>> {
 
 async function execNodeCommand(
   node: Node,
-  command: string,
+  radSubcommand: string,
+  args: string[] = [],
 ): Promise<{ stdout: string; stderr: string } | null> {
   const containerName = `${node.alias}-node`;
 
   try {
-    const { stdout, stderr } = await execAsync(
-      `podman exec -e RAD_PASSPHRASE= -e RAD_HOME=/radicle ${containerName} rad ${command}`,
-    );
+    const { stdout, stderr } = await execa("podman", [
+      "exec",
+      "-e",
+      "RAD_PASSPHRASE=",
+      "-e",
+      "RAD_HOME=/radicle",
+      containerName,
+      "rad",
+      radSubcommand,
+      ...args,
+    ]);
 
     console.log(`[Nodes] Node command output:\n${stdout}`);
     if (stderr) {
@@ -386,7 +398,7 @@ async function getNodeStatus(
       };
     }
 
-    const result = await execNodeCommand(node, "node status");
+    const result = await execNodeCommand(node, "node", ["status"]);
     if (!result) {
       return {
         success: false,
@@ -400,7 +412,7 @@ async function getNodeStatus(
 
     if (storagePath) {
       try {
-        const { stdout: duOutput } = await execAsync(`du -sk ${storagePath}`);
+        const { stdout: duOutput } = await execa("du", ["-sk", storagePath]);
         // Parse du output format: "1234\t/path/to/storage".
         // -s: summarize total size
         // -k: report size in kilobytes
@@ -514,7 +526,7 @@ async function seedRepo(
     };
   }
 
-  const result = await execNodeCommand(node, `seed ${repositoryId}`);
+  const result = await execNodeCommand(node, "seed", [repositoryId]);
   if (!result) {
     return {
       success: false,
@@ -574,7 +586,7 @@ async function unseedRepo(
     };
   }
 
-  const result = await execNodeCommand(node, `unseed ${repositoryId}`);
+  const result = await execNodeCommand(node, "unseed", [repositoryId]);
   if (!result) {
     return {
       success: false,

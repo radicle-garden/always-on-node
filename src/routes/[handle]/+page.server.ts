@@ -3,7 +3,7 @@ import { config } from "$lib/server/config";
 import { createHttpdClient } from "$lib/server/httpdClient";
 import { nodesService } from "$lib/server/services/nodes";
 import { usersService } from "$lib/server/services/users";
-import { parseNodeStatus } from "$lib/utils";
+import { parseNodeStatus, parseRepositoryId } from "$lib/utils";
 import type { PublicNodeInfo, UserProfile } from "$types/app";
 
 import { error, fail } from "@sveltejs/kit";
@@ -180,7 +180,15 @@ export const actions = {
       return fail(400, { error: "Node ID and Repository ID are required" });
     }
 
-    const result = await nodesService.seedRepo(nodeId, rid);
+    const parsedRid = parseRepositoryId(rid);
+    if (!parsedRid) {
+      return fail(400, { error: "Invalid Repository ID format" });
+    }
+
+    const result = await nodesService.seedRepo(
+      nodeId,
+      `${parsedRid.prefix}${parsedRid.pubkey}`,
+    );
 
     if (!result.success) {
       return fail(result.statusCode, { error: result.error });
@@ -202,7 +210,15 @@ export const actions = {
       return fail(400, { error: "Node ID and Repository ID are required" });
     }
 
-    const result = await nodesService.unseedRepo(nodeId, rid);
+    const parsedRid = parseRepositoryId(rid);
+    if (!parsedRid) {
+      return fail(400, { error: "Invalid Repository ID format" });
+    }
+
+    const result = await nodesService.unseedRepo(
+      nodeId,
+      `${parsedRid.prefix}${parsedRid.pubkey}`,
+    );
 
     if (!result.success) {
       return fail(result.statusCode, { error: result.error });
