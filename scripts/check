@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+
+ESLINT_FIX=""
+PRETTIER_MODE="--check"
+if [ "$1" = "--fix" ]; then
+  ESLINT_FIX="--fix"
+  PRETTIER_MODE="--write"
+fi
+
+pnpm exec tsc --noEmit
+pnpm exec svelte-kit sync
+pnpm exec svelte-check --tsconfig tsconfig.json --fail-on-warnings --compiler-warnings options_missing_custom_element:ignore
+pnpm exec eslint --cache --cache-location node_modules/.cache/eslint --max-warnings 0 $ESLINT_FIX .
+pnpm exec prettier "**/*.@(ts|js|svelte|json|css|html|yml)" --ignore-path .gitignore --ignore-path .prettierignore $PRETTIER_MODE --cache
