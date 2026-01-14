@@ -2,10 +2,6 @@ config_dir: "/home/vagrant/.config"
 data_dir: "/home/vagrant/.local/share"
 state_dir: "/home/vagrant/.local/state"
 bin_dir: "/home/vagrant/.local/bin"
-app_dir: "/vagrant"
-
-unix_user_id: 1001
-unix_group_id: 1001
 
 caddy_user: "vagrant"
 

@@ -1,0 +1,4 @@
+cloud_vm ansible_connection=local
+
+[prod]
+cloud_vm

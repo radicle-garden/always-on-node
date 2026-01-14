@@ -1,0 +1,4 @@
+vagrant_vm ansible_connection=local
+
+[dev]
+vagrant_vm

@@ -1,0 +1,98 @@
+name: Build VM Images with Packer
+
+on:
+  push:
+    paths:
+      - 'infra/packer/**'
+      - 'infra/ansible/**'
+      - '.github/workflows/packer-build.yml'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number for the images'
+        required: true
+        default: '0.1.0'
+      build_vagrant:
+        description: 'Build Vagrant box'
+        type: boolean
+        required: true
+        default: true
+      build_scaleway:
+        description: 'Build Scaleway image'
+        type: boolean
+        required: true
+        default: true
+
+env:
+  PACKER_VERSION: '1.14.3'
+  PACKER_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  validate:
+    name: Validate Packer Template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: ${{ env.PACKER_VERSION }}
+
+      - name: Initialize Packer
+        env:
+          PACKER_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: packer init infra/packer/radicle-garden.pkr.hcl
+
+      - name: Validate Packer template
+        env:
+          HCP_CLIENT_ID: dummy
+          HCP_CLIENT_SECRET: dummy
+          SCW_ACCESS_KEY: dummy
+          SCW_SECRET_KEY: dummy
+          SCW_PROJECT_ID: dummy
+        run: packer validate infra/packer/radicle-garden.pkr.hcl
+
+  build-scaleway:
+    name: Build Scaleway Image
+    runs-on: ubuntu-latest
+    needs: validate
+    if: |
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.build_scaleway == 'true') ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: ${{ env.PACKER_VERSION }}
+
+      - name: Initialize Packer
+        env:
+          PACKER_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: packer init infra/packer/radicle-garden.pkr.hcl
+
+      - name: Set version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=$(date +%Y.%m.%d)-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build Scaleway image
+        env:
+          SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
+          SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
+          SCW_PROJECT_ID: ${{ secrets.SCW_PROJECT_ID }}
+        run: |
+          echo ${{ secrets.ANSIBLE_VAULT_PASS }} > infra/ansible/.vault-password
+
+          packer build \
+            -only='radicle-garden.scaleway.ubuntu' \
+            -var "version=${{ steps.version.outputs.version }}" \
+            infra/packer/radicle-garden.pkr.hcl

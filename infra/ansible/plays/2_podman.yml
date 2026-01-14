@@ -25,6 +25,7 @@
 - name: Podman setup
   hosts: all
   become_user: "{{ system_username }}"
+  become: true
   tasks:
     - name: Debug running user
       debug:

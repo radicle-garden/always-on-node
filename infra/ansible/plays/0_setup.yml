@@ -1,4 +1,26 @@
 ---
+- name: User setup
+  hosts: prod
+  become: true
+  tasks:
+    - name: Create user that will run gardener apps
+      ansible.builtin.user:
+        name: "{{ system_username }}"
+        generate_ssh_key: no
+        shell: /bin/bash
+        create_home: true
+        state: present
+        uid: "{{ unix_user_id }}"
+
+    - name: Set up authorized keys
+      ansible.posix.authorized_key:
+        user: "{{ system_username }}"
+        state: present
+        key: "{{ item }}"
+      with_file:
+        - ../files/public_keys/yorgos.pub
+        - ../files/public_keys/tom.pub
+
 - name: Base setup
   hosts: all
   become: true
@@ -38,24 +60,3 @@
       systemd:
         daemon_reload: yes
 
-- name: User setup
-  hosts: gardener
-  become: true
-  tasks:
-    - name: Create user that will run gardener apps
-      ansible.builtin.user:
-        name: "{{ system_username }}"
-        generate_ssh_key: no
-        shell: /bin/bash
-        create_home: true
-        state: present
-        uid: "{{ unix_user_id }}"
-
-    - name: Set up authorized keys
-      ansible.posix.authorized_key:
-        user: "{{ system_username }}"
-        state: present
-        key: "{{ item }}"
-      with_file:
-        - ../files/public_keys/yorgos.pub
-        - ../files/public_keys/tom.pub
