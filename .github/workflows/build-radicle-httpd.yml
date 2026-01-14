@@ -9,17 +9,17 @@ on:
     inputs:
       radicle_httpd_version:
         description: 'Radicle HTTPD version'
-        required: true
-        default: '0.20.0'
+        required: false
+        default: ''
       alpine_version:
         description: 'Version of Alpine base image'
-        required: true
-        default: '3.23'
+        required: false
+        default: ''
 
 env:
   REGISTRY: quay.io
   IMAGE_NAME: radicle_garden/radicle-httpd
-  RADICLE_HTTPD_VERSION: '0.20.0'
+  RADICLE_HTTPD_VERSION: '0.22.0'
   ALPINE_VERSION: '3.23'
 
 jobs:
@@ -66,13 +66,17 @@ jobs:
       - name: Set version
         id: version
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "RADICLE_HTTPD_VERSION=${{ github.event.inputs.radicle_httpd_version }}" >> $GITHUB_OUTPUT
-            echo "ALPINE_VERSION=${{ github.event.inputs.alpine_version }}" >> $GITHUB_OUTPUT
-          else
-            echo "RADICLE_HTTPD_VERSION=${{ env.RADICLE_HTTPD_VERSION }}" >> $GITHUB_OUTPUT
-            echo "ALPINE_VERSION=${{ env.ALPINE_VERSION }}" >> $GITHUB_OUTPUT
+          RADICLE_HTTPD_VERSION="${{ github.event.inputs.radicle_httpd_version }}"
+          if [ -z "$RADICLE_HTTPD_VERSION" ]; then
+            RADICLE_HTTPD_VERSION="${{ env.RADICLE_HTTPD_VERSION }}"
           fi
+          echo "RADICLE_HTTPD_VERSION=$RADICLE_HTTPD_VERSION" >> $GITHUB_OUTPUT
+
+          ALPINE_VERSION="${{ github.event.inputs.alpine_version }}"
+          if [ -z "$ALPINE_VERSION" ]; then
+            ALPINE_VERSION="${{ env.ALPINE_VERSION }}"
+          fi
+          echo "ALPINE_VERSION=$ALPINE_VERSION" >> $GITHUB_OUTPUT
 
       - name: Build and push
         uses: docker/build-push-action@v6
