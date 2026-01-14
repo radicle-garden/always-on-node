@@ -73,7 +73,11 @@
         <div class="text-sm text-muted-foreground">No repositories found</div>
       {/if}
       {#each filteredRepositories as repo}
-        <RepositoryCard {repo} {nodeHttpdHostPort} />
+        <RepositoryCard
+          {repo}
+          {nodeHttpdHostPort}
+          {nodeId}
+          showRemoveButton={showCreateDialog} />
       {/each}
     </div>
   </div>

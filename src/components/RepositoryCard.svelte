@@ -1,17 +1,62 @@
 <script lang="ts">
+  import { enhance } from "$app/forms";
   import { Card } from "$lib/components/ui/card";
   import { timeAgo, truncateText } from "$lib/utils";
+
+  import { toast } from "svelte-sonner";
 
   import type { RepoInfo } from "../routes/[handle]/+page.server";
 
   import { copyToClipboard } from "./CopyableText.svelte";
   import Icon from "./Icon.svelte";
+  import RemoveRepositoryDialog from "./RemoveRepositoryDialog.svelte";
 
   let {
     repo,
     nodeHttpdHostPort,
-  }: { repo: RepoInfo; nodeHttpdHostPort: string } = $props();
+    nodeId,
+    showRemoveButton = false,
+  }: {
+    repo: RepoInfo;
+    nodeHttpdHostPort: string;
+    nodeId?: string;
+    showRemoveButton?: boolean;
+  } = $props();
+
+  let formRef: HTMLFormElement | undefined = $state();
+  let isSubmitting = $state(false);
+
+  function handleUnseed() {
+    if (formRef) {
+      formRef.requestSubmit();
+    }
+  }
 </script>
+
+{#if showRemoveButton && nodeId}
+  <form
+    bind:this={formRef}
+    method="POST"
+    action="?/unseed"
+    use:enhance={() => {
+      isSubmitting = true;
+      return async ({ result, update }) => {
+        isSubmitting = false;
+        if (result.type === "success") {
+          toast.success("Stopped seeding repository");
+          await update();
+        } else if (result.type === "failure") {
+          toast.error(
+            (result.data as { error?: string })?.error ||
+              "Failed to stop seeding repository",
+          );
+        }
+      };
+    }}>
+    <input type="hidden" name="nodeId" value={nodeId} />
+    <input type="hidden" name="rid" value={repo.rid} />
+  </form>
+{/if}
 
 <Card class="h-full">
   {#if repo.syncing}
@@ -24,6 +69,12 @@
           </div>
           <div class="flex items-center gap-2 text-muted-foreground">
             <Icon name="seedling" />
+            {#if showRemoveButton && nodeId}
+              <RemoveRepositoryDialog
+                title="Stop Seeding Repository"
+                description="Are you sure you want to stop seeding this repository? It will no longer be served from your node."
+                onRemove={handleUnseed} />
+            {/if}
           </div>
         </div>
         <div class="flex flex-col gap-0 text-sm">
@@ -58,6 +109,12 @@
           <div class="flex items-center gap-2">
             <Icon name="seedling-filled" />
             {repo.seeding}
+            {#if showRemoveButton && nodeId}
+              <RemoveRepositoryDialog
+                title="Stop Seeding Repository"
+                description="Are you sure you want to stop seeding this repository? It will no longer be served from your node."
+                onRemove={handleUnseed} />
+            {/if}
           </div>
         </div>
         <div class="flex flex-col gap-0 text-sm">
