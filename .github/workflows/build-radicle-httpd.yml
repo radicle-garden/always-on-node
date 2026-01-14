@@ -2,12 +2,6 @@ name: Build and Push radicle-httpd Container
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'infra/containers/radicle-httpd/**'
-      - '.github/workflows/build-radicle-httpd.yml'
-  pull_request:
     paths:
       - 'infra/containers/radicle-httpd/**'
       - '.github/workflows/build-radicle-httpd.yml'
@@ -143,7 +137,7 @@ jobs:
             type=ref,event=pr
             type=raw,value=latest,enable={{is_default_branch}}
           labels: |
-            quay.expires-after=${{ github.event_name == 'pull_request' && '7d' || '' }}
+            quay.expires-after=${{ github.ref_name != 'main' && '7d' || '' }}
 
 
       - name: Create manifest list and push
