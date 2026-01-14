@@ -7,7 +7,7 @@
 
 {#if comment?.reactions?.length > 0}
   <div class="flex flex-row gap-2">
-    {#each comment.reactions as reaction}
+    {#each comment.reactions as reaction (reaction.emoji)}
       <Tooltip.Provider delayDuration={200}>
         <Tooltip.Root>
           <Tooltip.Trigger>
@@ -19,7 +19,7 @@
           </Tooltip.Trigger>
           <Tooltip.Content>
             <div class="text-sm text-gray-500">
-              {#each reaction.authors.slice(0, 3) as author}
+              {#each reaction.authors.slice(0, 3) as author (author.id)}
                 {author.alias}
               {/each}
               {#if reaction.authors.length > 3}

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
+  import { resolve } from "$app/paths";
   import Avatar from "$components/Avatar.svelte";
   import * as NavigationMenu from "$lib/components/ui/navigation-menu";
   import type { User } from "$types/app";
@@ -15,7 +16,7 @@
       <NavigationMenu.Item>
         <NavigationMenu.Link class="p-0 hover:bg-transparent" tabindex={-1}>
           <a
-            href="/"
+            href={resolve("/")}
             class="flex flex-col items-start justify-start md:flex-row md:items-center md:gap-2">
             <img
               src="/img/radicle-logo.svg"
@@ -32,7 +33,9 @@
       {#if isLoggedIn && user}
         <NavigationMenu.Item>
           <NavigationMenu.Link class="hover:bg-transparent" tabindex={-1}>
-            <a href="/{user.handle}" class="flex items-center gap-2">
+            <a
+              href={resolve(`/${user.handle}`)}
+              class="flex items-center gap-2">
               <div class="h-8 w-8 border border-white">
                 <Avatar alt="Avatar" fallbackText={user.handle.slice(0, 2)} />
               </div>
@@ -52,7 +55,7 @@
       {:else}
         <NavigationMenu.Item>
           <NavigationMenu.Link class="hover:bg-transparent" tabindex={-1}>
-            <a href="/login">Login</a>
+            <a href={resolve("/login")}>Login</a>
           </NavigationMenu.Link>
         </NavigationMenu.Item>
       {/if}

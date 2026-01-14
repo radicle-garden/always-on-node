@@ -1,5 +1,4 @@
-import type { BaseUrl, CommitHeader } from "$lib/http-client";
-import { HttpdClient } from "$lib/http-client";
+import type { CommitHeader } from "$lib/http-client";
 import { getDaysPassed } from "$lib/utils";
 
 // A set of commits grouped by time.

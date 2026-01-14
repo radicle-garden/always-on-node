@@ -24,7 +24,6 @@
   } = $props();
 
   let formRef: HTMLFormElement | undefined = $state();
-  let isSubmitting = $state(false);
 
   function handleUnseed() {
     if (formRef) {
@@ -39,9 +38,7 @@
     method="POST"
     action="?/unseed"
     use:enhance={() => {
-      isSubmitting = true;
       return async ({ result, update }) => {
-        isSubmitting = false;
         if (result.type === "success") {
           toast.success("Stopped seeding repository");
           await update();
