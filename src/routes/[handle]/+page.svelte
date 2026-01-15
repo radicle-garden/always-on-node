@@ -56,11 +56,11 @@
                 <Dialog.Trigger>
                   {#if nodeStatuses[node.node_id].isRunning}
                     <span class="text-green-500">
-                      <Icon name="seedling-filled" />
+                      <Icon name="seed-filled" />
                     </span>
                   {:else}
                     <span class="text-red-500">
-                      <Icon name="seedling" />
+                      <Icon name="seed" />
                     </span>
                   {/if}
                 </Dialog.Trigger>
@@ -81,7 +81,7 @@
                             <Icon name="open-external" />
                           </a>
                           <Badge variant="default">
-                            <Icon name="seedling-filled" />
+                            <Icon name="seed-filled" />
                             Online
                           </Badge>
                         </div>
@@ -89,7 +89,7 @@
                         <div class="flex gap-2">
                           {nodeHttpdHostPort}
                           <Badge variant="destructive">
-                            <Icon name="seedling" />
+                            <Icon name="seed" />
                             Offline
                           </Badge>
                         </div>

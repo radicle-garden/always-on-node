@@ -18,7 +18,7 @@
 <Dialog.Root bind:open>
   <Dialog.Trigger>
     <Button variant="outline">
-      <Icon name="add" />
+      <Icon name="plus" />
       Seed Repository
     </Button>
   </Dialog.Trigger>

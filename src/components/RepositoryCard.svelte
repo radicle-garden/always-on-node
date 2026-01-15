@@ -66,7 +66,7 @@
             Syncing...
           </div>
           <div class="flex items-center gap-2 text-muted-foreground">
-            <Icon name="seedling" />
+            <Icon name="seed" />
             {#if showRemoveButton && nodeId}
               <RemoveRepositoryDialog
                 title="Stop Seeding Repository"
@@ -110,7 +110,7 @@
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <Icon name="seedling-filled" />
+            <Icon name="seed-filled" />
             {repo.seeding}
             {#if showRemoveButton && nodeId}
               <RemoveRepositoryDialog
