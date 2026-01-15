@@ -50,7 +50,7 @@
               <Tooltip.Root delayDuration={0}>
                 <Tooltip.Trigger>
                   <div class="col-span-full">
-                    <Button disabled><Icon name="github" />Import</Button>
+                    <Button disabled><Icon name="git" />Import</Button>
                   </div>
                 </Tooltip.Trigger>
                 <Tooltip.Content>

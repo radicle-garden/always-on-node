@@ -21,7 +21,7 @@
     </div>
   </main>
   <footer class="txt-small px-2">
-    &copy; {new Date().getFullYear()} Radicle <Icon name="seedling" />
+    &copy; {new Date().getFullYear()} Radicle <Icon name="seed" />
   </footer>
 </div>
 

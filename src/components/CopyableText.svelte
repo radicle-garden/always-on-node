@@ -41,6 +41,6 @@
     }}
     bind:this={container}>
     {@render children()}
-    <Icon name={icon} size="16" />
+    <Icon name={icon} />
   </div>
 </div>
