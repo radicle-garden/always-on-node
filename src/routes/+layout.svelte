@@ -4,11 +4,14 @@
   import { cn } from "$lib/utils";
   import { Toaster } from "$vendor/shadcn-svelte/sonner";
 
+  import { ModeWatcher } from "mode-watcher";
+
   import "../app.css";
 
   let { children, data } = $props();
 </script>
 
+<ModeWatcher />
 <Toaster />
 
 <div class="layout px-2 py-1">

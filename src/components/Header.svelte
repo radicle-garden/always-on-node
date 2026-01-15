@@ -5,9 +5,17 @@
   import type { User } from "$types/app";
   import * as NavigationMenu from "$vendor/shadcn-svelte/navigation-menu";
 
+  import { setMode, userPrefersMode } from "mode-watcher";
+
   let { user }: { user: User | null } = $props();
 
   let isLoggedIn = $derived(user !== null);
+
+  const modes = ["light", "dark", "system"] as const;
+
+  function handleModeChange(newMode: (typeof modes)[number]) {
+    setMode(newMode);
+  }
 </script>
 
 <div class="mx-auto flex min-h-16 justify-between">
@@ -30,6 +38,22 @@
   </NavigationMenu.Root>
   <NavigationMenu.Root>
     <NavigationMenu.List>
+      <NavigationMenu.Item>
+        <div class="flex items-center gap-2">
+          {#each modes as modeOption (modeOption)}
+            <label class="flex cursor-pointer items-center gap-1">
+              <input
+                type="radio"
+                name="theme"
+                value={modeOption}
+                checked={userPrefersMode.current === modeOption}
+                onchange={() => handleModeChange(modeOption)}
+                class="cursor-pointer" />
+              <span class="text-sm">{modeOption}</span>
+            </label>
+          {/each}
+        </div>
+      </NavigationMenu.Item>
       {#if isLoggedIn && user}
         <NavigationMenu.Item>
           <NavigationMenu.Link class="hover:bg-transparent" tabindex={-1}>
