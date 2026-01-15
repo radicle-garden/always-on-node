@@ -1,4 +1,4 @@
-<script module>
+<script module lang="ts">
   import { type WithElementRef, cn } from "$lib/utils.js";
 
   import type { HTMLAttributes } from "svelte/elements";
