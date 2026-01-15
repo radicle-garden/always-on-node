@@ -4,6 +4,58 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: "Booton";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/Booton-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Booton";
+  font-weight: 468;
+  font-display: swap;
+  src: url("/fonts/Booton-Medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Booton";
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/Booton-SemiBold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/JetBrainsMono-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/JetBrainsMono-Medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/JetBrainsMono-SemiBold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/JetBrainsMono-Bold.woff2") format("woff2");
+}
+
 :root {
   --radius: 0.5rem;
 
@@ -209,6 +261,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -240,6 +293,36 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-family-sans: Booton, sans-serif;
+  --font-family-mono: "JetBrains Mono", monospace;
+
+  --font-size-heading-xxl: 2rem; /* 32px */
+  --font-size-heading-xl: 1.75rem; /* 28px */
+  --font-size-heading-l: 1.375rem; /* 22px */
+  --font-size-heading-m: 1.125rem; /* 18px */
+  --font-size-heading-s: 1rem; /* 16px */
+  --font-size-heading-xs: 0.875rem; /* 14px */
+  --font-size-heading-xxs: 0.75rem; /* 12px */
+
+  --font-size-body-l: 1rem; /* 16px */
+  --font-size-body-m: 0.875rem; /* 14px */
+  --font-size-body-s: 0.75rem; /* 12px */
+
+  --line-height-heading-xxl: 2.25rem; /* 36px */
+  --line-height-heading-xl: 2rem; /* 32px */
+  --line-height-heading-l: 1.75rem; /* 28px */
+  --line-height-heading-m: 1.25rem; /* 20px */
+  --line-height-heading-s: 1.25rem; /* 20px */
+  --line-height-heading-xs: 1.25rem; /* 20px */
+  --line-height-heading-xxs: 1rem; /* 16px */
+  --line-height-body-l: 1.5rem; /* 24px */
+  --line-height-body-m: 1.25rem; /* 20px */
+  --line-height-body-s: 1rem; /* 16px */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 468;
+  --font-weight-semibold: 600;
 }
 
 @layer base {
@@ -247,6 +330,10 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background font-sans text-foreground;
+    font-size: 1rem;
+    line-height: 1.25;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
