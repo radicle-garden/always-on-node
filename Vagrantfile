@@ -59,7 +59,19 @@ Vagrant.configure("2") do |config|
     else
       echo "node_modules already mounted"
     fi
-  SHELL
+
+    SHELL
+
+  config.vm.provision "shell", privileged: false, run: "always", inline: <<-SHELL
+
+    # Install node modules
+    cd /vagrant
+    pnpm install
+
+    # Start the dev server
+    tmux new-session -d -s "sveltekit" "pnpm dev"
+
+    SHELL
 
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
@@ -84,12 +96,12 @@ Vagrant.configure("2") do |config|
     ║  To connect to the VM:                                                       ║
     ║    vagrant ssh                                                               ║
     ║                                                                              ║
-    ║  To start the development server:                                            ║
-    ║    cd /vagrant                                                               ║
-    ║    pnpm install                                                              ║
-    ║    pnpm dev                                                                  ║
+    ║  To see logs (inside Vagrant):                                               ║
+    ║    tmux attach -t sveltekit                                                  ║
     ║                                                                              ║
+    ║  Development server should be running on:                                    ║
+    ║    http://localhost:5173                                                     ║
     ║                                                                              ║
     ╚══════════════════════════════════════════════════════════════════════════════╝
-  MSG
+MSG
 end
