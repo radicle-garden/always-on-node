@@ -1,6 +1,5 @@
-profiles/*
-storage/*
 node_modules
+sveltekit.log
 
 # Output
 .output

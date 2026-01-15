@@ -68,8 +68,8 @@ Vagrant.configure("2") do |config|
     cd /vagrant
     pnpm install
 
-    # Start the dev server
-    tmux new-session -d -s "sveltekit" "pnpm dev"
+    # Start the dev server (log to file and tmux session)
+    tmux new-session -d -s "sveltekit" "pnpm dev 2>&1 | tee /vagrant/sveltekit.log"
 
     SHELL
 
@@ -95,6 +95,9 @@ Vagrant.configure("2") do |config|
     ║                                                                              ║
     ║  To connect to the VM:                                                       ║
     ║    vagrant ssh                                                               ║
+    ║                                                                              ║
+    ║  To see logs (outside Vagrant):                                              ║
+    ║    tail -f sveltekit.log                                            ║
     ║                                                                              ║
     ║  To see logs (inside Vagrant):                                               ║
     ║    tmux attach -t sveltekit                                                  ║
