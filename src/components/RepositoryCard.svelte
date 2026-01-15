@@ -10,6 +10,7 @@
   import { copyToClipboard } from "./CopyableText.svelte";
   import Icon from "./Icon.svelte";
   import RemoveRepositoryDialog from "./RemoveRepositoryDialog.svelte";
+  import RepoAvatar from "./RepoAvatar.svelte";
 
   let {
     repo,
@@ -55,7 +56,7 @@
   </form>
 {/if}
 
-<Card class="h-full">
+<Card class="h-full p-4">
   {#if repo.syncing}
     <div class="flex h-full flex-col justify-between gap-6">
       <div class="flex flex-col gap-2">
@@ -97,11 +98,16 @@
       <div class="flex flex-col gap-2">
         <div class="flex w-full justify-between">
           <div class="max-w-80 truncate font-medium md:max-w-60 lg:max-w-80">
-            <a
-              href="https://app.radicle.xyz/nodes/{nodeHttpdHostPort}/{repo.rid}"
-              target="_blank">
-              {repo.name || "Untitled"}
-            </a>
+            <div class="flex items-center gap-2">
+              <RepoAvatar name={repo.name} rid={repo.rid} styleWidth="2rem" />
+              <a
+                class="flex items-center gap-1"
+                href="https://app.radicle.xyz/nodes/{nodeHttpdHostPort}/{repo.rid}"
+                target="_blank">
+                {repo.name || "Untitled"}
+                <Icon name="open-external" />
+              </a>
+            </div>
           </div>
           <div class="flex items-center gap-2">
             <Icon name="seedling-filled" />

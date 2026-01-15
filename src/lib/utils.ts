@@ -1,5 +1,6 @@
 import bs58 from "bs58";
 import { type ClassValue, clsx } from "clsx";
+import md5 from "md5";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -278,4 +279,12 @@ export function createFormValidator<T extends Record<string, unknown>>(
 
 export function hasFormErrors(errors: Record<string, string>): boolean {
   return Object.keys(errors).length > 0;
+}
+
+// Get the gravatar URL of an email.
+export function gravatarURL(email: string, size?: number): string {
+  const address = email.trim().toLowerCase();
+  const hash = md5(address);
+
+  return `https://www.gravatar.com/avatar/${hash}${size ? `?s=${size}px` : ""}`;
 }

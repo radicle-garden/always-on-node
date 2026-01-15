@@ -1,8 +1,8 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
   import { resolve } from "$app/paths";
-  import Avatar from "$components/Avatar.svelte";
   import * as NavigationMenu from "$lib/components/ui/navigation-menu";
+  import { gravatarURL } from "$lib/utils";
   import type { User } from "$types/app";
 
   let { user }: { user: User | null } = $props();
@@ -36,8 +36,11 @@
             <a
               href={resolve(`/${user.handle}`)}
               class="flex items-center gap-2">
-              <div class="h-8 w-8 border border-white">
-                <Avatar alt="Avatar" fallbackText={user.handle.slice(0, 2)} />
+              <div class="h-8 w-8">
+                <img
+                  style:width="2rem"
+                  alt="gravatar"
+                  src={gravatarURL(user.email, 32)} />
               </div>
               {user.handle}
             </a>
