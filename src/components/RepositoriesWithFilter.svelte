@@ -72,7 +72,7 @@
       {#if filteredRepositories.length === 0}
         <div class="text-sm text-muted-foreground">No repositories found</div>
       {/if}
-      {#each filteredRepositories as repo}
+      {#each filteredRepositories as repo (repo.rid)}
         <RepositoryCard
           {repo}
           {nodeHttpdHostPort}

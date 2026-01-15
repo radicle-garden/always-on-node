@@ -7,6 +7,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     return { user: null };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { password_hash: _, ...safeUser } = user;
 
   return {

@@ -21,9 +21,12 @@ export function unreachable(value: never): never {
   throw new Error(`Unreachable code: ${value}`);
 }
 
-export function debounce(callback: (...args: any[]) => void, wait: number) {
+export function debounce<T extends unknown[]>(
+  callback: (...args: T) => void,
+  wait: number,
+) {
   let timeoutId: number | undefined = undefined;
-  return (...args: any[]) => {
+  return (...args: T) => {
     window.clearTimeout(timeoutId);
     timeoutId = window.setTimeout(() => {
       callback(...args);
@@ -90,7 +93,7 @@ export function parseRepositoryId(
 
 export function validateEmail(email: string) {
   return email.match(
-    /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
   );
 }
 
@@ -247,7 +250,7 @@ export function parseNodeStatus(status: string) {
       peers,
       sinceSeconds,
     };
-  } catch (error) {
+  } catch {
     return {
       isRunning: false,
       peers: 0,
@@ -256,8 +259,8 @@ export function parseNodeStatus(status: string) {
   }
 }
 
-export function createFormValidator<T extends Record<string, any>>(
-  validators: Record<keyof T, (value: any) => string | null>,
+export function createFormValidator<T extends Record<string, unknown>>(
+  validators: Record<keyof T, (value: unknown) => string | null>,
 ) {
   return function validate(data: T): Record<keyof T, string> {
     const errors: Record<keyof T, string> = {} as Record<keyof T, string>;

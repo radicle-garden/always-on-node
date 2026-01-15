@@ -50,7 +50,7 @@
             )}
           </span>
         </div>
-        {#each profile.nodes as node}
+        {#each profile.nodes as node (node.node_id)}
           <div class="flex items-center gap-2">
             <CopyableText text={node.did}>
               {truncateText(node.did)}

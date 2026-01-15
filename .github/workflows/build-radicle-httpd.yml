@@ -3,24 +3,24 @@ name: Build and Push radicle-httpd Container
 on:
   push:
     paths:
-      - 'infra/containers/radicle-httpd/**'
-      - '.github/workflows/build-radicle-httpd.yml'
+      - "infra/containers/radicle-httpd/**"
+      - ".github/workflows/build-radicle-httpd.yml"
   workflow_dispatch:
     inputs:
       radicle_httpd_version:
-        description: 'Radicle HTTPD version'
+        description: "Radicle HTTPD version"
         required: false
-        default: ''
+        default: ""
       alpine_version:
-        description: 'Version of Alpine base image'
+        description: "Version of Alpine base image"
         required: false
-        default: ''
+        default: ""
 
 env:
   REGISTRY: quay.io
   IMAGE_NAME: radicle_garden/radicle-httpd
-  RADICLE_HTTPD_VERSION: '0.22.0'
-  ALPINE_VERSION: '3.23'
+  RADICLE_HTTPD_VERSION: "0.22.0"
+  ALPINE_VERSION: "3.23"
 
 jobs:
   build-and-push:
@@ -142,7 +142,6 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
           labels: |
             quay.expires-after=${{ github.ref_name != 'main' && '7d' || '' }}
-
 
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests

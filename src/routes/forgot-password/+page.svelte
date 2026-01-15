@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
+  import { resolve } from "$app/paths";
   import * as Alert from "$lib/components/ui/alert";
   import { Button } from "$lib/components/ui/button";
   import * as Card from "$lib/components/ui/card";
@@ -74,7 +75,7 @@
             <p>Sending...</p>
           {/if}
         {/if}
-        <a href="/login">Back to login</a>
+        <a href={resolve("/login")}>Back to login</a>
       </Card.Footer>
     </Card.Root>
   </form>

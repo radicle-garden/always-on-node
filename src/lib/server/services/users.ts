@@ -3,12 +3,7 @@ import jwt, { type JwtPayload } from "jsonwebtoken";
 
 import { config } from "../config";
 import { getDb, schema } from "../db";
-import {
-  type Node,
-  type User,
-  profileFromUser,
-  setPassword,
-} from "../entities";
+import { type User, profileFromUser, setPassword } from "../entities";
 
 import { emailService } from "./email";
 import { nodesService } from "./nodes";

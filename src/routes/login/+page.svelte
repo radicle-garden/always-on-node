@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
+  import { resolve } from "$app/paths";
   import { page } from "$app/state";
   import * as Alert from "$lib/components/ui/alert";
   import { Button } from "$lib/components/ui/button";
@@ -111,7 +112,7 @@
             <div class="flex items-center justify-between">
               <Label for="password">Password</Label>
               <a
-                href="/forgot-password"
+                href={resolve("/forgot-password")}
                 class="text-sm underline-offset-4 hover:underline">
                 Forgot password?
               </a>
@@ -143,7 +144,7 @@
         {#if isSubmitting}
           <p>Logging in...</p>
         {/if}
-        <a href="/register">Or create an account</a>
+        <a href={resolve("/register")}>Or create an account</a>
       </Card.Footer>
     </Card.Root>
   </form>

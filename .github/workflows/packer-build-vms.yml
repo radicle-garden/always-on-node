@@ -3,28 +3,28 @@ name: Build VM Images with Packer
 on:
   push:
     paths:
-      - 'infra/packer/**'
-      - 'infra/ansible/**'
-      - '.github/workflows/packer-build.yml'
+      - "infra/packer/**"
+      - "infra/ansible/**"
+      - ".github/workflows/packer-build.yml"
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version number for the images'
+        description: "Version number for the images"
         required: true
-        default: '0.1.0'
+        default: "0.1.0"
       build_vagrant:
-        description: 'Build Vagrant box'
+        description: "Build Vagrant box"
         type: boolean
         required: true
         default: true
       build_scaleway:
-        description: 'Build Scaleway image'
+        description: "Build Scaleway image"
         type: boolean
         required: true
         default: true
 
 env:
-  PACKER_VERSION: '1.14.3'
+  PACKER_VERSION: "1.14.3"
   PACKER_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:

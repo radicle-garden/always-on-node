@@ -3,20 +3,20 @@ name: Build and Push radicle-node Container
 on:
   push:
     paths:
-      - 'infra/containers/radicle-node/**'
-      - '.github/workflows/build-radicle-node.yml'
+      - "infra/containers/radicle-node/**"
+      - ".github/workflows/build-radicle-node.yml"
   workflow_dispatch:
     inputs:
       alpine_version:
-        description: 'Version of Alpine base image'
+        description: "Version of Alpine base image"
         required: true
-        default: '3.23'
+        default: "3.23"
 
 env:
   REGISTRY: quay.io
   HEARTWOOD_IMAGE_NAME: radicle_garden/heartwood
   RADICLE_NODE_IMAGE_NAME: radicle_garden/radicle-node
-  ALPINE_VERSION: '3.23'
+  ALPINE_VERSION: "3.23"
 
 jobs:
   test:
@@ -224,12 +224,10 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-
   merge:
     runs-on: ubuntu-latest
     needs: [extract-version, build-radicle-node]
     steps:
-
       - name: Download digests
         uses: actions/download-artifact@v6
         with:
@@ -259,18 +257,15 @@ jobs:
           labels: |
             quay.expires-after=${{ github.event_name == 'pull_request' && '7d' || '' }}
 
-
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY }}/${{ env.RADICLE_NODE_IMAGE_NAME }}@sha256:%s ' *)
 
-
       - name: Inspect image
         run: |
           docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.RADICLE_NODE_IMAGE_NAME }}:${{ steps.meta.outputs.version }}
-
 
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
