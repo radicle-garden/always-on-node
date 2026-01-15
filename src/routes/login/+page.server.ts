@@ -56,7 +56,7 @@ export const actions = {
         });
       }
 
-      setSessionCookie(cookies, user.id);
+      setSessionCookie(cookies, user.id, user.created_at);
       redirect(303, `/${user.handle}`);
     } catch (err) {
       if (isRedirect(err)) {

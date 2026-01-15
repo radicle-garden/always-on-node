@@ -12,6 +12,7 @@ const SESSION_MAX_AGE = 60 * 60 * 24 * 14; // 2 weeks in seconds
 
 export interface SessionData {
   userId: number;
+  userCreatedAt: string;
   createdAt: number;
 }
 
@@ -56,9 +57,10 @@ export async function authenticateUser(
   }
 }
 
-export function createSession(userId: number): string {
+export function createSession(userId: number, userCreatedAt: string): string {
   const sessionData: SessionData = {
     userId,
+    userCreatedAt,
     createdAt: Date.now(),
   };
 
@@ -103,11 +105,27 @@ export async function getUserFromSession(
     },
   });
 
-  return user || null;
+  if (!user) {
+    return null;
+  }
+
+  if (user.created_at !== sessionData.userCreatedAt) {
+    return null;
+  }
+
+  if (!user.email_verified) {
+    return null;
+  }
+
+  return user;
 }
 
-export function setSessionCookie(cookies: Cookies, userId: number): void {
-  const token = createSession(userId);
+export function setSessionCookie(
+  cookies: Cookies,
+  userId: number,
+  userCreatedAt: string,
+): void {
+  const token = createSession(userId, userCreatedAt);
 
   cookies.set(SESSION_COOKIE_NAME, token, {
     path: "/",
