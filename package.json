@@ -25,8 +25,8 @@
     "@tailwindcss/vite": "^4.1.18",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/bcrypt": "^6.0.0",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/pg": "^8.11.11",
     "@typescript-eslint/parser": "^8.53.0",
     "bits-ui": "^2.15.4",
     "clsx": "^2.1.1",
@@ -57,19 +57,18 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "bcrypt",
-      "better-sqlite3",
       "cpu-features",
       "esbuild",
       "ssh2"
     ],
     "ignoredBuiltDependencies": [
-      "@tailwindcss/oxide"
+      "@tailwindcss/oxide",
+      "better-sqlite3"
     ]
   },
   "dependencies": {
     "@docker/node-sdk": "^0.0.17",
     "bcrypt": "^6.0.0",
-    "better-sqlite3": "^12.6.0",
     "bs58": "^6.0.0",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
@@ -77,6 +76,7 @@
     "formsnap": "^2.0.1",
     "jsonwebtoken": "^9.0.3",
     "multiformats": "^13.4.2",
+    "postgres": "^3.4.5",
     "reflect-metadata": "^0.2.2",
     "remark-emoji": "^5.0.2",
     "resend": "^6.7.0",

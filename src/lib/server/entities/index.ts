@@ -19,7 +19,7 @@ export interface INode {
 export interface IUser {
   handle: string;
   nodes: INode[];
-  created_at: string;
+  created_at: Date;
   description: string | null;
 }
 

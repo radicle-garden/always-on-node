@@ -6,16 +6,16 @@ import type { Handle } from "@sveltejs/kit";
 // Initialize database on server start
 let dbInitialized = false;
 
-function ensureDbInitialized() {
+async function ensureDbInitialized() {
   if (!dbInitialized) {
-    initializeDatabase();
+    await initializeDatabase();
     dbInitialized = true;
   }
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
   // Ensure database is initialized
-  ensureDbInitialized();
+  await ensureDbInitialized();
 
   // Get user from session cookie
   const user = await getUserFromSession(event.cookies);

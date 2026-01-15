@@ -1,23 +1,28 @@
-import { relations, sql } from "drizzle-orm";
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { relations } from "drizzle-orm";
+import {
+  boolean,
+  integer,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
-export const users = sqliteTable("user", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const users = pgTable("user", {
+  id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
-  email_verified: integer("email_verified", { mode: "boolean" })
-    .notNull()
-    .default(false),
+  email_verified: boolean("email_verified").notNull().default(false),
   password_hash: text("password_hash").notNull(),
-  created_at: text("created_at")
+  created_at: timestamp("created_at", { withTimezone: true })
     .notNull()
-    .default(sql`(datetime('now'))`),
-  deleted: integer("deleted", { mode: "boolean" }).notNull().default(false),
+    .defaultNow(),
+  deleted: boolean("deleted").notNull().default(false),
   handle: text("handle").notNull().unique(),
   description: text("description"),
 });
 
-export const nodes = sqliteTable("node", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const nodes = pgTable("node", {
+  id: serial("id").primaryKey(),
   did: text("did").notNull(),
   alias: text("alias").notNull(),
   ssh_public_key: text("ssh_public_key").notNull(),
@@ -25,26 +30,23 @@ export const nodes = sqliteTable("node", {
   user_id: integer("user_id")
     .notNull()
     .references(() => users.id),
-  created_at: text("created_at")
+  created_at: timestamp("created_at", { withTimezone: true })
     .notNull()
-    .default(sql`(datetime('now'))`),
-  deleted: integer("deleted", { mode: "boolean" }).notNull().default(false),
+    .defaultNow(),
+  deleted: boolean("deleted").notNull().default(false),
   connect_address: text("connect_address"),
 });
 
-export const seededRadicleRepositories = sqliteTable(
-  "seeded_radicle_repository",
-  {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    repository_id: text("repository_id").notNull(),
-    node_id: integer("node_id")
-      .notNull()
-      .references(() => nodes.id),
-    seeding: integer("seeding", { mode: "boolean" }).notNull(),
-    seeding_start: text("seeding_start").notNull(),
-    seeding_end: text("seeding_end"),
-  },
-);
+export const seededRadicleRepositories = pgTable("seeded_radicle_repository", {
+  id: serial("id").primaryKey(),
+  repository_id: text("repository_id").notNull(),
+  node_id: integer("node_id")
+    .notNull()
+    .references(() => nodes.id),
+  seeding: boolean("seeding").notNull(),
+  seeding_start: timestamp("seeding_start", { withTimezone: true }).notNull(),
+  seeding_end: timestamp("seeding_end", { withTimezone: true }),
+});
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({

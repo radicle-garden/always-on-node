@@ -59,7 +59,7 @@ async function createNode(user: User): Promise<Node | null> {
     );
 
     try {
-      const db = getDb();
+      const db = await getDb();
       console.log(`[Nodes] Creating new node with id: ${nodeId}`);
 
       const nodeData = createNodeData(nodeId, nodeAlias, user.id);
@@ -231,7 +231,7 @@ async function updateNodeConfig(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   nodeConfig: any,
 ): Promise<ServiceResult<void>> {
-  const db = getDb();
+  const db = await getDb();
   console.log(
     `[Nodes] Updating node config for ${nodeId}: ${JSON.stringify(nodeConfig)}`,
   );
@@ -278,7 +278,7 @@ async function updateNodeConfig(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getConfigForNode(nodeId: string): Promise<ServiceResult<any>> {
   try {
-    const db = getDb();
+    const db = await getDb();
     const node = await db.query.nodes.findFirst({
       where: and(
         eq(schema.nodes.node_id, nodeId),
@@ -316,7 +316,7 @@ async function getConfigForNode(nodeId: string): Promise<ServiceResult<any>> {
 
 async function getNodeById(nodeId: string): Promise<ServiceResult<Node>> {
   try {
-    const db = getDb();
+    const db = await getDb();
     const node = await db.query.nodes.findFirst({
       where: and(
         eq(schema.nodes.node_id, nodeId),
@@ -380,7 +380,7 @@ async function getNodeStatus(
   user: User,
 ): Promise<ServiceResult<{ stdout: string; size?: number }>> {
   try {
-    const db = getDb();
+    const db = await getDb();
     const node = await db.query.nodes.findFirst({
       where: and(
         eq(schema.nodes.node_id, nodeId),
@@ -450,7 +450,7 @@ async function getSeededReposForNode(
   nodeId: string,
 ): Promise<ServiceResult<SeededRadicleRepository[]>> {
   try {
-    const db = getDb();
+    const db = await getDb();
     const node = await db.query.nodes.findFirst({
       where: and(
         eq(schema.nodes.node_id, nodeId),
@@ -493,7 +493,7 @@ async function seedRepo(
   nodeId: string,
   repositoryId: string,
 ): Promise<ServiceResult<void>> {
-  const db = getDb();
+  const db = await getDb();
   const node = await db.query.nodes.findFirst({
     where: and(
       eq(schema.nodes.node_id, nodeId),
@@ -539,7 +539,7 @@ async function seedRepo(
     repository_id: repositoryId,
     node_id: node.id,
     seeding: true,
-    seeding_start: new Date().toISOString(),
+    seeding_start: new Date(),
   });
 
   return {
@@ -553,7 +553,7 @@ async function unseedRepo(
   nodeId: string,
   repositoryId: string,
 ): Promise<ServiceResult<void>> {
-  const db = getDb();
+  const db = await getDb();
   const node = await db.query.nodes.findFirst({
     where: and(
       eq(schema.nodes.node_id, nodeId),
@@ -599,7 +599,7 @@ async function unseedRepo(
     .update(schema.seededRadicleRepositories)
     .set({
       seeding: false,
-      seeding_end: new Date().toISOString(),
+      seeding_end: new Date(),
     })
     .where(eq(schema.seededRadicleRepositories.id, seededRepo.id));
 
@@ -611,7 +611,7 @@ async function unseedRepo(
 }
 
 async function assignAvailablePort(node: Node): Promise<number> {
-  const db = getDb();
+  const db = await getDb();
   const nodeEntryId = node.id;
   const externalPort = 7000 + Number(nodeEntryId);
   const connectAddress = `${config.nodesConnectFQDN}:${externalPort}`;

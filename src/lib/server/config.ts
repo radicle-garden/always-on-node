@@ -8,7 +8,7 @@ dotenv.config({ path: path.join(__dirname, ".env") });
 
 export interface AppConfig {
   appSecret: string;
-  databaseStoragePath: string;
+  databaseUrl: string;
   profileStoragePath: string;
   radBinaryPath: string;
   resendApiKey: string | undefined;
@@ -40,8 +40,7 @@ export function getConfig(): AppConfig {
     resendApiKey: process.env.RESEND_API_KEY,
     emailSenderAddress: process.env.EMAIL_SENDER_ADDRESS,
 
-    databaseStoragePath:
-      process.env.DATABASE_STORAGE_PATH || configJson.databaseStoragePath,
+    databaseUrl: process.env.DATABASE_URL || configJson.databaseUrl,
     profileStoragePath:
       process.env.PROFILE_STORAGE_PATH || configJson.profileStoragePath,
     radBinaryPath: process.env.RAD_BINARY_PATH || configJson.radBinaryPath,

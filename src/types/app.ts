@@ -1,7 +1,7 @@
 export type UserProfile = {
   handle: string;
   description: string;
-  created_at: string;
+  created_at: Date;
   nodes: PublicNodeInfo[];
 };
 
@@ -19,7 +19,7 @@ export type User = {
   email_verified: boolean;
   handle: string;
   nodes: Node[];
-  created_at: string;
+  created_at: Date;
   deleted: boolean;
   description: string | null;
 };
@@ -31,7 +31,7 @@ export type Node = {
   ssh_public_key: string;
   node_id: string;
   user_id: number;
-  created_at: string;
+  created_at: Date;
   deleted: boolean;
   connect_address: string | null;
 };
@@ -40,7 +40,7 @@ export type SeededRadicleRepository = {
   id: number;
   repository_id: string;
   seeding: boolean;
-  seeding_start: string;
-  seeding_end: string | null;
+  seeding_start: Date;
+  seeding_end: Date | null;
   node_id: number;
 };

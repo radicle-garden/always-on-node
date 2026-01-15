@@ -1,7 +1,6 @@
 nodejs_version: "24.x"
 nodejs_npm_global_packages:
   - name: pnpm
-  - name: sqlite3
 
 ### Caddy
 caddy_config: "{{ lookup('template', '../templates/Caddyfile.gardener.j2') }}"
@@ -25,4 +24,5 @@ firewall_allowed_tcp_ports:
   - "443"
   - "5173"
   - "8776"
+  - "5432"
   - "7000:8000"

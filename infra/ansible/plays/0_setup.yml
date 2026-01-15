@@ -53,8 +53,7 @@
           - btop
           - make
           - unzip
-          - sqlite3
-          - libsqlite3-dev
+          - postgresql-client
   handlers:
     - name: reload systemd
       systemd:

@@ -12,3 +12,10 @@ security_sudoers_passwordless:
   - vagrant
 security_autoupdate_enabled: true
 security_autoupdate_reboot: false
+
+### Postgres
+postgres_user: garden
+postgres_password: garden
+postgres_db: garden
+postgres_port: 5432
+postgres_data_dir: "{{ data_dir }}/postgres"

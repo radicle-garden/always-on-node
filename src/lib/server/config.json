@@ -1,5 +1,5 @@
 {
-  "databaseStoragePath": "./storage",
+  "databaseUrl": "postgres://garden:garden@localhost:5432/garden",
   "profileStoragePath": "/home/vagrant/.local/share/radicle/profiles/",
   "radBinaryPath": "/home/vagrant/.radicle/bin/rad",
   "jwtExpiresIn": "15m",

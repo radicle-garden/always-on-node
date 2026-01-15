@@ -21,7 +21,7 @@ export async function retrieveUserByHandle(
   publicProfile: boolean,
 ): Promise<ServiceResult<User | object>> {
   try {
-    const db = getDb();
+    const db = await getDb();
     const user = await db.query.users.findFirst({
       where: and(
         eq(schema.users.handle, username),
@@ -64,7 +64,7 @@ export async function createNewUser(
   password: string,
 ): Promise<ServiceResult<User | null>> {
   try {
-    const db = getDb();
+    const db = await getDb();
 
     // Check if user already exists
     const existingUser = await db.query.users.findFirst({
@@ -165,7 +165,7 @@ export async function verifyEmailAddress(
   jsonWebToken: string,
 ): Promise<ServiceResult<void>> {
   try {
-    const db = getDb();
+    const db = await getDb();
     const userToVerify = jwt.verify(
       jsonWebToken,
       config.appSecret,
@@ -228,7 +228,7 @@ export async function verifyPasswordResetToken(
   try {
     const decoded = jwt.verify(jsonWebToken, config.appSecret) as JwtPayload;
 
-    const db = getDb();
+    const db = await getDb();
     const user = await db.query.users.findFirst({
       where: eq(schema.users.id, decoded.id),
     });
@@ -290,7 +290,7 @@ export async function resetPassword(
       };
     }
 
-    const db = getDb();
+    const db = await getDb();
     await db
       .update(schema.users)
       .set({ password_hash: setPassword(newPassword) })
@@ -316,7 +316,7 @@ export async function requestPasswordReset(
   email: string,
 ): Promise<ServiceResult<void>> {
   try {
-    const db = getDb();
+    const db = await getDb();
     const user = await db.query.users.findFirst({
       where: and(
         eq(schema.users.email, email),

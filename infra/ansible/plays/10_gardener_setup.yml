@@ -4,6 +4,8 @@
 - name: Prepare Setup for Gardener node
   hosts: all
   gather_facts: no
+  become: true
+  become_user: "{{ system_username }}"
   tasks:
     # Setup Application Environment
     - name: Create necessary directories
@@ -19,9 +21,9 @@
         - "{{ config_dir }}/radicle"
         - "{{ data_dir }}"
         - "{{ data_dir }}/radicle"
-        - "{{ data_dir }}/radicle/db"
         - "{{ data_dir }}/radicle/profiles"
         - "{{ bin_dir }}"
+        - "{{ postgres_data_dir }}"
 
     # Install Radicle CLI
     - name: Check if Radicle CLI is installed
@@ -64,3 +66,29 @@
         owner: "{{ system_username }}"
         group: "{{ system_group }}"
         mode: 0755
+
+- name: Setup database
+  hosts: dev
+  gather_facts: no
+  become: true
+  become_user: "{{ system_username }}"
+  tasks:
+    - name: Run Postgres container
+      containers.podman.podman_container:
+        name: postgres
+        image: docker.io/library/postgres:18-alpine
+        state: started
+        restart_policy: always
+        env:
+          POSTGRES_USER: "{{ postgres_user }}"
+          POSTGRES_PASSWORD: "{{ postgres_password }}"
+          POSTGRES_DB: "{{ postgres_db }}"
+        ports:
+          - "{{ postgres_port }}:5432"
+        volumes:
+          - "{{ postgres_data_dir }}:/var/lib/postgresql/data:Z"
+        healthcheck: CMD pg_isready -U {{ postgres_user }} -d {{ postgres_db }}
+        healthcheck_retries: 6
+        healthcheck_interval: 10s
+        healthcheck_timeout: 5s
+        healthcheck_start_period: 5s

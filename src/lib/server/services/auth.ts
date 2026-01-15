@@ -20,7 +20,7 @@ export async function authenticateUser(
   email: string,
   password: string,
 ): Promise<{ user: (User & { nodes: Node[] }) | null; error?: string }> {
-  const db = getDb();
+  const db = await getDb();
 
   try {
     const user = await db.query.users.findFirst({
@@ -92,7 +92,7 @@ export async function getUserFromSession(
     return null;
   }
 
-  const db = getDb();
+  const db = await getDb();
   const user = await db.query.users.findFirst({
     where: and(
       eq(schema.users.id, sessionData.userId),
