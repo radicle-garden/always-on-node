@@ -57,10 +57,10 @@ export async function authenticateUser(
   }
 }
 
-export function createSession(userId: number, userCreatedAt: string): string {
+export function createSession(userId: number, userCreatedAt: Date): string {
   const sessionData: SessionData = {
     userId,
-    userCreatedAt,
+    userCreatedAt: userCreatedAt.toISOString(),
     createdAt: Date.now(),
   };
 
@@ -109,7 +109,7 @@ export async function getUserFromSession(
     return null;
   }
 
-  if (user.created_at !== sessionData.userCreatedAt) {
+  if (user.created_at.toISOString() !== sessionData.userCreatedAt) {
     return null;
   }
 
@@ -123,7 +123,7 @@ export async function getUserFromSession(
 export function setSessionCookie(
   cookies: Cookies,
   userId: number,
-  userCreatedAt: string,
+  userCreatedAt: Date,
 ): void {
   const token = createSession(userId, userCreatedAt);
 

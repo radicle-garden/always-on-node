@@ -71,12 +71,8 @@
           "name": "node_user_id_user_id_fk",
           "tableFrom": "node",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -86,9 +82,7 @@
         "node_node_id_unique": {
           "name": "node_node_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "node_id"
-          ]
+          "columns": ["node_id"]
         }
       },
       "policies": {},
@@ -142,12 +136,8 @@
           "name": "seeded_radicle_repository_node_id_node_id_fk",
           "tableFrom": "seeded_radicle_repository",
           "tableTo": "node",
-          "columnsFrom": [
-            "node_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["node_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -221,16 +211,12 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "user_handle_unique": {
           "name": "user_handle_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "handle"
-          ]
+          "columns": ["handle"]
         }
       },
       "policies": {},
