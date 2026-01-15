@@ -5,3 +5,6 @@ yarn.lock
 bun.lock
 bun.lockb
 infra/containers/radicle-node/heartwood
+
+# Vendor dependencies
+src/vendor/

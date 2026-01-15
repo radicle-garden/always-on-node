@@ -1,8 +1,8 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
-  import { Button } from "$lib/components/ui/button";
-  import * as Dialog from "$lib/components/ui/dialog";
-  import { Input } from "$lib/components/ui/input";
+  import { Button } from "$vendor/shadcn-svelte/button";
+  import * as Dialog from "$vendor/shadcn-svelte/dialog";
+  import { Input } from "$vendor/shadcn-svelte/input";
 
   import { toast } from "svelte-sonner";
 

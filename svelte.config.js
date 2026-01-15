@@ -10,6 +10,7 @@ const config = {
     alias: {
       $components: "./src/components",
       $types: "./src/types",
+      $vendor: "./src/vendor",
       "@http-client": "./http-client",
     },
   },

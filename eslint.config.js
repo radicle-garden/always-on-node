@@ -32,4 +32,10 @@ export default [
       },
     },
   },
+  {
+    files: ["src/vendor/shadcn-svelte/**"],
+    rules: {
+      "svelte/no-navigation-without-resolve": "off",
+    },
+  },
 ];

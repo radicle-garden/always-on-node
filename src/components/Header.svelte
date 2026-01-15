@@ -2,8 +2,8 @@
   import { enhance } from "$app/forms";
   import { resolve } from "$app/paths";
   import Avatar from "$components/Avatar.svelte";
-  import * as NavigationMenu from "$lib/components/ui/navigation-menu";
   import type { User } from "$types/app";
+  import * as NavigationMenu from "$vendor/shadcn-svelte/navigation-menu";
 
   let { user }: { user: User | null } = $props();
 
@@ -22,7 +22,7 @@
               src="/img/radicle-logo.svg"
               alt="Radicle"
               class="h-full w-32" />
-            <span class="text-2xl font-extrabold text-garden-logo">garden</span>
+            <span class="text-garden-logo text-2xl font-extrabold">garden</span>
           </a>
         </NavigationMenu.Link>
       </NavigationMenu.Item>

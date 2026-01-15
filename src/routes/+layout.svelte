@@ -1,8 +1,8 @@
 <script lang="ts">
   import Header from "$components/Header.svelte";
   import Icon from "$components/Icon.svelte";
-  import { Toaster } from "$lib/components/ui/sonner";
   import { cn } from "$lib/utils";
+  import { Toaster } from "$vendor/shadcn-svelte/sonner";
 
   import "../app.css";
 

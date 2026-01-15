@@ -1,11 +1,11 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
   import { resolve } from "$app/paths";
-  import * as Alert from "$lib/components/ui/alert";
-  import { Button } from "$lib/components/ui/button";
-  import * as Card from "$lib/components/ui/card";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
+  import * as Alert from "$vendor/shadcn-svelte/alert";
+  import { Button } from "$vendor/shadcn-svelte/button";
+  import * as Card from "$vendor/shadcn-svelte/card";
+  import { Input } from "$vendor/shadcn-svelte/input";
+  import { Label } from "$vendor/shadcn-svelte/label";
 
   let { form } = $props();
 

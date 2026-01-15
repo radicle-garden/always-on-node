@@ -3,11 +3,11 @@
   import Icon from "$components/Icon.svelte";
   import Markdown from "$components/Markdown.svelte";
   import RepositoriesWithFilter from "$components/RepositoriesWithFilter.svelte";
-  import { Badge } from "$lib/components/ui/badge";
-  import { Card } from "$lib/components/ui/card";
-  import * as Dialog from "$lib/components/ui/dialog";
   import { timeAgo, truncateDid, truncateText, unescapeHtml } from "$lib/utils";
   import type { UserProfile } from "$types/app";
+  import { Badge } from "$vendor/shadcn-svelte/badge";
+  import { Card } from "$vendor/shadcn-svelte/card";
+  import * as Dialog from "$vendor/shadcn-svelte/dialog";
 
   import type { PageData } from "./$types";
 
@@ -73,7 +73,7 @@
                           target="_blank">
                           {nodeHttpdHostPort}
                         </a>
-                        <Badge variant="success">
+                        <Badge variant="secondary">
                           <Icon name="seedling-filled" />
                           Online
                         </Badge>
@@ -110,7 +110,7 @@
                           <div
                             class="h-2 w-full overflow-hidden rounded-full bg-muted">
                             <div
-                              class="h-full rounded-full bg-success-foreground transition-all"
+                              class="bg-success-foreground h-full rounded-full transition-all"
                               style="width: {Math.min(
                                 (diskUsage / userMaxDiskUsageBytes) * 100,
                                 100,

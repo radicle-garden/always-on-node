@@ -1,6 +1,6 @@
 <script lang="ts">
-  import * as Tooltip from "$lib/components/ui/tooltip";
   import type { Comment } from "$lib/http-client";
+  import * as Tooltip from "$vendor/shadcn-svelte/tooltip";
 
   let { comment }: { comment: Comment } = $props();
 </script>

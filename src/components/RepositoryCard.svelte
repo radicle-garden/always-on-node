@@ -1,7 +1,7 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
-  import { Card } from "$lib/components/ui/card";
   import { timeAgo, truncateText } from "$lib/utils";
+  import { Card } from "$vendor/shadcn-svelte/card";
 
   import { toast } from "svelte-sonner";
 
@@ -75,7 +75,7 @@
           </div>
         </div>
         <div class="flex flex-col gap-0 text-sm">
-          <div class="flex font-mono font-semibold text-radicle-blue">
+          <div class="text-radicle-blue flex font-mono font-semibold">
             <button
               class="hover:underline"
               onclick={e => {
@@ -115,7 +115,7 @@
           </div>
         </div>
         <div class="flex flex-col gap-0 text-sm">
-          <div class="flex font-mono font-semibold text-radicle-blue">
+          <div class="text-radicle-blue flex font-mono font-semibold">
             <button
               class="hover:underline"
               onclick={e => {

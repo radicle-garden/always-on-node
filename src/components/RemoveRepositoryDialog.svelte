@@ -1,7 +1,10 @@
 <script lang="ts">
   import Icon from "$components/Icon.svelte";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog";
-  import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
+  import * as AlertDialog from "$vendor/shadcn-svelte/alert-dialog";
+  import {
+    Button,
+    buttonVariants,
+  } from "$vendor/shadcn-svelte/button/index.js";
 
   let {
     open = $bindable(false),

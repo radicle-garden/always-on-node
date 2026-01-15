@@ -1,6 +1,6 @@
 <script lang="ts">
-  import * as Avatar from "$lib/components/ui/avatar";
   import { cn } from "$lib/utils";
+  import * as Avatar from "$vendor/shadcn-svelte/avatar";
 
   let {
     src,

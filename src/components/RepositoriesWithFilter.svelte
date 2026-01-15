@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
-  import { Card } from "$lib/components/ui/card";
-  import { Input } from "$lib/components/ui/input";
-  import * as Tooltip from "$lib/components/ui/tooltip";
+  import { Button } from "$vendor/shadcn-svelte/button";
+  import { Card } from "$vendor/shadcn-svelte/card";
+  import { Input } from "$vendor/shadcn-svelte/input";
+  import * as Tooltip from "$vendor/shadcn-svelte/tooltip";
 
   import type { RepoInfo } from "../routes/[handle]/+page.server";
 
@@ -38,7 +38,7 @@
   );
 </script>
 
-<Card variant="outline" class="p-4">
+<Card class="p-4">
   <div class="flex flex-col gap-2">
     <div class="flex items-center justify-between">
       <div class="text-2xl font-medium">{namespace}'s repositories</div>
