@@ -3,6 +3,7 @@
   import Icon from "$components/Icon.svelte";
   import Markdown from "$components/Markdown.svelte";
   import RepositoriesWithFilter from "$components/RepositoriesWithFilter.svelte";
+  import UserAvatar from "$components/UserAvatar.svelte";
   import { timeAgo, truncateDid, truncateText, unescapeHtml } from "$lib/utils";
   import type { UserProfile } from "$types/app";
   import { Badge } from "$vendor/shadcn-svelte/badge";
@@ -67,22 +68,31 @@
                   <Dialog.Header>
                     <Dialog.Title>Your Radicle Garden Node</Dialog.Title>
                     <Dialog.Description>
+                      <div class="mb-4 flex">
+                        <UserAvatar nodeId={node.node_id} styleWidth="16rem" />
+                      </div>
                       {#if nodeStatuses[node.node_id].isRunning}
-                        <a
-                          href="https://app.radicle.xyz/nodes/{nodeHttpdHostPort}"
-                          target="_blank">
-                          {nodeHttpdHostPort}
-                        </a>
-                        <Badge variant="secondary">
-                          <Icon name="seed-filled" />
-                          Online
-                        </Badge>
+                        <div class="flex gap-2">
+                          <a
+                            class="flex items-center gap-1"
+                            href="https://app.radicle.xyz/nodes/{nodeHttpdHostPort}"
+                            target="_blank">
+                            {nodeHttpdHostPort}
+                            <Icon name="open-external" />
+                          </a>
+                          <Badge variant="default">
+                            <Icon name="seed-filled" />
+                            Online
+                          </Badge>
+                        </div>
                       {:else}
-                        {nodeHttpdHostPort}
-                        <Badge variant="destructive">
-                          <Icon name="seed" />
-                          Offline
-                        </Badge>
+                        <div class="flex gap-2">
+                          {nodeHttpdHostPort}
+                          <Badge variant="destructive">
+                            <Icon name="seed" />
+                            Offline
+                          </Badge>
+                        </div>
                       {/if}
                       <p>This node is managed by Radicle Garden.</p>
                       <div>
