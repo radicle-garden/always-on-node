@@ -30,6 +30,7 @@ export interface AppConfig {
     // Override this in production via PUBLIC_SERVICE_HOST_PORT to
     // radicle.garden or whatever domain we'll use.
     publicServiceHostPort: string;
+    userMaxDiskUsageBytes: number;
   };
 }
 
@@ -70,6 +71,9 @@ export function getConfig(): AppConfig {
       publicServiceHostPort:
         process.env.PUBLIC_SERVICE_HOST_PORT ||
         configJson.public.publicServiceHostPort,
+      userMaxDiskUsageBytes:
+        Number(process.env.NODE_MAX_STORAGE_BYTES) ||
+        configJson.public.userMaxDiskUsageBytes,
     },
   };
 }

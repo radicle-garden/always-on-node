@@ -15,6 +15,7 @@ import {
   type User,
   createNodeData,
   getRadHome,
+  userStoragePath,
 } from "../entities";
 
 const execAsync = util.promisify(exec);
@@ -365,7 +366,7 @@ async function execNodeCommand(
 async function getNodeStatus(
   nodeId: string,
   user: User,
-): Promise<ServiceResult<string>> {
+): Promise<ServiceResult<{ stdout: string; size?: number }>> {
   try {
     const db = getDb();
     const node = await db.query.nodes.findFirst({
@@ -386,15 +387,46 @@ async function getNodeStatus(
     }
 
     const result = await execNodeCommand(node, "node status");
-    if (result) {
-      return { success: true, content: result.stdout, statusCode: 200 };
-    } else {
+    if (!result) {
       return {
         success: false,
         error: `Failed to retrieve node status for node ${nodeId}`,
         statusCode: 500,
       };
     }
+
+    let size: number | undefined; // Bytes.
+    const storagePath = userStoragePath(node.user.handle);
+
+    if (storagePath) {
+      try {
+        const { stdout: duOutput } = await execAsync(`du -sk ${storagePath}`);
+        // Parse du output format: "1234\t/path/to/storage".
+        // -s: summarize total size
+        // -k: report size in kilobytes
+        const sizeParts = duOutput.trim().split(/\s+/);
+        const sizeInKb = Number.parseInt(sizeParts[0], 10);
+
+        if (!Number.isNaN(sizeInKb) && sizeInKb >= 0) {
+          size = sizeInKb * 1024; // Convert to bytes.
+        } else {
+          console.warn(
+            `[Nodes] Invalid du output for node ${nodeId}: "${duOutput}"`,
+          );
+        }
+      } catch (duError) {
+        console.warn(
+          `[Nodes] Failed to get storage size for node ${nodeId}:`,
+          duError,
+        );
+      }
+    }
+
+    return {
+      success: true,
+      content: { stdout: result.stdout, size },
+      statusCode: 200,
+    };
   } catch (dbError) {
     const errorMessage = `Failed to retrieve node ${nodeId}`;
     console.warn(errorMessage, dbError);

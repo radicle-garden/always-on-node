@@ -71,6 +71,10 @@ export function getRadHome(username: string): string | undefined {
   return path.resolve(config.profileStoragePath, username);
 }
 
+export function userStoragePath(username: string): string | undefined {
+  return path.resolve(config.profileStoragePath, username, "storage");
+}
+
 function extractSshPublicKeyFromDid(nodeId: string): string {
   if (!nodeId) {
     return "";

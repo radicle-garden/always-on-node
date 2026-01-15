@@ -14,6 +14,7 @@ export interface NodeStatus {
   isRunning: boolean;
   peers: number;
   sinceSeconds: number;
+  size?: number;
 }
 
 export interface RepoInfo {
@@ -74,18 +75,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         );
         if (statusResult.success && statusResult.content) {
           const { isRunning, peers, sinceSeconds } = parseNodeStatus(
-            statusResult.content,
+            statusResult.content.stdout,
           );
           nodeStatuses[node.node_id] = {
             isRunning,
             peers,
             sinceSeconds: sinceSeconds ?? 0,
+            size: statusResult.content.size,
           };
         } else {
           nodeStatuses[node.node_id] = {
             isRunning: false,
             peers: 0,
             sinceSeconds: 0,
+            size: 0,
           };
         }
       } catch {
@@ -93,6 +96,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
           isRunning: false,
           peers: 0,
           sinceSeconds: 0,
+          size: 0,
         };
       }
     }
@@ -158,6 +162,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     nodeStatuses,
     isMe,
     publicServiceHostPort: config.public.publicServiceHostPort,
+    userMaxDiskUsageBytes: config.public.userMaxDiskUsageBytes,
   };
 };
 

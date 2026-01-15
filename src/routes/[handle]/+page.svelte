@@ -23,6 +23,15 @@
   let nodeHttpdHostPort = $derived(
     `${data.user?.handle}.${data.publicServiceHostPort}`,
   );
+  let userMaxDiskUsageBytes = $derived(data.userMaxDiskUsageBytes);
+
+  function formatBytes(bytes: number): string {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  }
 </script>
 
 {#if profile}
@@ -93,6 +102,35 @@
                         </div>
                         in a shell where a radicle node is running.
                       </div>
+                      {@const diskUsage = nodeStatuses[node.node_id].size}
+                      {#if diskUsage !== undefined}
+                        <div class="py-4">
+                          <div class="mb-1 flex justify-between text-sm">
+                            <span>Storage</span>
+                            <span>
+                              {formatBytes(diskUsage)} /
+                              {formatBytes(userMaxDiskUsageBytes)}
+                            </span>
+                          </div>
+                          <div
+                            class="h-2 w-full overflow-hidden rounded-full bg-muted">
+                            <div
+                              class="h-full rounded-full bg-success-foreground transition-all"
+                              style="width: {Math.min(
+                                (diskUsage / userMaxDiskUsageBytes) * 100,
+                                100,
+                              )}%">
+                            </div>
+                          </div>
+                        </div>
+                      {:else}
+                        <div class="py-4">
+                          <div class="mb-1 flex justify-between text-sm">
+                            <span>Storage</span>
+                            <span>Couldn't determine disk usage.</span>
+                          </div>
+                        </div>
+                      {/if}
                     </Dialog.Description>
                   </Dialog.Header>
                 </Dialog.Content>
