@@ -2,6 +2,7 @@
   import CopyableText from "$components/CopyableText.svelte";
   import Icon from "$components/Icon.svelte";
   import Markdown from "$components/Markdown.svelte";
+  import PaymentSection from "$components/PaymentSection.svelte";
   import RepositoriesWithFilter from "$components/RepositoriesWithFilter.svelte";
   import { Badge } from "$lib/components/ui/badge";
   import { Card } from "$lib/components/ui/card";
@@ -141,6 +142,11 @@
           <Markdown md={unescapedDescription || "Welcome to my profile!"} />
         </div>
       </Card>
+      {#if isMe && data.user?.email_verified}
+        <PaymentSection
+          subscriptionStatus={data.subscriptionStatus}
+          stripePriceId={data.stripePriceId} />
+      {/if}
       <RepositoriesWithFilter
         {nodeHttpdHostPort}
         namespace={profile.handle}

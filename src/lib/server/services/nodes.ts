@@ -203,11 +203,9 @@ async function createNode(user: User): Promise<Node | null> {
         `[Nodes] Created httpd container ${httpdContainerName} with ID: ${httpdContainer.Id}`,
       );
 
-      await docker.containerStart(nodeContainer.Id);
-      console.log(`[Nodes] Started node container ${nodeContainerName}`);
-
-      await docker.containerStart(httpdContainer.Id);
-      console.log(`[Nodes] Started httpd container ${httpdContainerName}`);
+      console.log(
+        `[Nodes] Containers created but not started. Will be started after subscription is active.`,
+      );
 
       return persistedNode;
     } catch (nodeInsertErr) {
@@ -624,6 +622,216 @@ async function assignAvailablePort(node: Node): Promise<number> {
   return externalPort;
 }
 
+async function stopContainers(user: User): Promise<ServiceResult<void>> {
+  try {
+    const nodeAlias = `${user.handle}_seed`;
+    const nodeContainerName = `${nodeAlias}-node`;
+    const httpdContainerName = `${nodeAlias}-httpd`;
+
+    const docker = await DockerClient.fromDockerHost(config.dockerHost);
+
+    // Stop node container
+    try {
+      const nodeContainer = await docker.containerInspect(nodeContainerName);
+      if (nodeContainer.State?.Running && nodeContainer.Id) {
+        await docker.containerStop(nodeContainer.Id);
+        console.log(`[Nodes] Stopped node container ${nodeContainerName}`);
+      }
+    } catch {
+      console.warn(
+        `[Nodes] Node container not found or already stopped: ${nodeContainerName}`,
+      );
+    }
+
+    // Stop httpd container
+    try {
+      const httpdContainer = await docker.containerInspect(httpdContainerName);
+      if (httpdContainer.State?.Running && httpdContainer.Id) {
+        await docker.containerStop(httpdContainer.Id);
+        console.log(`[Nodes] Stopped httpd container ${httpdContainerName}`);
+      }
+    } catch {
+      console.warn(
+        `[Nodes] HTTPD container not found or already stopped: ${httpdContainerName}`,
+      );
+    }
+
+    return { success: true, message: "Containers stopped", statusCode: 200 };
+  } catch (error) {
+    console.error(`[Nodes] Failed to stop containers:`, error);
+    return {
+      success: false,
+      error: "Failed to stop containers",
+      statusCode: 500,
+    };
+  }
+}
+
+async function startContainers(user: User): Promise<ServiceResult<void>> {
+  try {
+    const nodeAlias = `${user.handle}_seed`;
+    const nodeContainerName = `${nodeAlias}-node`;
+    const httpdContainerName = `${nodeAlias}-httpd`;
+
+    const docker = await DockerClient.fromDockerHost(config.dockerHost);
+
+    // Start node container
+    try {
+      const nodeContainer = await docker.containerInspect(nodeContainerName);
+      if (!nodeContainer.State?.Running && nodeContainer.Id) {
+        await docker.containerStart(nodeContainer.Id);
+        console.log(`[Nodes] Started node container ${nodeContainerName}`);
+      }
+    } catch {
+      console.warn(`[Nodes] Node container not found: ${nodeContainerName}`);
+      return {
+        success: false,
+        error: "Node container not found",
+        statusCode: 404,
+      };
+    }
+
+    // Start httpd container
+    try {
+      const httpdContainer = await docker.containerInspect(httpdContainerName);
+      if (!httpdContainer.State?.Running && httpdContainer.Id) {
+        await docker.containerStart(httpdContainer.Id);
+        console.log(`[Nodes] Started httpd container ${httpdContainerName}`);
+      }
+    } catch {
+      console.warn(`[Nodes] HTTPD container not found: ${httpdContainerName}`);
+      return {
+        success: false,
+        error: "HTTPD container not found",
+        statusCode: 404,
+      };
+    }
+
+    return { success: true, message: "Containers started", statusCode: 200 };
+  } catch (error) {
+    console.error(`[Nodes] Failed to start containers:`, error);
+    return {
+      success: false,
+      error: "Failed to start containers",
+      statusCode: 500,
+    };
+  }
+}
+
+async function getContainerStatus(
+  user: User,
+): Promise<ServiceResult<{ nodeRunning: boolean; httpdRunning: boolean }>> {
+  try {
+    const nodeAlias = `${user.handle}_seed`;
+    const docker = await DockerClient.fromDockerHost(config.dockerHost);
+
+    let nodeRunning = false;
+    let httpdRunning = false;
+
+    try {
+      const nodeContainer = await docker.containerInspect(`${nodeAlias}-node`);
+      nodeRunning = nodeContainer.State?.Running ?? false;
+    } catch {
+      // Container doesn't exist or can't be inspected
+    }
+
+    try {
+      const httpdContainer = await docker.containerInspect(
+        `${nodeAlias}-httpd`,
+      );
+      httpdRunning = httpdContainer.State?.Running ?? false;
+    } catch {
+      // Container doesn't exist or can't be inspected
+    }
+
+    return {
+      success: true,
+      content: { nodeRunning, httpdRunning },
+      statusCode: 200,
+    };
+  } catch {
+    return {
+      success: false,
+      error: "Failed to get container status",
+      statusCode: 500,
+    };
+  }
+}
+
+/**
+ * Ensures a user has a node and it's running.
+ * Creates node if it doesn't exist, then starts containers.
+ * This is primarily used by subscription webhooks.
+ */
+async function ensureNodeActiveForUser(
+  userId: number,
+): Promise<ServiceResult<void>> {
+  try {
+    const db = await getDb();
+
+    // Get user with nodes
+    const user = await db.query.users.findFirst({
+      where: eq(schema.users.id, userId),
+      with: { nodes: true },
+    });
+
+    if (!user) {
+      return {
+        success: false,
+        error: "User not found",
+        statusCode: 404,
+      };
+    }
+
+    // If user has nodes, start containers
+    if (user.nodes.length > 0) {
+      console.log(
+        `[Nodes] User ${userId} has existing node, starting containers`,
+      );
+      return await startContainers(user);
+    }
+
+    // No nodes exist - create one first
+    console.log(`[Nodes] Creating node for user ${userId}`);
+    const node = await createNode(user);
+
+    if (!node) {
+      // Race condition check: another process might have created the node
+      // Re-query to see if node now exists
+      const refreshedUser = await db.query.users.findFirst({
+        where: eq(schema.users.id, userId),
+        with: { nodes: true },
+      });
+
+      if (refreshedUser && refreshedUser.nodes.length > 0) {
+        console.log(
+          `[Nodes] Node created by another process, starting containers for user ${userId}`,
+        );
+        return await startContainers(refreshedUser);
+      }
+
+      return {
+        success: false,
+        error: "Failed to create node",
+        statusCode: 500,
+      };
+    }
+
+    console.log(`[Nodes] Node created, starting containers for user ${userId}`);
+    return await startContainers(user);
+  } catch (error) {
+    console.error(
+      `[Nodes] Failed to ensure node active for user ${userId}:`,
+      error,
+    );
+    return {
+      success: false,
+      error: "Failed to activate node",
+      statusCode: 500,
+    };
+  }
+}
+
 export const nodesService = {
   createNode,
   updateNodeConfig,
@@ -635,4 +843,8 @@ export const nodesService = {
   seedRepo,
   unseedRepo,
   assignAvailablePort,
+  stopContainers,
+  startContainers,
+  getContainerStatus,
+  ensureNodeActiveForUser,
 };

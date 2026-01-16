@@ -23,6 +23,9 @@ export interface AppConfig {
   dockerHost: string;
   radicleNodeContainer: string;
   radicleHttpdContainer: string;
+  stripeSecretKey: string;
+  stripeWebhookSecret: string;
+  stripePriceId: string;
   public: {
     defaultHttpdApiHostname: string;
     defaultHttpdApiPort: number;
@@ -57,6 +60,9 @@ export function getConfig(): AppConfig {
       process.env.RADICLE_NODE_CONTAINER || configJson.radicleNodeContainer,
     radicleHttpdContainer:
       process.env.RADICLE_HTTPD_CONTAINER || configJson.radicleHttpdContainer,
+    stripeSecretKey: process.env.STRIPE_SECRET_SERVER_SIDE_KEY || "",
+    stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
+    stripePriceId: process.env.STRIPE_PRICE_ID || "",
     public: {
       defaultHttpdApiHostname:
         process.env.DEFAULT_HTTPD_API_HOSTNAME ||
