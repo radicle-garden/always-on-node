@@ -769,10 +769,14 @@ async function ensureNodeActiveForUser(
   try {
     const db = await getDb();
 
-    // Get user with nodes
+    // Get user with non-deleted nodes only
     const user = await db.query.users.findFirst({
       where: eq(schema.users.id, userId),
-      with: { nodes: true },
+      with: {
+        nodes: {
+          where: eq(schema.nodes.deleted, false),
+        },
+      },
     });
 
     if (!user) {
@@ -783,12 +787,42 @@ async function ensureNodeActiveForUser(
       };
     }
 
-    // If user has nodes, start containers
+    // If user has active nodes, try to start containers
     if (user.nodes.length > 0) {
       console.log(
         `[Nodes] User ${userId} has existing node, starting containers`,
       );
-      return await startContainers(user);
+      const startResult = await startContainers(user);
+
+      // If containers don't exist (404), the node DB entry exists but containers
+      // were destroyed - create a new node
+      if (!startResult.success && startResult.statusCode === 404) {
+        console.log(
+          `[Nodes] Containers not found for user ${userId}, creating new node`,
+        );
+        // Mark existing node as deleted since its containers are gone
+        await db
+          .update(schema.nodes)
+          .set({ deleted: true })
+          .where(eq(schema.nodes.user_id, userId));
+
+        // Create new node
+        const node = await createNode(user);
+        if (!node) {
+          return {
+            success: false,
+            error: "Failed to create replacement node",
+            statusCode: 500,
+          };
+        }
+
+        console.log(
+          `[Nodes] New node created, starting containers for user ${userId}`,
+        );
+        return await startContainers(user);
+      }
+
+      return startResult;
     }
 
     // No nodes exist - create one first
@@ -800,7 +834,11 @@ async function ensureNodeActiveForUser(
       // Re-query to see if node now exists
       const refreshedUser = await db.query.users.findFirst({
         where: eq(schema.users.id, userId),
-        with: { nodes: true },
+        with: {
+          nodes: {
+            where: eq(schema.nodes.deleted, false),
+          },
+        },
       });
 
       if (refreshedUser && refreshedUser.nodes.length > 0) {
@@ -832,6 +870,126 @@ async function ensureNodeActiveForUser(
   }
 }
 
+/**
+ * Helper function to stop and remove a single container.
+ * Returns an error message if cleanup fails, otherwise returns null.
+ */
+async function cleanupContainer(
+  docker: DockerClient,
+  containerName: string,
+): Promise<string | null> {
+  try {
+    const container = await docker.containerInspect(containerName);
+    if (container.Id) {
+      if (container.State?.Running) {
+        await docker.containerStop(container.Id);
+        console.log(`[Nodes] Stopped container ${containerName}`);
+      }
+      await docker.containerDelete(container.Id, { force: true });
+      console.log(`[Nodes] Removed container ${containerName}`);
+    }
+    return null;
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.warn(`[Nodes] Failed to remove container ${containerName}:`, error);
+    return `Failed to remove container ${containerName}: ${errorMsg}`;
+  }
+}
+
+/**
+ * Destroys a node completely: stops and removes containers, deletes Radicle identity,
+ * and soft-deletes the node from the database.
+ * This is intended for development use only.
+ *
+ * This operation attempts to clean up all resources even if some steps fail.
+ * Partial failures are accumulated and reported to the caller.
+ */
+async function destroyNode(user: User): Promise<ServiceResult<void>> {
+  const errors: string[] = [];
+  const nodeAlias = `${user.handle}_seed`;
+  const completedSteps: string[] = [];
+
+  try {
+    const db = await getDb();
+    const docker = await DockerClient.fromDockerHost(config.dockerHost);
+
+    // 1. Stop and remove containers (best effort - continue even if some fail)
+    const nodeContainerName = `${nodeAlias}-node`;
+    const httpdContainerName = `${nodeAlias}-httpd`;
+
+    const nodeError = await cleanupContainer(docker, nodeContainerName);
+    if (nodeError) {
+      errors.push(nodeError);
+    } else {
+      completedSteps.push("Removed node container");
+    }
+
+    const httpdError = await cleanupContainer(docker, httpdContainerName);
+    if (httpdError) {
+      errors.push(httpdError);
+    } else {
+      completedSteps.push("Removed httpd container");
+    }
+
+    // 2. Delete Radicle identity (RAD_HOME directory)
+    try {
+      const radHome = getRadHome(user.handle);
+      if (radHome && fs.existsSync(radHome)) {
+        await fs.promises.rm(radHome, { recursive: true, force: true });
+        console.log(`[Nodes] Removed Radicle identity at ${radHome}`);
+        completedSteps.push("Removed Radicle identity");
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`[Nodes] Failed to remove Radicle identity:`, error);
+      errors.push(`Failed to remove Radicle identity: ${errorMsg}`);
+    }
+
+    // 3. Soft delete node from database (critical step - fail if this fails)
+    try {
+      await db
+        .update(schema.nodes)
+        .set({ deleted: true })
+        .where(eq(schema.nodes.user_id, user.id));
+      completedSteps.push("Marked node as deleted in database");
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`[Nodes] Failed to update database:`, error);
+      errors.push(`Failed to mark node as deleted: ${errorMsg}`);
+
+      // Database update is critical - if this fails, report as failed operation
+      return {
+        success: false,
+        error: `Node partially cleaned up but database update failed. Completed: ${completedSteps.join(", ")}. Errors: ${errors.join("; ")}`,
+        statusCode: 500,
+      };
+    }
+
+    // Report results
+    if (errors.length > 0) {
+      console.warn(
+        `[Nodes] Node destroyed with warnings for user ${user.handle}. Errors: ${errors.join("; ")}`,
+      );
+      return {
+        success: true,
+        message: `Node destroyed with warnings: ${errors.join("; ")}`,
+        statusCode: 200,
+      };
+    }
+
+    console.log(`[Nodes] Successfully destroyed node for user ${user.handle}`);
+    return { success: true, message: "Node destroyed", statusCode: 200 };
+  } catch (error) {
+    console.error(`[Nodes] Failed to destroy node:`, error);
+    const errorMsg = error instanceof Error ? error.message : "Unknown error";
+    return {
+      success: false,
+      error: `Failed to destroy node: ${errorMsg}. Completed steps: ${completedSteps.join(", ")}`,
+      statusCode: 500,
+    };
+  }
+}
+
 export const nodesService = {
   createNode,
   updateNodeConfig,
@@ -847,4 +1005,5 @@ export const nodesService = {
   startContainers,
   getContainerStatus,
   ensureNodeActiveForUser,
+  destroyNode,
 };

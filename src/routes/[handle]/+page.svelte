@@ -1,5 +1,6 @@
 <script lang="ts">
   import CopyableText from "$components/CopyableText.svelte";
+  import DevControls from "$components/DevControls.svelte";
   import Icon from "$components/Icon.svelte";
   import Markdown from "$components/Markdown.svelte";
   import PaymentSection from "$components/PaymentSection.svelte";
@@ -25,6 +26,7 @@
     `${data.user?.handle}.${data.publicServiceHostPort}`,
   );
   let userMaxDiskUsageBytes = $derived(data.userMaxDiskUsageBytes);
+  let isDev = $derived(data.isDev);
 
   function formatBytes(bytes: number): string {
     if (bytes === 0) return "0 B";
@@ -142,6 +144,9 @@
           <Markdown md={unescapedDescription || "Welcome to my profile!"} />
         </div>
       </Card>
+      {#if isDev && isMe}
+        <DevControls {profile} {nodeStatuses} />
+      {/if}
       {#if isMe && data.user?.email_verified}
         <PaymentSection
           subscriptionStatus={data.subscriptionStatus}
