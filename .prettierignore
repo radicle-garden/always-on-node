@@ -5,3 +5,4 @@ yarn.lock
 bun.lock
 bun.lockb
 infra/containers/radicle-node/heartwood
+infra/ansible/group_vars/prod.yml
