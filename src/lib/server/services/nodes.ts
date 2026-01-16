@@ -203,11 +203,9 @@ async function createNode(user: User): Promise<Node | null> {
         `[Nodes] Created httpd container ${httpdContainerName} with ID: ${httpdContainer.Id}`,
       );
 
-      await docker.containerStart(nodeContainer.Id);
-      console.log(`[Nodes] Started node container ${nodeContainerName}`);
-
-      await docker.containerStart(httpdContainer.Id);
-      console.log(`[Nodes] Started httpd container ${httpdContainerName}`);
+      console.log(
+        `[Nodes] Containers created but not started. Will be started after subscription is active.`,
+      );
 
       return persistedNode;
     } catch (nodeInsertErr) {
@@ -310,33 +308,6 @@ async function getConfigForNode(nodeId: string): Promise<ServiceResult<any>> {
   } catch (error) {
     const errorMessage = `Error retrieving node config: ${error} for ${nodeId}`;
     console.error(errorMessage);
-    return { success: false, error: errorMessage, statusCode: 500 };
-  }
-}
-
-async function getNodeById(nodeId: string): Promise<ServiceResult<Node>> {
-  try {
-    const db = await getDb();
-    const node = await db.query.nodes.findFirst({
-      where: and(
-        eq(schema.nodes.node_id, nodeId),
-        eq(schema.nodes.deleted, false),
-      ),
-    });
-
-    if (!node) {
-      console.warn(`[Nodes] No active node found with node_id: ${nodeId}`);
-      return {
-        success: false,
-        error: `No active node found with node_id: ${nodeId}`,
-        statusCode: 404,
-      };
-    }
-
-    return { success: true, content: node, statusCode: 200 };
-  } catch (dbError) {
-    const errorMessage = `Failed to retrieve node ${nodeId}`;
-    console.warn(errorMessage, dbError);
     return { success: false, error: errorMessage, statusCode: 500 };
   }
 }
@@ -617,15 +588,212 @@ async function assignAvailablePort(node: Node): Promise<number> {
   return externalPort;
 }
 
+async function stopContainers(user: User): Promise<ServiceResult<void>> {
+  try {
+    const nodeAlias = `${user.handle}_seed`;
+    const nodeContainerName = `${nodeAlias}-node`;
+    const httpdContainerName = `${nodeAlias}-httpd`;
+
+    const docker = await DockerClient.fromDockerHost(config.dockerHost);
+
+    try {
+      const nodeContainer = await docker.containerInspect(nodeContainerName);
+      if (nodeContainer.State?.Running && nodeContainer.Id) {
+        await docker.containerStop(nodeContainer.Id);
+        console.log(`[Nodes] Stopped node container ${nodeContainerName}`);
+      }
+    } catch {
+      console.warn(
+        `[Nodes] Node container not found or already stopped: ${nodeContainerName}`,
+      );
+    }
+
+    try {
+      const httpdContainer = await docker.containerInspect(httpdContainerName);
+      if (httpdContainer.State?.Running && httpdContainer.Id) {
+        await docker.containerStop(httpdContainer.Id);
+        console.log(`[Nodes] Stopped httpd container ${httpdContainerName}`);
+      }
+    } catch {
+      console.warn(
+        `[Nodes] HTTPD container not found or already stopped: ${httpdContainerName}`,
+      );
+    }
+
+    return { success: true, message: "Containers stopped", statusCode: 200 };
+  } catch (error) {
+    console.error(`[Nodes] Failed to stop containers:`, error);
+    return {
+      success: false,
+      error: "Failed to stop containers",
+      statusCode: 500,
+    };
+  }
+}
+
+async function startContainers(user: User): Promise<ServiceResult<void>> {
+  try {
+    const nodeAlias = `${user.handle}_seed`;
+    const nodeContainerName = `${nodeAlias}-node`;
+    const httpdContainerName = `${nodeAlias}-httpd`;
+
+    const docker = await DockerClient.fromDockerHost(config.dockerHost);
+
+    try {
+      const nodeContainer = await docker.containerInspect(nodeContainerName);
+      if (!nodeContainer.State?.Running && nodeContainer.Id) {
+        await docker.containerStart(nodeContainer.Id);
+        console.log(`[Nodes] Started node container ${nodeContainerName}`);
+      }
+    } catch {
+      console.warn(`[Nodes] Node container not found: ${nodeContainerName}`);
+      return {
+        success: false,
+        error: "Node container not found",
+        statusCode: 404,
+      };
+    }
+
+    try {
+      const httpdContainer = await docker.containerInspect(httpdContainerName);
+      if (!httpdContainer.State?.Running && httpdContainer.Id) {
+        await docker.containerStart(httpdContainer.Id);
+        console.log(`[Nodes] Started httpd container ${httpdContainerName}`);
+      }
+    } catch {
+      console.warn(`[Nodes] HTTPD container not found: ${httpdContainerName}`);
+      return {
+        success: false,
+        error: "HTTPD container not found",
+        statusCode: 404,
+      };
+    }
+
+    return { success: true, message: "Containers started", statusCode: 200 };
+  } catch (error) {
+    console.error(`[Nodes] Failed to start containers:`, error);
+    return {
+      success: false,
+      error: "Failed to start containers",
+      statusCode: 500,
+    };
+  }
+}
+
+async function ensureNodeActiveForUser(
+  userId: number,
+): Promise<ServiceResult<void>> {
+  try {
+    const db = await getDb();
+
+    const user = await db.query.users.findFirst({
+      where: eq(schema.users.id, userId),
+      with: {
+        nodes: {
+          where: eq(schema.nodes.deleted, false),
+        },
+      },
+    });
+
+    if (!user) {
+      return {
+        success: false,
+        error: "User not found",
+        statusCode: 404,
+      };
+    }
+
+    if (user.nodes.length > 0) {
+      console.log(
+        `[Nodes] User ${userId} has existing node, starting containers`,
+      );
+      const startResult = await startContainers(user);
+
+      // If containers don't exist (404), the node DB entry exists but
+      // containers were destroyed - create a new node.
+      if (!startResult.success && startResult.statusCode === 404) {
+        console.log(
+          `[Nodes] Containers not found for user ${userId}, creating new node`,
+        );
+        // Mark existing node as deleted since its containers are gone.
+        await db
+          .update(schema.nodes)
+          .set({ deleted: true })
+          .where(eq(schema.nodes.user_id, userId));
+
+        const node = await createNode(user);
+        if (!node) {
+          return {
+            success: false,
+            error: "Failed to create replacement node",
+            statusCode: 500,
+          };
+        }
+
+        console.log(
+          `[Nodes] New node created, starting containers for user ${userId}`,
+        );
+        return await startContainers(user);
+      }
+
+      return startResult;
+    }
+
+    console.log(`[Nodes] Creating node for user ${userId}`);
+    const node = await createNode(user);
+
+    if (!node) {
+      // Race condition check: another process might have created the node.
+      // Re-query to see if node now exists.
+      const refreshedUser = await db.query.users.findFirst({
+        where: eq(schema.users.id, userId),
+        with: {
+          nodes: {
+            where: eq(schema.nodes.deleted, false),
+          },
+        },
+      });
+
+      if (refreshedUser && refreshedUser.nodes.length > 0) {
+        console.log(
+          `[Nodes] Node created by another process, starting containers for user ${userId}`,
+        );
+        return await startContainers(refreshedUser);
+      }
+
+      return {
+        success: false,
+        error: "Failed to create node",
+        statusCode: 500,
+      };
+    }
+
+    console.log(`[Nodes] Node created, starting containers for user ${userId}`);
+    return await startContainers(user);
+  } catch (error) {
+    console.error(
+      `[Nodes] Failed to ensure node active for user ${userId}:`,
+      error,
+    );
+    return {
+      success: false,
+      error: "Failed to activate node",
+      statusCode: 500,
+    };
+  }
+}
+
 export const nodesService = {
   createNode,
   updateNodeConfig,
   getConfigForNode,
-  getNodeById,
   execNodeCommand,
   getNodeStatus,
   getSeededReposForNode,
   seedRepo,
   unseedRepo,
   assignAvailablePort,
+  stopContainers,
+  startContainers,
+  ensureNodeActiveForUser,
 };

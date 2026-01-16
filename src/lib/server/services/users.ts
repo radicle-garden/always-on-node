@@ -6,7 +6,6 @@ import { getDb, schema } from "../db";
 import { type User, profileFromUser, setPassword } from "../entities";
 
 import { emailService } from "./email";
-import { nodesService } from "./nodes";
 
 interface ServiceResult<T> {
   success: boolean;
@@ -194,22 +193,12 @@ export async function verifyEmailAddress(
       .set({ email_verified: true })
       .where(eq(schema.users.id, user.id));
 
-    const node = await nodesService.createNode(user);
-    if (!node) {
-      console.warn(`[Users] Failed to create node for user: ${user.id}`);
-      return {
-        success: false,
-        error: `Failed to create node for user: ${user.id}`,
-        statusCode: 500,
-      };
-    }
-
     console.log(
       `[Users] Successfully verified email address for user: ${user.id}`,
     );
     return {
       success: true,
-      message: `Email verified successfully`,
+      message: `Email verified successfully. Please complete payment to activate your node.`,
       statusCode: 200,
     };
   } catch (e) {
@@ -367,6 +356,30 @@ export async function requestPasswordReset(
   }
 }
 
+export async function retrieveUserWithSubscription(userId: number) {
+  try {
+    const db = await getDb();
+    const user = await db.query.users.findFirst({
+      where: and(eq(schema.users.id, userId), eq(schema.users.deleted, false)),
+      with: {
+        nodes: { where: eq(schema.nodes.deleted, false) },
+        stripeCustomer: {
+          with: {
+            subscriptions: true,
+          },
+        },
+      },
+    });
+    return user;
+  } catch (e) {
+    console.warn(
+      `[Users] Failed to retrieve user with subscription for userId: ${userId}`,
+      e,
+    );
+    return null;
+  }
+}
+
 export const usersService = {
   retrieveUserByHandle,
   createNewUser,
@@ -374,4 +387,5 @@ export const usersService = {
   verifyPasswordResetToken,
   resetPassword,
   requestPasswordReset,
+  retrieveUserWithSubscription,
 };

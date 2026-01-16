@@ -48,9 +48,57 @@ export const seededRadicleRepositories = pgTable("seeded_radicle_repository", {
   seeding_end: timestamp("seeding_end", { withTimezone: true }),
 });
 
+export const stripeCustomers = pgTable("stripe_customer", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id),
+  stripe_customer_id: text("stripe_customer_id").notNull().unique(),
+  created_at: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const stripeSubscriptions = pgTable("stripe_subscription", {
+  id: serial("id").primaryKey(),
+  stripe_customer_id: integer("stripe_customer_id")
+    .notNull()
+    .references(() => stripeCustomers.id),
+  stripe_subscription_id: text("stripe_subscription_id").notNull().unique(),
+  stripe_price_id: text("stripe_price_id").notNull(),
+  status: text("status").notNull(),
+  current_period_start: timestamp("current_period_start", {
+    withTimezone: true,
+  }).notNull(),
+  current_period_end: timestamp("current_period_end", {
+    withTimezone: true,
+  }).notNull(),
+  cancel_at_period_end: boolean("cancel_at_period_end")
+    .notNull()
+    .default(false),
+  cancel_at: timestamp("cancel_at", { withTimezone: true }),
+  canceled_at: timestamp("canceled_at", { withTimezone: true }),
+  trial_start: timestamp("trial_start", { withTimezone: true }),
+  trial_end: timestamp("trial_end", { withTimezone: true }),
+  created_at: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   nodes: many(nodes),
+  stripeCustomer: one(stripeCustomers, {
+    fields: [users.id],
+    references: [stripeCustomers.user_id],
+  }),
 }));
 
 export const nodesRelations = relations(nodes, ({ one, many }) => ({
@@ -71,12 +119,30 @@ export const seededRadicleRepositoriesRelations = relations(
   }),
 );
 
-// Types
+export const stripeCustomersRelations = relations(
+  stripeCustomers,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [stripeCustomers.user_id],
+      references: [users.id],
+    }),
+    subscriptions: many(stripeSubscriptions),
+  }),
+);
+
+export const stripeSubscriptionsRelations = relations(
+  stripeSubscriptions,
+  ({ one }) => ({
+    customer: one(stripeCustomers, {
+      fields: [stripeSubscriptions.stripe_customer_id],
+      references: [stripeCustomers.id],
+    }),
+  }),
+);
+
 export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
 export type Node = typeof nodes.$inferSelect;
-export type NewNode = typeof nodes.$inferInsert;
 export type SeededRadicleRepository =
   typeof seededRadicleRepositories.$inferSelect;
-export type NewSeededRadicleRepository =
-  typeof seededRadicleRepositories.$inferInsert;
+export type StripeCustomer = typeof stripeCustomers.$inferSelect;
+export type StripeSubscription = typeof stripeSubscriptions.$inferSelect;

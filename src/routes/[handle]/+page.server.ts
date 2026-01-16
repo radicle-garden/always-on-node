@@ -2,6 +2,7 @@ import { ResponseError } from "$lib/http-client/lib/fetcher";
 import { config } from "$lib/server/config";
 import { createHttpdClient } from "$lib/server/httpdClient";
 import { nodesService } from "$lib/server/services/nodes";
+import { stripeService } from "$lib/server/services/stripe";
 import { usersService } from "$lib/server/services/users";
 import { parseNodeStatus, parseRepositoryId } from "$lib/utils";
 import type { PublicNodeInfo, UserProfile } from "$types/app";
@@ -156,11 +157,23 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     }
   }
 
+  let subscriptionStatus = null;
+  if (isMe && currentUser) {
+    const statusResult = await stripeService.getSubscriptionStatus(
+      currentUser.id,
+    );
+    if (statusResult.success && statusResult.content) {
+      subscriptionStatus = statusResult.content;
+    }
+  }
+
   return {
     profile,
     repositories,
     nodeStatuses,
     isMe,
+    subscriptionStatus,
+    stripePriceId: config.stripePriceId,
     publicServiceHostPort: config.public.publicServiceHostPort,
     userMaxDiskUsageBytes: config.public.userMaxDiskUsageBytes,
   };
