@@ -199,7 +199,8 @@ export function parseNodeStatus(status: string) {
 
   try {
     const lines = status.split("\n");
-    const isRunning = lines.filter(line => line.includes("✓")).length >= 3;
+    const isRunning =
+      lines.filter(line => line.includes("Node is running")).length >= 1;
     const peers = lines.filter(line => line.includes("✓")).length - 2;
 
     // Parse time values from lines containing time units

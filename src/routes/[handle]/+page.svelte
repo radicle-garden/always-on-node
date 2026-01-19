@@ -54,9 +54,13 @@
             {#if isMe && nodeStatuses[node.node_id]}
               <Dialog.Root>
                 <Dialog.Trigger>
-                  {#if nodeStatuses[node.node_id].isRunning}
+                  {#if nodeStatuses[node.node_id].isRunning && nodeStatuses[node.node_id].peers > 0}
                     <span class="text-green-500">
                       <Icon name="seed-filled" />
+                    </span>
+                  {:else if nodeStatuses[node.node_id].isRunning && nodeStatuses[node.node_id].peers === 0}
+                    <span class="text-yellow-500">
+                      <Icon name="seed" />
                     </span>
                   {:else}
                     <span class="text-red-500">
@@ -71,20 +75,26 @@
                       <div class="mb-4 flex">
                         <UserAvatar nodeId={node.node_id} styleWidth="16rem" />
                       </div>
-                      {#if nodeStatuses[node.node_id].isRunning}
-                        <div class="flex gap-2">
-                          <a
-                            class="flex items-center gap-1"
-                            href="https://app.radicle.xyz/nodes/{nodeHttpdHostPort}"
-                            target="_blank">
-                            {nodeHttpdHostPort}
-                            <Icon name="open-external" />
-                          </a>
-                          <Badge variant="default">
-                            <Icon name="seed-filled" />
-                            Online
-                          </Badge>
-                        </div>
+                      {#if nodeStatuses[node.node_id].isRunning && nodeStatuses[node.node_id].peers > 0}
+                        <a
+                          href="https://app.radicle.xyz/nodes/{nodeHttpdHostPort}"
+                          target="_blank">
+                          {nodeHttpdHostPort}
+                        </a>
+                        <Badge variant="success">
+                          <Icon name="seed-filled" />
+                          Online
+                        </Badge>
+                      {:else if nodeStatuses[node.node_id].isRunning && nodeStatuses[node.node_id].peers === 0}
+                        <a
+                          href="https://app.radicle.xyz/nodes/{nodeHttpdHostPort}"
+                          target="_blank">
+                          {nodeHttpdHostPort}
+                        </a>
+                        <Badge variant="outline">
+                          <Icon name="seed" />
+                          Offline - no peers
+                        </Badge>
                       {:else}
                         <div class="flex gap-2">
                           {nodeHttpdHostPort}
