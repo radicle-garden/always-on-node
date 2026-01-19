@@ -23,7 +23,6 @@
         - "{{ data_dir }}/radicle"
         - "{{ data_dir }}/radicle/profiles"
         - "{{ bin_dir }}"
-        - "{{ postgres_data_dir }}"
 
     # Install Radicle CLI
     - name: Check if Radicle CLI is installed
@@ -73,6 +72,16 @@
   become: true
   become_user: "{{ system_username }}"
   tasks:
+    - name: Create necessary directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ system_username }}"
+        group: "{{ system_group }}"
+        mode: 0755
+      with_items:
+        - "{{ postgres_data_dir }}"
+
     - name: Run Postgres container
       containers.podman.podman_container:
         name: postgres
