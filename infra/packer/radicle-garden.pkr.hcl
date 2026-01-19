@@ -102,7 +102,7 @@ build {
   }
 
   provisioner "ansible-local" {
-    playbook_files     = ["infra/ansible/plays/10_gardener_setup.yml", "infra/ansible/plays/2_podman.yml"]
+    playbook_files     = ["infra/ansible/plays/10_app_setup.yml", "infra/ansible/plays/2_podman.yml", "infra/ansible/plays/20_app_deploy.yml"]
     playbook_dir      = "infra/ansible"
     role_paths        = ["infra/ansible/roles"]
     group_vars        = "infra/ansible/group_vars"

@@ -1,0 +1,17 @@
+NODE_ENV=production
+
+RAD_BINARY_PATH=/home/{{ system_username }}/.radicle/bin/rad
+PROFILE_STORAGE_PATH={{ profile_storage_path }}
+DATABASE_URL="{{ database_url }}"
+DOCKER_HOST=unix:///run/user/{{ unix_user_id }}/podman/podman.sock
+
+RESEND_API_KEY={{ resend_api_key }}
+EMAIL_SENDER_ADDRESS={{ email_sender_address }}
+
+APP_SECRET={{ app_secret }}
+RAD_PASSPHRASE=
+
+FQDN={{ garden_domain }}
+FRONTEND_URL=https://{{ garden_domain }}
+NODES_CONNECT_FQDN={{ garden_domain }}
+PUBLIC_SERVICE_HOST_PORT={{ garden_domain }}

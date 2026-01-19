@@ -1,0 +1,11 @@
+[Unit]
+Description=always-on-node
+
+[Service]
+ExecStart=/usr/bin/node --env-file={{ config_dir }}/radicle/always-on-node_env {{ app_dir }}/build
+Restart=on-failure
+WorkingDirectory={{ app_dir }}
+
+
+[Install]
+WantedBy=default.target

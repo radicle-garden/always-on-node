@@ -65,7 +65,7 @@ resource "null_resource" "aon_generate_ssh_cert" {
         -s ${local_sensitive_file.host_signing_ca_temp.filename} \
         -I "nodes.${var.garden_domain}" \
         -h \
-        -n app.${var.garden_domain},nodes.${var.garden_domain},aon.${var.garden_domain} \
+        -n app.${var.garden_domain},app-staging.${var.garden_domain},nodes.${var.garden_domain},nodes-staging.${var.garden_domain} \
         ${local_file.aon_host_public_key_temp.filename}
     EOT
   }

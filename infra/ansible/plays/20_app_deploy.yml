@@ -1,0 +1,66 @@
+- name: Deploy apps
+  hosts: prod
+  gather_facts: no
+  become: true
+  become_user: "{{ system_username }}"
+  tasks:
+    - name: Create the environment file
+      template:
+        src: ../templates/aon_env_file.j2
+        dest: "{{ config_dir }}/radicle/always-on-node_env"
+        owner: "{{ system_username }}"
+        group: "{{ system_username }}"
+        mode: "0644"
+
+    - name: Clone App
+      git:
+        repo: https://iris.radicle.xyz/rad:z2v4XbSTEqnYrxToCAA3vf9yCD5Er.git
+        dest: "{{ app_dir }}"
+        single_branch: yes
+        #        refspec: 'refs/namespaces/z6MkrnXJWPndzPBxpBUaE3L3BnMeWpaQdT1V1FvkoCPFSFS3/refs/heads/production'
+        #        version: 'FETCH_HEAD'
+        version: "main"
+        force: yes
+    #      notify:
+    #        - restart always-on-node
+
+    - name: Install dependencies
+      # FIXME: only prod dependencies should be getting installed with: ansible.builtin.command: pnpm install --prod
+      ansible.builtin.shell: export PATH=/usr/local/lib/npm/bin:$PATH && pnpm install
+      args:
+        chdir: "{{ app_dir }}"
+
+    - name: Build for production
+      ansible.builtin.shell: export PATH=/usr/local/lib/npm/bin:$PATH && pnpm build
+      args:
+        chdir: "{{ app_dir }}"
+
+    - name: Create the systemd unit file
+      template:
+        src: ../templates/aon_systemd_unit.j2
+        dest: "{{ config_dir }}/systemd/user/always-on-node.service"
+        owner: "{{ system_username }}"
+        group: "{{ system_username }}"
+        mode: "0644"
+      notify:
+        - reload systemd
+    #        - restart always-on-node
+
+    - name: Enable systemd user service
+      systemd:
+        name: "{{ item }}"
+        enabled: yes
+        scope: user
+      with_items:
+        - "always-on-node.service"
+
+  handlers:
+    - name: reload systemd
+      systemd:
+        daemon_reload: yes
+        scope: user
+    - name: restart always-on-node
+      systemd:
+        name: "always-on-node.service"
+        scope: user
+        state: restarted
