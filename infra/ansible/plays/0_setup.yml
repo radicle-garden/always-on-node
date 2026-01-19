@@ -12,6 +12,12 @@
         state: present
         uid: "{{ unix_user_id }}"
 
+    - name: Allow user's apps to write logs in /var/log
+      ansible.builtin.user:
+        name: "{{ system_username }}"
+        groups: syslog,systemd-journal
+        append: yes
+
     - name: Set up authorized keys
       ansible.posix.authorized_key:
         user: "{{ system_username }}"
