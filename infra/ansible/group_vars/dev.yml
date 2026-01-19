@@ -4,6 +4,7 @@ state_dir: "/home/vagrant/.local/state"
 bin_dir: "/home/vagrant/.local/bin"
 
 caddy_user: "vagrant"
+caddy_config: "{{ lookup('template', '../templates/Caddyfile.dev.j2') }}"
 
 ### Security
 system_username: "vagrant"

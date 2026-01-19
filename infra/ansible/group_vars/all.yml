@@ -3,7 +3,6 @@ nodejs_npm_global_packages:
   - name: pnpm
 
 ### Caddy
-caddy_config: "{{ lookup('template', '../templates/Caddyfile.gardener.j2') }}"
 # allow caddy to open ports under 1024 (e.g. 80 / 443)
 caddy_setcap: true
 caddy_systemd_capabilities_enabled: true
