@@ -53,9 +53,13 @@
             {#if isMe && nodeStatuses[node.node_id]}
               <Dialog.Root>
                 <Dialog.Trigger>
-                  {#if nodeStatuses[node.node_id].isRunning}
+                  {#if nodeStatuses[node.node_id].isRunning && nodeStatuses[node.node_id].peers > 0}
                     <span class="text-green-500">
                       <Icon name="seedling-filled" />
+                    </span>
+                  {:else if nodeStatuses[node.node_id].isRunning && nodeStatuses[node.node_id].peers === 0}
+                    <span class="text-yellow-500">
+                      <Icon name="seedling" />
                     </span>
                   {:else}
                     <span class="text-red-500">
@@ -67,7 +71,7 @@
                   <Dialog.Header>
                     <Dialog.Title>Your Radicle Garden Node</Dialog.Title>
                     <Dialog.Description>
-                      {#if nodeStatuses[node.node_id].isRunning}
+                      {#if nodeStatuses[node.node_id].isRunning && nodeStatuses[node.node_id].peers > 0}
                         <a
                           href="https://app.radicle.xyz/nodes/{nodeHttpdHostPort}"
                           target="_blank">
@@ -76,6 +80,16 @@
                         <Badge variant="success">
                           <Icon name="seedling-filled" />
                           Online
+                        </Badge>
+                      {:else if nodeStatuses[node.node_id].isRunning && nodeStatuses[node.node_id].peers === 0}
+                        <a
+                          href="https://app.radicle.xyz/nodes/{nodeHttpdHostPort}"
+                          target="_blank">
+                          {nodeHttpdHostPort}
+                        </a>
+                        <Badge variant="outline">
+                          <Icon name="seedling" />
+                          Offline - no peers
                         </Badge>
                       {:else}
                         {nodeHttpdHostPort}
