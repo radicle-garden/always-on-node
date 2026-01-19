@@ -5,7 +5,7 @@ on:
     paths:
       - "infra/packer/**"
       - "infra/ansible/**"
-      - ".github/workflows/packer-build.yml"
+      - ".github/workflows/packer-build-vms.yml"
   workflow_dispatch:
     inputs:
       version:
