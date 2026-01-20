@@ -72,6 +72,13 @@
   become: true
   become_user: "{{ system_username }}"
   tasks:
+    - name: "install additional packages for dev env"
+      become: true
+      become_user: root
+      package:
+        name:
+          - build-essential
+
     - name: Create necessary directories
       file:
         path: "{{ item }}"
