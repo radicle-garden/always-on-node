@@ -62,7 +62,15 @@
       <div class="flex flex-col gap-2">
         <div class="flex w-full justify-between">
           <div
-            class="max-w-80 truncate font-medium text-muted-foreground md:max-w-60 lg:max-w-80">
+            class="flex max-w-80 items-center gap-2 truncate font-medium text-muted-foreground md:max-w-60 lg:max-w-80">
+            <button
+              type="button"
+              title="Refresh"
+              class="ml-2 rounded p-1 text-muted-foreground hover:text-radicle-blue"
+              aria-label="Refresh"
+              onclick={() => location.reload()}>
+              <Icon name="hourglass" />
+            </button>
             Syncing...
           </div>
           <div class="flex items-center gap-2 text-muted-foreground">

@@ -526,14 +526,7 @@ async function seedRepo(
     };
   }
 
-  const result = await execNodeCommand(node, "seed", [repositoryId]);
-  if (!result) {
-    return {
-      success: false,
-      error: `Failed to seed repository ${repositoryId} by node ${nodeId}`,
-      statusCode: 500,
-    };
-  }
+  execNodeCommand(node, "seed", [repositoryId]);
 
   await db.insert(schema.seededRadicleRepositories).values({
     repository_id: repositoryId,
