@@ -62,6 +62,41 @@ Vagrant.configure("2") do |config|
 
     SHELL
 
+  config.vm.provision "shell", privileged: true, run: "once", inline: <<-SHELL
+    # Create custom MOTD script
+    cat > /etc/update-motd.d/99-vagrant-info <<'EOF'
+#!/bin/sh
+cat <<'MOTD'
+┌──────────────────────────────────────────────────────────┐
+│ Radicle Gardener · Dev Environment                       │
+├──────────────────────────────────────────────────────────┤
+│ tmux:                                                    │
+│   svelte dev  TERM=xterm tmux attach -t sveltekit        │
+│                                                          │
+│   detach      Ctrl+b d                                   │
+│   help        Ctrl+b ?                                   │
+│   copy        Ctrl+b [  (scroll / select)                │
+│   paste       Ctrl+b ]                                   │
+│   exit copy   q                                          │
+│   sessions    tmux ls                                    │
+│                                                          │
+│ caddy:                                                   │
+│   restart     sudo systemctl restart caddy               │
+│   logs        journalctl -f -u caddy                     │
+│                                                          │
+│ podman:                                                  │
+│   ps          podman ps                                  │
+│   all         podman container list --all                │
+│   start       podman container start <ID>                │
+│   stop        podman container stop <ID>                 │
+│   logs        podman container logs <ID>                 │
+└──────────────────────────────────────────────────────────┘
+
+MOTD
+EOF
+    chmod +x /etc/update-motd.d/99-vagrant-info
+    SHELL
+
   config.vm.provision "shell", privileged: false, run: "always", inline: <<-SHELL
 
     # Install node modules
@@ -88,23 +123,14 @@ Vagrant.configure("2") do |config|
 
   # Post-up message
   config.vm.post_up_message = <<-MSG
-    ╔══════════════════════════════════════════════════════════════════════════════╗
-    ║                         Radicle Gardener Dev Environment                     ║
-    ║                                                                              ║
-    ║  VM IP Address: 192.168.33.10                                                ║
-    ║                                                                              ║
-    ║  To connect to the VM:                                                       ║
-    ║    vagrant ssh                                                               ║
-    ║                                                                              ║
-    ║  To see logs (outside Vagrant):                                              ║
-    ║    tail -f sveltekit.log                                            ║
-    ║                                                                              ║
-    ║  To see logs (inside Vagrant):                                               ║
-    ║    tmux attach -t sveltekit                                                  ║
-    ║                                                                              ║
-    ║  Development server should be running on:                                    ║
-    ║    http://localhost:5173                                                     ║
-    ║                                                                              ║
-    ╚══════════════════════════════════════════════════════════════════════════════╝
+┌──────────────────────────────────────────────┐
+│ Radicle Gardener · Dev Environment           │
+├──────────────────────────────────────────────┤
+│ VM IP:        192.168.33.10                  │
+│ SSH:          vagrant ssh                    │
+│ Logs:         tail -f sveltekit.log          │
+│ Dev Server:   http://localhost:5173          │
+│ Clean:        pnpm clean                     │
+└──────────────────────────────────────────────┘
 MSG
 end
