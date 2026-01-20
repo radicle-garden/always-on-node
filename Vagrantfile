@@ -42,6 +42,18 @@ Vagrant.configure("2") do |config|
   # to ensure correct architecture (Linux) dependencies
   config.vm.synced_folder ".", "/vagrant", mount_options: ["dmode=775,fmode=664"]
 
+  # Install build tools needed for native Node.js modules
+  config.vm.provision "shell", privileged: true, run: "once", inline: <<-SHELL
+    # Install build-essential for gcc, g++, make, etc.
+    if ! dpkg -l | grep -q build-essential; then
+      echo "Installing build-essential..."
+      apt-get update
+      apt-get install -y build-essential
+    else
+      echo "build-essential already installed"
+    fi
+    SHELL
+
   # Create a VM-local node_modules and bind mount it into /vagrant
   # This ensures native dependencies are built for Linux, not macOS
   config.vm.provision "shell", privileged: true, run: "always", inline: <<-SHELL
