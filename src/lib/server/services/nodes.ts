@@ -653,6 +653,11 @@ export async function getSeededReposForNode(
   }
 }
 
+// FIXME: We wait for the seed sync to finish in the request process even after
+// returning the response early, which will probably terminate within 120s
+// (or whatever the prod api response timeout is set to), so if the sync takes
+// longer, we don't notify the front-end and the db goes out of sync with what
+// we have on disk.
 export async function seedRepo(
   nodeId: string,
   repositoryId: string,
@@ -691,23 +696,85 @@ export async function seedRepo(
     };
   }
 
-  execNodeCommand(node, "seed", [repositoryId]).then(result => {
-    const success = parseSeedCommandResult(result);
-    log.info("Seed command completed", { repositoryId, success });
-    onSeedComplete?.(success);
-  });
+  execNodeCommand(node, "seed", [repositoryId])
+    .then(async seedResult => {
+      const success = parseSeedCommandResult(seedResult);
 
-  await db.insert(schema.seededRadicleRepositories).values({
-    repository_id: repositoryId,
-    node_id: node.id,
-    seeding: true,
-    seeding_start: new Date(),
-  });
+      if (!success) {
+        log.error("Seeding failed", { repositoryId, nodeId });
+        onSeedComplete?.(false);
+        return;
+      }
+
+      log.info("Seed command completed successfully", { repositoryId, nodeId });
+
+      const pinResult = await execNodeCommand(node, "config", [
+        "push",
+        "web.pinned.repositories",
+        repositoryId,
+      ]);
+
+      if (!pinResult) {
+        log.error("Failed to pin repository after successful seed", {
+          repositoryId,
+          nodeId,
+        });
+        onSeedComplete?.(false);
+        return;
+      }
+
+      try {
+        const docker = await DockerClient.fromDockerHost(config.dockerHost);
+        const httpdContainerName = `${node.alias}-httpd`;
+        await docker.containerKill(httpdContainerName, { signal: "SIGHUP" });
+        log.info("Restarted httpd container after pinning repository", {
+          httpdContainerName,
+          repositoryId,
+        });
+      } catch (restartError) {
+        log.warn("Failed to restart httpd container", {
+          nodeId,
+          repositoryId,
+          error: restartError,
+        });
+      }
+
+      try {
+        await db.insert(schema.seededRadicleRepositories).values({
+          repository_id: repositoryId,
+          node_id: node.id,
+          seeding: true,
+          seeding_start: new Date(),
+        });
+
+        log.info("Repository marked as seeded in database", {
+          repositoryId,
+          nodeId,
+        });
+      } catch (dbError) {
+        log.error("Failed to insert seeded repository record", {
+          repositoryId,
+          nodeId,
+          error: dbError,
+        });
+        // Repo is seeded and pinned but not tracked in DB if this fails.
+      }
+
+      onSeedComplete?.(true);
+    })
+    .catch(error => {
+      log.error("Seed operation failed with exception", {
+        error,
+        repositoryId,
+        nodeId,
+      });
+      onSeedComplete?.(false);
+    });
 
   return {
     success: true,
-    message: `Successfully seeded repository ${repositoryId} by node ${nodeId}`,
-    statusCode: 200,
+    message: `Seeding repository ${repositoryId} started`,
+    statusCode: 202,
   };
 }
 
@@ -748,23 +815,44 @@ export async function unseedRepo(
     };
   }
 
+  const unpinResult = await execNodeCommand(node, "config", [
+    "remove",
+    "web.pinned.repositories",
+    repositoryId,
+  ]);
+  if (!unpinResult) {
+    log.error("Failed to unpin repository", { repositoryId, nodeId });
+    return {
+      success: false,
+      error: `Failed to unpin repository ${repositoryId} by node ${nodeId}`,
+      statusCode: 500,
+    };
+  }
+
+  try {
+    const docker = await DockerClient.fromDockerHost(config.dockerHost);
+    const httpdContainerName = `${node.alias}-httpd`;
+    await docker.containerKill(httpdContainerName, { signal: "SIGHUP" });
+    log.info("Restarted httpd container after unpinning repository", {
+      httpdContainerName,
+      repositoryId,
+    });
+  } catch (restartError) {
+    log.warn("Failed to restart httpd container", {
+      nodeId,
+      repositoryId,
+      error: restartError,
+    });
+  }
+
   const unseedResult = await execNodeCommand(node, "unseed", [repositoryId]);
   if (!unseedResult) {
-    log.warn("Failed to unseed repository", { repositoryId, nodeId });
+    log.error("Failed to unseed repository", { repositoryId, nodeId });
     return {
       success: false,
       error: `Failed to unseed repository ${repositoryId} by node ${nodeId}`,
       statusCode: 500,
     };
-  }
-
-  // https://app.radicle.xyz/nodes/seed.radicle.xyz/rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5/tree/crates/radicle-cli/examples/rad-clean.md
-  const cleanResult = await execNodeCommand(node, "clean", [
-    repositoryId,
-    "--no-confirm",
-  ]);
-  if (!cleanResult) {
-    log.warn("Failed to clean repository", { repositoryId, nodeId });
   }
 
   await db
@@ -774,6 +862,14 @@ export async function unseedRepo(
       seeding_end: new Date(),
     })
     .where(eq(schema.seededRadicleRepositories.id, seededRepo.id));
+
+  const cleanResult = await execNodeCommand(node, "clean", [
+    repositoryId,
+    "--no-confirm",
+  ]);
+  if (!cleanResult) {
+    log.warn("Failed to clean repository", { repositoryId, nodeId });
+  }
 
   return {
     success: true,
