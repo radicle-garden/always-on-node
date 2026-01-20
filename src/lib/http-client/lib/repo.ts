@@ -9,7 +9,7 @@ import {
   record,
   string,
   union,
-  z,
+  type z,
 } from "zod";
 
 import type { Fetcher, RequestOptions } from "./fetcher.js";

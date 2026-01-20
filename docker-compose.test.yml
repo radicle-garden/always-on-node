@@ -1,0 +1,18 @@
+services:
+  postgres-test:
+    image: postgres:17
+    container_name: always-on-node-test-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  stripe-mock:
+    image: stripe/stripe-mock:v0.197.0
+    container_name: always-on-node-stripe-mock
+    ports:
+      - "${STRIPE_MOCK_PORT}:12111"

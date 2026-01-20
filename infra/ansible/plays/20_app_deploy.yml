@@ -35,6 +35,11 @@
       args:
         chdir: "{{ app_dir }}"
 
+    - name: Run DB migrations
+      ansible.builtin.shell: export PATH=/usr/local/lib/npm/bin:$PATH && pnpm db:migrate
+      args:
+        chdir: "{{ app_dir }}"
+
     - name: Create the systemd unit file
       template:
         src: ../templates/aon_systemd_unit.j2

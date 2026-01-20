@@ -105,14 +105,11 @@ EOF
     SHELL
 
   config.vm.provision "shell", privileged: false, run: "always", inline: <<-SHELL
-
-    # Install node modules
     cd /vagrant
     pnpm install
-
+    pnpm db:migrate
     # Start the dev server (log to file and tmux session)
     tmux new-session -d -s "sveltekit" "pnpm dev 2>&1 | tee /vagrant/sveltekit.log"
-
     SHELL
 
   # Provider-specific configuration so you can fine-tune various

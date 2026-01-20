@@ -4,7 +4,7 @@ import * as path from "path";
 import configJson from "./config.json";
 
 const __dirname = path.resolve();
-dotenv.config({ path: path.join(__dirname, ".env") });
+dotenv.config({ path: path.join(__dirname, ".env"), quiet: true });
 
 export interface AppConfig {
   appSecret: string;
@@ -26,6 +26,7 @@ export interface AppConfig {
   stripeSecretKey: string;
   stripeWebhookSecret: string;
   stripePriceId: string;
+  stripeApiBase?: string;
   public: {
     defaultHttpdApiHostname: string;
     defaultHttpdApiPort: number;
@@ -63,6 +64,7 @@ export function getConfig(): AppConfig {
     stripeSecretKey: process.env.STRIPE_SECRET_SERVER_SIDE_KEY || "",
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
     stripePriceId: process.env.STRIPE_PRICE_ID || "",
+    stripeApiBase: process.env.STRIPE_API_BASE,
     public: {
       defaultHttpdApiHostname:
         process.env.DEFAULT_HTTPD_API_HOSTNAME ||
