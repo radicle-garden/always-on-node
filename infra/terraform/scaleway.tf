@@ -141,22 +141,56 @@ resource "scaleway_instance_server" "aon" {
       - cloud-init-per once ssh-users-ca echo "TrustedUserCAKeys /etc/ssh/users_ca.pub" >> /etc/ssh/sshd_config
       - cloud-init-per once ssh-host-cert echo "HostCertificate /etc/ssh/ssh_host_ed25519_key-cert.pub" >> /etc/ssh/sshd_config
     runcmd:
+
       - |
+        # 1. Identify devices dynamically
         logs_vol=$(lsblk --fs --json | jq -r '[.blockdevices[] | select(.children == null and .fstype == null) | .name][0]')
         nodes_vol=$(lsblk --fs --json | jq -r '[.blockdevices[] | select(.children == null and .fstype == null) | .name][1]')
+
+        # 2. LOGS SETUP
+        # Check if the logical volume already exists
+        if [ ! -e /dev/logs/log ]; then
+          # If not, initialize LVM and Format
         pvcreate /dev/$logs_vol
+          vgcreate logs /dev/$logs_vol
+          lvcreate --name log --size 45g logs
+          mkfs -t ext4 /dev/logs/log
+        else
+          # If it exists, ensure the Volume Group is active
+          vgchange -ay logs
+        fi
+
+        # 3. MOUNT /VAR/LOG SAFELY
+        # Always sync logs to ensure existing boot logs (until time runcmd has run) aren't hidden
+        mkdir -p /mnt/tmp_log
+        mount /dev/logs/log /mnt/tmp_log
+        rsync -aX /var/log/ /mnt/tmp_log/
+        umount /mnt/tmp_log
+
+        # Mount permanently
+        mount /dev/logs/log /var/log
+        echo '/dev/logs/log /var/log ext4 defaults 0 2' >> /etc/fstab
+
+        # Fix permissions and restart logger
+        chown root:syslog /var/log
+        chmod 775 /var/log
+        systemctl restart rsyslog
+
+        # 4. DATA SETUP
+        if [ ! -e /dev/node_storage/nodedata ]; then
         pvcreate /dev/$nodes_vol
-        vgcreate logs /dev/$logs_vol
         vgcreate node_storage /dev/$nodes_vol
-      - [ lvcreate, --name, log, --size, 45g, logs]
-      - [ mkfs, -t, ext4, /dev/logs/log ]
-      - [ mount, /dev/logs/log, /var/log ]
-      - sh -c "echo '/dev/logs/log /var/log ext4 defaults 0 2' >> /etc/fstab"
-      - [ lvcreate, --name, nodedata, --size, 93g, node_storage]
-      - [ mkfs, -t, ext4, /dev/node_storage/nodedata ]
-      - [ mkdir, -p, /opt/radicle ]
-      - [ mount, /dev/node_storage/nodedata, /opt/radicle ]
-      - sh -c "echo '/dev/node_storage/nodedata /opt/radicle ext4 defaults 0 2' >> /etc/fstab"
+          lvcreate --name nodedata --size 93g node_storage
+          mkfs -t ext4 /dev/node_storage/nodedata
+        else
+           vgchange -ay node_storage
+        fi
+
+        mkdir -p /opt/radicle
+        mount /dev/node_storage/nodedata /opt/radicle
+        echo '/dev/node_storage/nodedata /opt/radicle ext4 defaults 0 2' >> /etc/fstab
+        chown -R radicle:radicle /opt/radicle
+
     write_files:
       - path: /etc/ssh/users_ca.pub
         content: |
