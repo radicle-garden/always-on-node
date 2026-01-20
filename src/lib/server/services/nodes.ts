@@ -526,13 +526,39 @@ async function seedRepo(
     };
   }
 
-  const result = await execNodeCommand(node, "seed", [repositoryId]);
-  if (!result) {
+  const seedResult = await execNodeCommand(node, "seed", [repositoryId]);
+  if (!seedResult) {
     return {
       success: false,
       error: `Failed to seed repository ${repositoryId} by node ${nodeId}`,
       statusCode: 500,
     };
+  }
+  const pinResult = await execNodeCommand(node, "config", [
+    "push",
+    "web.pinned.repositories",
+    repositoryId,
+  ]);
+  if (!pinResult) {
+    return {
+      success: false,
+      error: `Failed to pin repository ${repositoryId} by node ${nodeId}`,
+      statusCode: 500,
+    };
+  }
+
+  try {
+    const docker = await DockerClient.fromDockerHost(config.dockerHost);
+    const httpdContainerName = `${node.alias}-httpd`;
+    await docker.containerRestart(httpdContainerName);
+    console.log(
+      `[Nodes] Restarted httpd container ${httpdContainerName} after pinning repository ${repositoryId}`,
+    );
+  } catch (restartError) {
+    console.warn(
+      `[Nodes] Failed to restart httpd container for node ${nodeId}:`,
+      restartError,
+    );
   }
 
   await db.insert(schema.seededRadicleRepositories).values({
@@ -586,13 +612,40 @@ async function unseedRepo(
     };
   }
 
-  const result = await execNodeCommand(node, "unseed", [repositoryId]);
-  if (!result) {
+  const unseedResult = await execNodeCommand(node, "unseed", [repositoryId]);
+  if (!unseedResult) {
     return {
       success: false,
       error: `Failed to unseed repository ${repositoryId} by node ${nodeId}`,
       statusCode: 500,
     };
+  }
+
+  const unpinResult = await execNodeCommand(node, "config", [
+    "remove",
+    "web.pinned.repositories",
+    repositoryId,
+  ]);
+  if (!unpinResult) {
+    return {
+      success: false,
+      error: `Failed to unpin repository ${repositoryId} by node ${nodeId}`,
+      statusCode: 500,
+    };
+  }
+
+  try {
+    const docker = await DockerClient.fromDockerHost(config.dockerHost);
+    const httpdContainerName = `${node.alias}-httpd`;
+    await docker.containerRestart(httpdContainerName);
+    console.log(
+      `[Nodes] Restarted httpd container ${httpdContainerName} after unpinning repository ${repositoryId}`,
+    );
+  } catch (restartError) {
+    console.warn(
+      `[Nodes] Failed to restart httpd container for node ${nodeId}:`,
+      restartError,
+    );
   }
 
   await db
