@@ -1,0 +1,65 @@
+#!/bin/bash
+set -e
+
+# Remove the first '--' if pnpm adds it
+if [ "$1" = "--" ]; then
+  shift
+fi
+
+# Detect docker or podman
+if command -v docker &> /dev/null; then
+  CONTAINER_CMD="docker"
+elif command -v podman &> /dev/null; then
+  CONTAINER_CMD="podman"
+else
+  echo "Error: Neither docker nor podman is installed"
+  exit 1
+fi
+
+# Load test environment variables
+set -a
+source .env.test
+set +a
+
+setup_services() {
+  local output
+
+  if ! output=$($CONTAINER_CMD compose -f docker-compose.test.yml up -d 2>&1); then
+    echo "$output"
+    exit 1
+  fi
+
+  SECONDS=0
+  until $CONTAINER_CMD compose -f docker-compose.test.yml exec -T postgres-test pg_isready -U "$POSTGRES_USER" > /dev/null 2>&1; do
+    if [ $SECONDS -gt 30 ]; then
+      echo "Timeout waiting for PostgreSQL to be ready"
+      exit 1
+    fi
+    sleep 1
+  done
+
+  SECONDS=0
+  until curl -s "$STRIPE_API_BASE" > /dev/null 2>&1; do
+    if [ $SECONDS -gt 30 ]; then
+      echo "Timeout waiting for Stripe Mock to be ready"
+      exit 1
+    fi
+    sleep 1
+  done
+
+  if ! output=$(pnpm db:migrate 2>&1); then
+    echo "$output"
+    exit 1
+  fi
+}
+
+teardown_services() {
+  if ! output=$($CONTAINER_CMD compose -f docker-compose.test.yml down -v 2>&1); then
+    echo "$output"
+    exit 1
+  fi
+}
+
+setup_services
+pnpm exec playwright test "$@"
+trap teardown_services EXIT # Trap to ensure teardown runs even if tests fail

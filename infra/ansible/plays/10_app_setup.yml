@@ -85,7 +85,7 @@
     - name: Run Postgres container
       containers.podman.podman_container:
         name: postgres
-        image: docker.io/library/postgres:18-alpine
+        image: docker.io/library/postgres:17-alpine
         state: started
         restart_policy: always
         env:

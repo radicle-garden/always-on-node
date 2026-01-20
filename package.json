@@ -6,18 +6,21 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "preview": "vite preview",
+    "preview": "node build",
     "prepare": "svelte-kit sync || echo ''",
     "check": "scripts/check",
     "format": "scripts/check --fix",
     "clean": "rm -rf ./storage/* && vagrant destroy --force",
-    "setup:stripe": "scripts/setup-stripe.ts"
+    "setup:stripe": "scripts/setup-stripe.ts",
+    "db:migrate": "drizzle-kit migrate",
+    "test:e2e": "scripts/test-e2e"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.1",
     "@eslint/js": "^9.39.2",
     "@internationalized/date": "^3.10.1",
     "@lucide/svelte": "^0.562.0",
+    "@playwright/test": "^1.57.0",
     "@sveltejs/adapter-auto": "^7.0.0",
     "@sveltejs/adapter-node": "^5.5.0",
     "@sveltejs/adapter-static": "^3.0.10",

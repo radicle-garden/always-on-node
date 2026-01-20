@@ -1,5 +1,4 @@
 import { drizzle } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 
 import { config } from "../config";
@@ -19,16 +18,7 @@ export async function initializeDatabase() {
   client = postgres(config.databaseUrl);
   db = drizzle(client, { schema });
 
-  console.log("[Database] Running migrations...");
-  try {
-    await migrate(db, { migrationsFolder: "migrations" });
-    console.log("[Database] Migrations applied successfully");
-  } catch (error) {
-    console.error("[Database] Migration failed:", error);
-    throw error;
-  }
-
-  console.log("[Database] Database initialized successfully");
+  console.log("[Database] Database connection established successfully");
 
   return db;
 }

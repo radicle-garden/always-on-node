@@ -24,9 +24,20 @@ interface SubscriptionStatus {
   cancelAt: Date | null;
 }
 
-const stripe = new Stripe(config.stripeSecretKey, {
+const stripeConfig: Stripe.StripeConfig = {
   apiVersion: "2025-12-15.clover",
-});
+};
+
+if (config.stripeApiBase) {
+  const apiBaseUrl = new URL(config.stripeApiBase);
+  stripeConfig.host = apiBaseUrl.hostname;
+  stripeConfig.port = parseInt(apiBaseUrl.port);
+  stripeConfig.protocol = apiBaseUrl.protocol.replace(":", "") as
+    | "http"
+    | "https";
+}
+
+const stripe = new Stripe(config.stripeSecretKey, stripeConfig);
 
 async function getUsersWithActiveSubscription(): Promise<User[]> {
   const db = await getDb();
