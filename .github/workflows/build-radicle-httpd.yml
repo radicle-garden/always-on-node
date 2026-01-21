@@ -16,6 +16,10 @@ on:
         required: false
         default: ""
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   REGISTRY: quay.io
   IMAGE_NAME: radicle_garden/radicle-httpd
@@ -38,10 +42,10 @@ jobs:
     outputs:
       radicle_httpd_version: ${{ steps.version.outputs.RADICLE_HTTPD_VERSION }}
 
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+
       - name: Prepare
         run: |
           platform=${{ matrix.platform }}
@@ -118,7 +122,7 @@ jobs:
       - build-and-push
     steps:
       - name: Download digests
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: ${{ runner.temp }}/digests
           pattern: digests-*

@@ -10,18 +10,22 @@ on:
     inputs:
       version:
         description: "Version number for the images"
-        required: true
+        required: false
         default: "0.1.0"
       build_vagrant:
         description: "Build Vagrant box"
         type: boolean
-        required: true
+        required: false
         default: true
       build_scaleway:
         description: "Build Scaleway image"
         type: boolean
-        required: true
+        required: false
         default: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   PACKER_VERSION: "1.14.3"
@@ -84,15 +88,21 @@ jobs:
             echo "version=$(date +%Y.%m.%d)-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           fi
 
+      - name: Create vault password file
+        run: |
+          echo "${{ secrets.ANSIBLE_VAULT_PASS }}" > infra/ansible/.vault-password
+
       - name: Build Scaleway image
         env:
           SCW_ACCESS_KEY: ${{ secrets.SCW_ACCESS_KEY }}
           SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
           SCW_PROJECT_ID: ${{ secrets.SCW_PROJECT_ID }}
         run: |
-          echo ${{ secrets.ANSIBLE_VAULT_PASS }} > infra/ansible/.vault-password
-
           packer build \
             -only='radicle-garden.scaleway.ubuntu' \
             -var "version=${{ steps.version.outputs.version }}" \
             infra/packer/radicle-garden.pkr.hcl
+
+      - name: Clean up vault password
+        if: always()
+        run: rm -f infra/ansible/.vault-password
