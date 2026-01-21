@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import Stripe from "stripe";
 
 import { config } from "../config";
@@ -27,6 +27,24 @@ interface SubscriptionStatus {
 const stripe = new Stripe(config.stripeSecretKey, {
   apiVersion: "2025-12-15.clover",
 });
+
+async function getUsersWithActiveSubscription(): Promise<User[]> {
+  const db = await getDb();
+  const subscriptions = await db.query.stripeSubscriptions.findMany({
+    where: or(
+      eq(schema.stripeSubscriptions.status, "active"),
+      eq(schema.stripeSubscriptions.status, "trialing"),
+    ),
+    with: {
+      customer: {
+        with: {
+          user: true,
+        },
+      },
+    },
+  });
+  return subscriptions.map(subscription => subscription.customer.user);
+}
 
 async function getOrCreateStripeCustomer(
   user: User,
@@ -469,6 +487,7 @@ async function getSubscriptionStatus(
 }
 
 export const stripeService = {
+  getUsersWithActiveSubscription,
   getOrCreateStripeCustomer,
   createCheckoutSession,
   createCustomerPortalSession,

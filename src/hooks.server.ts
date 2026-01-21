@@ -1,23 +1,28 @@
 import { initializeDatabase } from "$lib/server/db";
 import { getUserFromSession } from "$lib/server/services/auth";
+import { nodesService } from "$lib/server/services/nodes";
+import { stripeService } from "$lib/server/services/stripe";
 
-import type { Handle } from "@sveltejs/kit";
+import type { Handle, ServerInit } from "@sveltejs/kit";
 
-// Initialize database on server start
-let dbInitialized = false;
-
-async function ensureDbInitialized() {
-  if (!dbInitialized) {
-    await initializeDatabase();
-    dbInitialized = true;
+export const init: ServerInit = async () => {
+  await initializeDatabase();
+  const usersWithActiveSubscriptions =
+    await stripeService.getUsersWithActiveSubscription();
+  console.log(
+    `[Hooks] Found ${usersWithActiveSubscriptions.length} users with active subscriptions`,
+  );
+  for (const user of usersWithActiveSubscriptions) {
+    try {
+      console.log(`[Hooks] Ensuring node active for user ${user.id}`);
+      await nodesService.ensureNodeActiveForUser(user.id);
+    } catch (e) {
+      console.log(`[Hooks] Error activating node for user ${user.id}: ${e}`);
+    }
   }
-}
+};
 
 export const handle: Handle = async ({ event, resolve }) => {
-  // Ensure database is initialized
-  await ensureDbInitialized();
-
-  // Get user from session cookie
   const user = await getUserFromSession(event.cookies);
   event.locals.user = user;
 
