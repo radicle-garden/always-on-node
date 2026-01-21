@@ -552,6 +552,9 @@ async function unseedRepo(
 
   const unseedResult = await execNodeCommand(node, "unseed", [repositoryId]);
   if (!unseedResult) {
+    console.log(
+      `[Nodes] Failed to unseed repository ${repositoryId} by node ${nodeId}`,
+    );
     return {
       success: false,
       error: `Failed to unseed repository ${repositoryId} by node ${nodeId}`,
