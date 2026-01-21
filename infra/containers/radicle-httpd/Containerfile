@@ -1,7 +1,7 @@
 ARG ALPINE_VERSION
 FROM alpine:${ALPINE_VERSION} AS runtime
 
-RUN apk add git git-daemon 
+RUN apk add git git-daemon
 
 ARG RADICLE_HTTPD_VERSION
 ARG PLATFORM

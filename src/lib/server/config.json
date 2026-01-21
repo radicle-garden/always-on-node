@@ -10,8 +10,8 @@
   "nodesConnectFQDN": "localhost",
   "nodeEnv": "development",
   "dockerHost": "unix:///run/user/1000/podman/podman.sock",
-  "radicleNodeContainer": "quay.io/radicle_garden/radicle-node:1.6.0",
-  "radicleHttpdContainer": "quay.io/radicle_garden/radicle-httpd:latest",
+  "radicleNodeContainer": "quay.io/radicle_garden/radicle-node:1.6.1",
+  "radicleHttpdContainer": "quay.io/radicle_garden/radicle-httpd:0.23.0",
   "public": {
     "defaultHttpdApiHostname": "localhost",
     "defaultHttpdApiPort": 9999,
