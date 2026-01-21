@@ -550,13 +550,27 @@ async function unseedRepo(
     };
   }
 
-  const result = await execNodeCommand(node, "unseed", [repositoryId]);
-  if (!result) {
+  const unseedResult = await execNodeCommand(node, "unseed", [repositoryId]);
+  if (!unseedResult) {
+    console.log(
+      `[Nodes] Failed to unseed repository ${repositoryId} by node ${nodeId}`,
+    );
     return {
       success: false,
       error: `Failed to unseed repository ${repositoryId} by node ${nodeId}`,
       statusCode: 500,
     };
+  }
+
+  // https://app.radicle.xyz/nodes/seed.radicle.xyz/rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5/tree/crates/radicle-cli/examples/rad-clean.md
+  const cleanResult = await execNodeCommand(node, "clean", [
+    repositoryId,
+    "--no-confirm",
+  ]);
+  if (!cleanResult) {
+    console.log(
+      `[Nodes] Failed to clean repository ${repositoryId} by node ${nodeId}`,
+    );
   }
 
   await db
