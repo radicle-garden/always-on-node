@@ -67,30 +67,37 @@ Vagrant.configure("2") do |config|
     cat > /etc/update-motd.d/99-vagrant-info <<'EOF'
 #!/bin/sh
 cat <<'MOTD'
-┌──────────────────────────────────────────────────────────┐
-│ Radicle Gardener · Dev Environment                       │
-├──────────────────────────────────────────────────────────┤
-│ tmux:                                                    │
-│   svelte dev  TERM=xterm tmux attach -t sveltekit        │
-│                                                          │
-│   detach      Ctrl+b d                                   │
-│   help        Ctrl+b ?                                   │
-│   copy        Ctrl+b [  (scroll / select)                │
-│   paste       Ctrl+b ]                                   │
-│   exit copy   q                                          │
-│   sessions    tmux ls                                    │
-│                                                          │
-│ caddy:                                                   │
-│   restart     sudo systemctl restart caddy               │
-│   logs        journalctl -f -u caddy                     │
-│                                                          │
-│ podman:                                                  │
-│   ps          podman ps                                  │
-│   all         podman container list --all                │
-│   start       podman container start <ID>                │
-│   stop        podman container stop <ID>                 │
-│   logs        podman container logs <ID>                 │
-└──────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ Radicle Gardener · Dev Environment                              │
+├─────────────────────────────────────────────────────────────────┤
+│ tmux:                                                           │
+│   svelte dev  tmux attach -t sveltekit                          │
+│                                                                 │
+│   detach      Ctrl+b d                                          │
+│   help        Ctrl+b ?                                          │
+│   copy        Ctrl+b [  (scroll / select)                       │
+│   paste       Ctrl+b ]                                          │
+│   exit copy   q                                                 │
+│   sessions    tmux ls                                           │
+│                                                                 │
+│ caddy:                                                          │
+│   restart     sudo systemctl restart caddy                      │
+│   logs        journalctl -f -u caddy                            │
+│                                                                 │
+│ podman:                                                         │
+│   ps          podman ps                                         │
+│   all         podman container list --all                       │
+│   start       podman container start <ID>                       │
+│   stop        podman container stop <ID>                        │
+│   logs        podman container logs <ID>                        │
+│                                                                 │
+│ postgres:                                                       │
+│   connect   psql postgres://garden:garden@localhost:5432/garden │
+│   users     select * from public.user;                          │
+│   nodes     select * from public.node;                          │
+│   list      \dt  tables   \di  indexes   \dv  views   \ds  seq  │
+│   inspect   \d <table>                                          │
+└─────────────────────────────────────────────────────────────────┘
 
 MOTD
 EOF
