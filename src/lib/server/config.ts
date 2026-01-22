@@ -61,7 +61,7 @@ export function getConfig(): AppConfig {
       process.env.RADICLE_NODE_CONTAINER || configJson.radicleNodeContainer,
     radicleHttpdContainer:
       process.env.RADICLE_HTTPD_CONTAINER || configJson.radicleHttpdContainer,
-    stripeSecretKey: process.env.STRIPE_SECRET_SERVER_SIDE_KEY || "",
+    stripeSecretKey: process.env.STRIPE_SECRET_SERVER_SIDE_KEY || "placeholder",
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
     stripePriceId: process.env.STRIPE_PRICE_ID || "",
     stripeApiBase: process.env.STRIPE_API_BASE,
