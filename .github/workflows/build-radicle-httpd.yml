@@ -139,6 +139,7 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,event=pr
+            type=match,pattern=releases/(.*),group=1
             type=raw,value=latest,enable={{is_default_branch}}
           labels: |
             quay.expires-after=${{ github.ref_name != 'main' && '7d' || '' }}
