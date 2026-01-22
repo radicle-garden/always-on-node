@@ -97,7 +97,7 @@ build {
     group_vars        = "infra/ansible/group_vars"
     galaxy_file       = "infra/ansible/roles/requirements.yml"
     inventory_file    = source.type == "vagrant" ? "infra/ansible/dev.inventory" : "infra/ansible/prod.inventory"
-    extra_arguments = ["--vault-password-file .vault-password"]
+    extra_arguments   = source.type == "vagrant" ? [] : ["--vault-password-file .vault-password"]
 
   }
 
@@ -107,7 +107,7 @@ build {
     role_paths        = ["infra/ansible/roles"]
     group_vars        = "infra/ansible/group_vars"
     inventory_file    = source.type == "vagrant" ? "infra/ansible/dev.inventory" : "infra/ansible/prod.inventory"
-    extra_arguments = ["--vault-password-file .vault-password"]
+    extra_arguments   = source.type == "vagrant" ? [] : ["--vault-password-file .vault-password"]
   }
 
   post-processors {
