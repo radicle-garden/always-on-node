@@ -1,0 +1,111 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - production
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.13.0"
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Get git commit hash
+        id: git
+        run: echo "commit_hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Create deployment archive
+        run: |
+          mkdir -p deploy
+          cp -r build deploy/
+          cp -r migrations deploy/
+          cp package.json pnpm-lock.yaml drizzle.config.ts deploy/
+          tar -czf deploy.tar.gz -C deploy .
+
+      - name: Setup SSH certificates
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "${{ secrets.DEPLOY_SSH_CERT }}" > ~/.ssh/deploy_key-cert.pub
+          chmod 644 ~/.ssh/deploy_key-cert.pub
+          echo "${{ secrets.SSH_CA_PUBLIC_KEY }}" > ~/.ssh/ca.pub
+          chmod 644 ~/.ssh/ca.pub
+
+          cat >> ~/.ssh/known_hosts << EOF
+          @cert-authority * $(cat ~/.ssh/ca.pub)
+          EOF
+
+      - name: Create Ansible inventory
+        run: |
+          cat > infra/ansible/prod.inventory << EOF
+          ${{ secrets.PROD_SERVER_HOST }} ansible_user=${{ secrets.PROD_SERVER_USER }} ansible_port=${{ secrets.PROD_SERVER_SSH_PORT }} ansible_ssh_private_key_file=~/.ssh/deploy_key ansible_ssh_common_args='-o CertificateFile=~/.ssh/deploy_key-cert.pub'
+
+          [prod]
+          ${{ secrets.PROD_SERVER_HOST }}
+          EOF
+
+      - name: Create vault password file
+        run: |
+          echo "${{ secrets.ANSIBLE_VAULT_PASS }}" > infra/ansible/.vault-password
+
+      - name: Install Ansible
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install ansible
+
+      - name: Install Ansible requirements
+        run: |
+          cd infra/ansible
+          ansible-galaxy install -r roles/requirements.yml
+
+      - name: Run Ansible playbook
+        run: |
+          cd infra/ansible
+          ansible-playbook \
+            -i prod.inventory \
+            --vault-password-file .vault-password \
+            --extra-vars "deploy_archive=${{ github.workspace }}/deploy.tar.gz git_commit_hash=${{ steps.git.outputs.commit_hash }}" \
+            plays/20_app_deploy.yml
+
+      - name: Clean up
+        if: always()
+        run: |
+          rm -f ~/.ssh/deploy_key ~/.ssh/deploy_key-cert.pub ~/.ssh/ca.pub
+          rm -f infra/ansible/.vault-password
+          rm -f infra/ansible/prod.inventory

@@ -1,8 +1,13 @@
 - name: Deploy apps
   hosts: prod
-  gather_facts: no
+  gather_facts: yes
   become: true
   become_user: "{{ system_username }}"
+  vars:
+    deploy_date: "{{ ansible_date_time.date }}"
+    releases_dir: "{{ app_dir }}/releases"
+    release_dir: "{{ releases_dir }}/{{ deploy_date }}_{{ git_commit_hash | default('unknown') }}"
+    current_link: "{{ app_dir }}/current"
   tasks:
     - name: Create the environment file
       template:
@@ -12,33 +17,75 @@
         group: "{{ system_username }}"
         mode: "0644"
 
-    - name: Clone App
-      git:
-        repo: https://iris.radicle.xyz/rad:z2v4XbSTEqnYrxToCAA3vf9yCD5Er.git
-        dest: "{{ app_dir }}"
-        single_branch: yes
-        #        refspec: 'refs/namespaces/z6MkrnXJWPndzPBxpBUaE3L3BnMeWpaQdT1V1FvkoCPFSFS3/refs/heads/production'
-        #        version: 'FETCH_HEAD'
-        version: "main"
+    - name: Stop the service
+      systemd:
+        name: always-on-node.service
+        state: stopped
+        scope: user
+      ignore_errors: yes
+
+    - name: Ensure releases directory exists
+      file:
+        path: "{{ releases_dir }}"
+        state: directory
+        owner: "{{ system_username }}"
+        group: "{{ system_username }}"
+        mode: "0755"
+
+    - name: Create release directory
+      file:
+        path: "{{ release_dir }}"
+        state: directory
+        owner: "{{ system_username }}"
+        group: "{{ system_username }}"
+        mode: "0755"
+
+    - name: Upload deployment archive
+      copy:
+        src: "{{ deploy_archive }}"
+        dest: "/tmp/deploy.tar.gz"
+        owner: "{{ system_username }}"
+        group: "{{ system_username }}"
+        mode: "0644"
+
+    - name: Extract deployment archive
+      unarchive:
+        src: "/tmp/deploy.tar.gz"
+        dest: "{{ release_dir }}"
+        remote_src: yes
+        owner: "{{ system_username }}"
+        group: "{{ system_username }}"
+
+    - name: Install production dependencies
+      ansible.builtin.shell: export PATH=/usr/local/lib/npm/bin:$PATH && pnpm install --prod --frozen-lockfile
+      args:
+        chdir: "{{ release_dir }}"
+
+    - name: Update current symlink
+      file:
+        src: "{{ release_dir }}"
+        dest: "{{ current_link }}"
+        owner: "{{ system_username }}"
+        group: "{{ system_username }}"
+        state: link
         force: yes
-    #      notify:
-    #        - restart always-on-node
 
-    - name: Install dependencies
-      # FIXME: only prod dependencies should be getting installed with: ansible.builtin.command: pnpm install --prod
-      ansible.builtin.shell: export PATH=/usr/local/lib/npm/bin:$PATH && pnpm install
-      args:
-        chdir: "{{ app_dir }}"
+    - name: Clean up deployment archive
+      file:
+        path: "/tmp/deploy.tar.gz"
+        state: absent
 
-    - name: Build for production
-      ansible.builtin.shell: export PATH=/usr/local/lib/npm/bin:$PATH && pnpm build
+    - name: Clean up old releases (keep last 10)
+      shell: |
+        cd {{ releases_dir }}
+        ls -t | tail -n +11 | xargs -r rm -rf
       args:
-        chdir: "{{ app_dir }}"
+        executable: /bin/bash
 
     - name: Run DB migrations
       ansible.builtin.shell: export PATH=/usr/local/lib/npm/bin:$PATH && pnpm db:migrate
       args:
-        chdir: "{{ app_dir }}"
+        chdir: "{{ release_dir }}"
 
     - name: Create the systemd unit file
       template:
@@ -47,25 +94,17 @@
         owner: "{{ system_username }}"
         group: "{{ system_username }}"
         mode: "0644"
-      notify:
-        - reload systemd
-    #        - restart always-on-node
+      register: systemd_unit
 
-    - name: Enable systemd user service
-      systemd:
-        name: "{{ item }}"
-        enabled: yes
-        scope: user
-      with_items:
-        - "always-on-node.service"
-
-  handlers:
-    - name: reload systemd
+    - name: Reload systemd if unit changed
       systemd:
         daemon_reload: yes
         scope: user
-    - name: restart always-on-node
+      when: systemd_unit.changed
+
+    - name: Start the service
       systemd:
-        name: "always-on-node.service"
+        name: always-on-node.service
+        enabled: yes
+        state: started
         scope: user
-        state: restarted
