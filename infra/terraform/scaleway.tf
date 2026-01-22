@@ -175,6 +175,7 @@ resource "scaleway_instance_server" "aon" {
         chown root:syslog /var/log
         chmod 775 /var/log
         systemctl restart rsyslog
+        systemctl restart systemd-journald
 
         # 4. DATA SETUP
         if [ ! -e /dev/node_storage/nodedata ]; then
