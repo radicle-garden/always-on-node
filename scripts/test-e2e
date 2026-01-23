@@ -16,8 +16,10 @@ else
   exit 1
 fi
 
-# Load test environment variables
+# Load environment variables
+# First load shared defaults from .env, then test overrides from .env.test
 set -a
+source .env
 source .env.test
 set +a
 

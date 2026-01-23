@@ -116,7 +116,7 @@ async function createNode(user: User): Promise<Node | null> {
         return null;
       }
 
-      const docker = await DockerClient.fromDockerHost(config.dockerHost);
+      const docker = await DockerClient.fromDockerHost(config.appPodmanSocket);
 
       console.log(`[Nodes] Pulling container images for ${nodeAlias}...`);
 
@@ -608,7 +608,7 @@ async function stopContainers(user: User): Promise<ServiceResult<void>> {
     const nodeContainerName = `${nodeAlias}-node`;
     const httpdContainerName = `${nodeAlias}-httpd`;
 
-    const docker = await DockerClient.fromDockerHost(config.dockerHost);
+    const docker = await DockerClient.fromDockerHost(config.appPodmanSocket);
 
     try {
       const nodeContainer = await docker.containerInspect(nodeContainerName);
@@ -651,7 +651,7 @@ async function startContainers(user: User): Promise<ServiceResult<void>> {
     const nodeContainerName = `${nodeAlias}-node`;
     const httpdContainerName = `${nodeAlias}-httpd`;
 
-    const docker = await DockerClient.fromDockerHost(config.dockerHost);
+    const docker = await DockerClient.fromDockerHost(config.appPodmanSocket);
 
     try {
       const nodeContainer = await docker.containerInspect(nodeContainerName);

@@ -7,9 +7,17 @@ import { json } from "@sveltejs/kit";
 
 import type { RequestHandler } from "./$types";
 
-const stripe = new Stripe(config.stripeSecretKey, {
-  apiVersion: "2025-12-15.clover",
-});
+let stripeInstance: Stripe | null = null;
+
+function getStripe(): Stripe {
+  if (stripeInstance) {
+    return stripeInstance;
+  }
+  stripeInstance = new Stripe(config.stripeSecretKey, {
+    apiVersion: "2025-12-15.clover",
+  });
+  return stripeInstance;
+}
 
 export const POST: RequestHandler = async ({ request }) => {
   const body = await request.text();
@@ -29,7 +37,7 @@ export const POST: RequestHandler = async ({ request }) => {
       );
     }
 
-    event = stripe.webhooks.constructEvent(
+    event = getStripe().webhooks.constructEvent(
       body,
       signature,
       config.stripeWebhookSecret,

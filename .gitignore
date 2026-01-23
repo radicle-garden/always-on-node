@@ -14,8 +14,10 @@ sveltekit.log
 Thumbs.db
 
 # Env
-.env
-.env.*
+.env.local
+.env.*.local
+.env.production
+!.env
 !.env.example
 !.env.test
 

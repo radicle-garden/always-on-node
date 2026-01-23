@@ -168,6 +168,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   }
 
   return {
+    config,
     profile,
     repositories,
     nodeStatuses,

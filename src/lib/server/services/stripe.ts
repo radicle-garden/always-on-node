@@ -24,20 +24,29 @@ interface SubscriptionStatus {
   cancelAt: Date | null;
 }
 
-const stripeConfig: Stripe.StripeConfig = {
-  apiVersion: "2025-12-15.clover",
-};
+let stripeInstance: Stripe | null = null;
 
-if (config.stripeApiBase) {
-  const apiBaseUrl = new URL(config.stripeApiBase);
-  stripeConfig.host = apiBaseUrl.hostname;
-  stripeConfig.port = parseInt(apiBaseUrl.port);
-  stripeConfig.protocol = apiBaseUrl.protocol.replace(":", "") as
-    | "http"
-    | "https";
+function getStripe(): Stripe {
+  if (stripeInstance) {
+    return stripeInstance;
+  }
+
+  const stripeConfig: Stripe.StripeConfig = {
+    apiVersion: "2025-12-15.clover",
+  };
+
+  if (config.stripeApiBase) {
+    const apiBaseUrl = new URL(config.stripeApiBase);
+    stripeConfig.host = apiBaseUrl.hostname;
+    stripeConfig.port = parseInt(apiBaseUrl.port);
+    stripeConfig.protocol = apiBaseUrl.protocol.replace(":", "") as
+      | "http"
+      | "https";
+  }
+
+  stripeInstance = new Stripe(config.stripeSecretKey, stripeConfig);
+  return stripeInstance;
 }
-
-const stripe = new Stripe(config.stripeSecretKey, stripeConfig);
 
 async function getUsersWithActiveSubscription(): Promise<User[]> {
   const db = await getDb();
@@ -75,7 +84,7 @@ async function getOrCreateStripeCustomer(
       };
     }
 
-    const customer = await stripe.customers.create({
+    const customer = await getStripe().customers.create({
       email: user.email,
       name: user.handle,
       metadata: {
@@ -131,7 +140,7 @@ async function createCheckoutSession(
       };
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       mode: "subscription",
       customer: customerResult.content,
       line_items: [
@@ -189,7 +198,7 @@ async function createCustomerPortalSession(
       };
     }
 
-    const session = await stripe.billingPortal.sessions.create({
+    const session = await getStripe().billingPortal.sessions.create({
       customer: customer.stripe_customer_id,
       return_url: returnUrl,
     });
@@ -293,7 +302,8 @@ async function syncSubscriptionFromStripe(
   subscriptionId: string,
 ): Promise<void> {
   try {
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const subscription =
+      await getStripe().subscriptions.retrieve(subscriptionId);
     await syncSubscriptionFromEvent(subscription);
   } catch (error) {
     console.error(

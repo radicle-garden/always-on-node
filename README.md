@@ -4,8 +4,26 @@ A web app for managing your radicle garden.
 
 ## Development
 
+### Environment Configuration
+
+This project uses a layered environment configuration:
+
+- **`.env`** (committed) - Shared defaults for all environments
+- **`.env.local`** (gitignored) - Your local secrets and overrides
+- **`.env.test`** (committed) - Test environment configuration
+
+In production override everything by setting environment variables.
+
+**Setup:**
 ```bash
-cp .env.example .env
+# Copy the template to create your local config
+# Edit .env.local and fill in required secrets
+
+cp .env.example .env.local
+```
+
+**Starting the app:**
+```bash
 vagrant up
 vagrant ssh
 ```
@@ -38,7 +56,7 @@ brew install stripe/stripe-cli/stripe
 
 ### 3. Configure Environment Variables
 
-Add your Stripe keys to `.env`:
+Add your Stripe keys to `.env.local`:
 
 ```bash
 STRIPE_SECRET_SERVER_SIDE_KEY=sk_test_…
@@ -57,7 +75,7 @@ The script will:
 - Create/find the "Always-On Node Subscription" product
 - Create/find the €10/month price with 7-day trial
 - Configure the Stripe Customer Portal settings
-- Print `STRIPE_PRICE_ID` which you have to add to your .env file
+- Print `STRIPE_PRICE_ID` which you have to add to your .env.local file
 
 ### 5. Login to Stripe CLI
 
@@ -83,7 +101,7 @@ stripe listen --forward-to localhost:5173/api/stripe/webhook
 ```
 
 This will output a webhook signing secret like `whsec_…`.
-Copy this value and add it to your `.env`:
+Copy this value and add it to your `.env.local`:
 
 ```bash
 STRIPE_WEBHOOK_SECRET=whsec_…
