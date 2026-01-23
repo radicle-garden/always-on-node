@@ -19,7 +19,7 @@ RUN mv radicle-$RADICLE_VERSION-$PLATFORM/bin/rad /usr/local/bin/ && \
 
 RUN rm -rf radicle-$RADICLE_VERSION-$PLATFORM/
 
-ADD https://minio-api.radworks.garden/radworks-releases/radicle-healthcheck/v0.1.0/radicle-healthcheck_v0.1.0_x86_64-unknown-linux-musl /usr/local/bin/radicle-healthcheck
+ADD https://radworks-releases.s3.fr-par.scw.cloud/radicle-healthcheck/v0.1.0/radicle-healthcheck_v0.1.0_$PLATFORM /usr/local/bin/radicle-healthcheck
 RUN chmod +x /usr/local/bin/radicle-healthcheck
 
 # Create a non-root user
