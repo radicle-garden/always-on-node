@@ -35,6 +35,9 @@ jobs:
             value: aarch64-unknown-linux-musl
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
+    outputs:
+      radicle_httpd_version: ${{ steps.version.outputs.RADICLE_HTTPD_VERSION }}
+
 
     steps:
       - name: Checkout repository
@@ -138,8 +141,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=branch
-            type=ref,event=pr
-            type=match,pattern=releases/(.*),group=1
+            type=raw,value=${{ needs.build-and-push.outputs.radicle_httpd_version }}${{ matrix.suffix }}
             type=raw,value=latest,enable={{is_default_branch}}
           labels: |
             quay.expires-after=${{ github.ref_name != 'main' && '7d' || '' }}
