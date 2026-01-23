@@ -140,22 +140,6 @@ export async function copyToClipboard(text: string) {
   await navigator.clipboard.writeText(text);
 }
 
-export function unescapeHtml(text: string): string {
-  const entities: Record<string, string> = {
-    "&amp;": "&",
-    "&lt;": "<",
-    "&gt;": ">",
-    "&quot;": '"',
-    "&#39;": "'",
-    "&apos;": "'",
-    "&nbsp;": " ",
-    "&#x27;": "'",
-    "&#x2F;": "/",
-    "&#32;": " ",
-  };
-  return text.replace(/&[#\w]+;/g, entity => entities[entity] || entity);
-}
-
 export function parseNodeStatus(status: string) {
   /**
    * Example Node status output:
