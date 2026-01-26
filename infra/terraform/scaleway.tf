@@ -79,7 +79,7 @@ resource "scaleway_block_volume" "aon_logs" {
 
 
 data "scaleway_instance_image" "packer_vm" {
-  name = "radicle-garden-2026.01.15-6e3fe49"
+  name = "radicle-garden-2026.01.23-47d1785"
   architecture = "arm64"
   zone = var.scaleway_zone
 }
@@ -130,7 +130,7 @@ resource "scaleway_instance_server" "aon" {
       ed25519_public: |
         ${chomp(tls_private_key.aon_host_key.public_key_openssh)}
       ed25519_certificate: |
-        ${chomp(data.local_file.aon_host_cert.content)}
+        ${chomp(base64decode(scaleway_secret_version.aon_host_cert.data))}
     ssh_publish_hostkeys:
       blacklist: [rsa]
       enabled: true
@@ -200,7 +200,7 @@ resource "scaleway_instance_server" "aon" {
         permissions: '0644'
         owner: root:root
         content: |
-          ${indent(10, chomp(data.local_file.aon_host_cert.content))}
+          ${indent(10, chomp(base64decode(scaleway_secret_version.aon_host_cert.data)))}
       - path: /etc/environment
         content: |
           DATABASE_URL="postgres://${base64decode(data.scaleway_secret_version.pg_user.data)}:${base64decode(data.scaleway_secret_version.pg_pass.data)}@${scaleway_rdb_instance.main.private_ip[0].address}:5432/${scaleway_rdb_database.main.name}"

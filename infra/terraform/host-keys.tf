@@ -21,7 +21,6 @@ resource "tls_private_key" "aon_host_key" {
   algorithm = "ED25519"
 }
 
-# Store private key in Scaleway Secret Manager
 resource "scaleway_secret" "aon_host_private_key" {
   name        = "aon-host-private-key"
   description = "SSH host private key for Always-On Node"
@@ -34,7 +33,6 @@ resource "scaleway_secret_version" "aon_host_private_key" {
   data      = tls_private_key.aon_host_key.private_key_openssh
 }
 
-# Store public key in Scaleway Secret Manager
 resource "scaleway_secret" "aon_host_public_key" {
   name        = "aon-host-public-key"
   description = "SSH host public key for Always-On Node"
@@ -59,9 +57,6 @@ resource "null_resource" "aon_generate_ssh_cert" {
     local_file.aon_host_public_key_temp,
     local_sensitive_file.host_signing_ca_temp
   ]
-  # triggers = {
-  #   run_always = timestamp()
-  # }
   provisioner "local-exec" {
     command = <<EOT
       ssh-keygen \
@@ -79,7 +74,6 @@ data "local_file" "aon_host_cert" {
   filename   = "/tmp/aon_host_key-cert.pub"
 }
 
-# Store certificate in Scaleway Secret Manager
 resource "scaleway_secret" "aon_host_cert" {
   name        = "aon-host-certificate"
   description = "SSH host certificate for Always-On Node"
@@ -90,8 +84,3 @@ resource "scaleway_secret_version" "aon_host_cert" {
   secret_id = scaleway_secret.aon_host_cert.id
   data      = data.local_file.aon_host_cert.content
 }
-
-# data "scaleway_secret_version" "aon_host_cert" {
-#   secret_id = scaleway_secret.aon_host_cert.id
-#   revision = "latest"
-# }
