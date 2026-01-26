@@ -19,7 +19,9 @@ terraform {
   }
 }
 
-provider "scaleway" {}
+provider "scaleway" {
+  profile = "garden_infra"
+}
 
 provider "cloudflare" {
   api_token = var.cloudflare_api_token
