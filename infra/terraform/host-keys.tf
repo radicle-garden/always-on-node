@@ -59,11 +59,14 @@ resource "null_resource" "aon_generate_ssh_cert" {
     local_file.aon_host_public_key_temp,
     local_sensitive_file.host_signing_ca_temp
   ]
+  # triggers = {
+  #   run_always = timestamp()
+  # }
   provisioner "local-exec" {
     command = <<EOT
       ssh-keygen \
         -s ${local_sensitive_file.host_signing_ca_temp.filename} \
-        -I "nodes.${var.garden_domain}" \
+        -I "always-on-node" \
         -h \
         -n app.${var.garden_domain},app-staging.${var.garden_domain},nodes.${var.garden_domain},nodes-staging.${var.garden_domain} \
         ${local_file.aon_host_public_key_temp.filename}
@@ -87,3 +90,8 @@ resource "scaleway_secret_version" "aon_host_cert" {
   secret_id = scaleway_secret.aon_host_cert.id
   data      = data.local_file.aon_host_cert.content
 }
+
+# data "scaleway_secret_version" "aon_host_cert" {
+#   secret_id = scaleway_secret.aon_host_cert.id
+#   revision = "latest"
+# }
