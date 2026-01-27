@@ -497,7 +497,17 @@ async function seedRepo(
     };
   }
 
-  execNodeCommand(node, "seed", [repositoryId]);
+  const seedResult = await execNodeCommand(node, "seed", [repositoryId]);
+  if (!seedResult) {
+    console.log(
+      `[Nodes] Failed to seed repository ${repositoryId} by node ${nodeId}`,
+    );
+    return {
+      success: false,
+      error: `Failed to seed repository ${repositoryId} by node ${nodeId}`,
+      statusCode: 500,
+    };
+  }
 
   await db.insert(schema.seededRadicleRepositories).values({
     repository_id: repositoryId,
@@ -737,6 +747,7 @@ async function ensureNodeActiveForUser(
 
         const node = await createNode(user);
         if (!node) {
+          console.warn("Failed to create replacement node for user", userId);
           return {
             success: false,
             error: "Failed to create replacement node",
