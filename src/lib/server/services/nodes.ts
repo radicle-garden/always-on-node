@@ -773,29 +773,40 @@ async function ensureNodeActiveForUser(
       const startResult = await startContainers(user);
 
       // If containers don't exist (404), the node DB entry exists but
-      // containers were destroyed - create a new node.
+      // containers were destroyed - recreate containers only.
       if (!startResult.success && startResult.statusCode === 404) {
         console.log(
-          `[Nodes] Containers not found for user ${userId}, creating new node`,
+          `[Nodes] Containers not found for user ${userId}, recreating containers`,
         );
-        // Mark existing node as deleted since its containers are gone.
-        await db
-          .update(schema.nodes)
-          .set({ deleted: true })
-          .where(eq(schema.nodes.user_id, userId));
 
-        const node = await createNode(user);
-        if (!node) {
-          console.warn("Failed to create replacement node for user", userId);
+        const existingNode = user.nodes[0];
+        const radHome = getRadHome(user.handle);
+        if (!radHome) {
           return {
             success: false,
-            error: "Failed to create replacement node",
+            error: "Failed to get RAD_HOME",
+            statusCode: 500,
+          };
+        }
+
+        const created = await createContainersForNode(
+          existingNode.alias,
+          radHome,
+          getPortForNode(existingNode),
+        );
+        if (!created) {
+          console.warn(
+            `[Nodes] Failed to recreate containers for user ${userId}`,
+          );
+          return {
+            success: false,
+            error: "Failed to recreate containers",
             statusCode: 500,
           };
         }
 
         console.log(
-          `[Nodes] New node created, starting containers for user ${userId}`,
+          `[Nodes] Containers recreated, starting containers for user ${userId}`,
         );
         return await startContainers(user);
       }
