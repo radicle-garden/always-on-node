@@ -5,7 +5,7 @@ import { config } from "../config";
 import { getDb, schema } from "../db";
 import type { User } from "../db/schema";
 
-import { nodesService } from "./nodes";
+import { ensureNodeActiveForUser, stopContainers } from "./nodes";
 
 interface ServiceResult<T> {
   success: boolean;
@@ -330,7 +330,7 @@ async function handleWebhookEvent(
           console.log(
             `[Stripe] Activating node for user ${userId} (subscription ${subscription.status})`,
           );
-          const result = await nodesService.ensureNodeActiveForUser(userId);
+          const result = await ensureNodeActiveForUser(userId);
           if (!result.success) {
             console.error(
               `[Stripe] Failed to activate node for user ${userId}: ${result.error}`,
@@ -366,7 +366,7 @@ async function handleWebhookEvent(
             break;
           }
 
-          const result = await nodesService.stopContainers(user);
+          const result = await stopContainers(user);
           if (!result.success) {
             console.error(
               `[Stripe] Failed to stop containers for user ${userId}: ${result.error}`,
@@ -401,7 +401,7 @@ async function handleWebhookEvent(
           break;
         }
 
-        const result = await nodesService.stopContainers(user);
+        const result = await stopContainers(user);
         if (!result.success) {
           console.error(
             `[Stripe] Failed to stop containers for user ${userId}: ${result.error}`,

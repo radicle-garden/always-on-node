@@ -22,58 +22,9 @@ export function unreachable(value: never): never {
   throw new Error(`Unreachable code: ${value}`);
 }
 
-export function debounce<T extends unknown[]>(
-  callback: (...args: T) => void,
-  wait: number,
-) {
-  let timeoutId: number | undefined = undefined;
-  return (...args: T) => {
-    window.clearTimeout(timeoutId);
-    timeoutId = window.setTimeout(() => {
-      callback(...args);
-    }, wait);
-  };
-}
-
 export function truncateText(text: string, remaining?: number): string {
   remaining = remaining ?? 6;
   return `${text.substring(0, remaining)}…${text.slice(-remaining)}`;
-}
-
-export function truncateDid(did: string): string {
-  return `did:key:${truncateText(publicKeyFromDid(did))}`;
-}
-
-export function didFromPublicKey(publicKey: string) {
-  return `did:key:${publicKey}`;
-}
-
-export function publicKeyFromDid(did: string) {
-  return did.replace("did:key:", "");
-}
-
-export function parseNodeId(
-  nid: string,
-): { prefix: string; pubkey: string } | undefined {
-  const match = /^(did:key:)?(z[a-zA-Z0-9]+)$/.exec(nid);
-  if (match) {
-    let hex: Uint8Array | undefined = undefined;
-    try {
-      hex = bs58.decode(match[2].substring(1));
-    } catch (error) {
-      console.error("utils.parseNodId: Not able to decode received NID", error);
-      return undefined;
-    }
-    // This checks also that the first 2 bytes are equal
-    // to the ed25519 public key type used.
-    if (hex && !(hex.byteLength === 34 && hex[0] === 0xed && hex[1] === 1)) {
-      return undefined;
-    }
-
-    return { prefix: match[1] || "did:key:", pubkey: match[2] };
-  }
-
-  return undefined;
 }
 
 export function parseRepositoryId(
@@ -90,12 +41,6 @@ export function parseRepositoryId(
   }
 
   return undefined;
-}
-
-export function validateEmail(email: string) {
-  return email.match(
-    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-  );
 }
 
 export function getDaysPassed(from: Date, to: Date): number {
@@ -138,156 +83,6 @@ export function timeAgo(date: Date, short = false) {
 
 export async function copyToClipboard(text: string) {
   await navigator.clipboard.writeText(text);
-}
-
-export function parseNodeStatus(status: string) {
-  /**
-   * Example Node status output:
-   *
-    ✓ Node is running and listening on 0.0.0.0:8776.
-
-    ╭────────────────────────────────────────────────────────────────────────────╮
-    │ Node ID           Address                           ?   ⤭   Since          │
-    ├────────────────────────────────────────────────────────────────────────────┤
-    │ z6Mkppz…4NbLwRh   seed.ivy.lat:8776                 ✓   🡥   1.62 minute(s) │
-    │ z6Mkmqo…4ebScxo   ash.radicle.garden:8776           !   🡥                  │
-    │ z6MkeUf…EBXQeDZ   postweb.nexus:8776                !   🡥                  │
-    │ z6MkrLM…ocNYPm7   seed.radicle.garden:8776          !   🡥                  │
-    │ z6Mkf3h…53bJAqe   radicle.git.gg:8776               ✓   🡥   1.63 minute(s) │
-    │ z6MkeTU…E2tKM4g   ssh.let.software:8776             ✓   🡥   1.65 minute(s) │
-    │ z6Mksqu…7327TEt   radicle.linuxw.info:8776          ✓   🡥   1.62 minute(s) │
-    │ z6MkqoF…MtnyJAm   seed.rapidexpedition.org:8776     !   🡥                  │
-    │ z6MkmkW…tkjEUty   seed.radicle.cylinder.tube:8776   !   🡥                  │
-    ╰────────────────────────────────────────────────────────────────────────────╯
-    ✗ Hint:
-      ? … Status:
-          ✓ … connected    ✗ … disconnected
-          ! … attempted    • … initial
-      ⤭ … Link Direction:
-          🡦 … inbound      🡥 … outbound
-   *
-   */
-
-  // We want to know:
-  // - Is the node running? (3 or more lines containing ✓)
-  // - How many peers is the node connected to? (Lines that contain ✓ minus 2)
-  // - How long has the node been running? (Let's take the longest since time)
-  // Things we must consider:
-  //  - Might have no output
-  //  - Might have no peers
-  //  - Might have no since time
-
-  if (!status) {
-    return {
-      isRunning: false,
-      peers: 0,
-      since: 0,
-    };
-  }
-
-  try {
-    const lines = status.split("\n");
-    const isRunning =
-      lines.filter(line => line.includes("Node is running")).length >= 1;
-    const peers = lines.filter(line => line.includes("✓")).length - 2;
-
-    // Parse time values from lines containing time units
-    const timeUnits = ["second", "minute", "hour", "day", "month", "year"];
-    const timeUnitValues = {
-      second: 1,
-      minute: 60,
-      hour: 3600,
-      day: 86400,
-      month: 2592000,
-      year: 31536000,
-    };
-
-    const timeLines = lines.filter(line =>
-      timeUnits.some(unit => line.includes(unit)),
-    );
-
-    // Extract and parse time values
-    const timeValues = timeLines
-      .map(line => {
-        for (const unit of timeUnits) {
-          const match = line.match(
-            new RegExp(`(\\d+(?:\\.\\d+)?)\\s*${unit}s?`),
-          );
-          if (match) {
-            const value = parseFloat(match[1]);
-            return {
-              value,
-              unit,
-              seconds:
-                value * timeUnitValues[unit as keyof typeof timeUnitValues],
-            };
-          }
-        }
-        return null;
-      })
-      .filter(Boolean) as Array<{
-      value: number;
-      unit: string;
-      seconds: number;
-    }>;
-
-    // Sort by seconds (longest first) and take the first one
-    const longestTime = timeValues.sort((a, b) => b.seconds - a.seconds)[0];
-    const sinceSeconds = longestTime ? longestTime.seconds : 0;
-
-    return {
-      isRunning,
-      peers,
-      sinceSeconds,
-    };
-  } catch {
-    return {
-      isRunning: false,
-      peers: 0,
-      sinceSeconds: 0,
-    };
-  }
-}
-
-/**
- * Example seed command result:
- * ```
- * ✓ Seeding policy updated for rad:z2X8Sn1o4pL7zVmXjcEvfUkiLS5jc with scope 'all'
- * Fetching rad:z2X8Sn1o4pL7zVmXjcEvfUkiLS5jc from the network, found 2 potential seed(s).
- * ✗ Target not met: could not fetch from [z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo, z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7], and required 2 more seed(s)
- * ```
- */
-export function parseSeedCommandResult(
-  result: { stdout: string; stderr: string } | null,
-): boolean {
-  if (!result) {
-    return false;
-  }
-  const lines = result.stdout.split("\n");
-  if (lines.some(line => line.includes("✗ Target not met"))) {
-    return false;
-  }
-  return true;
-}
-export function createFormValidator<T extends Record<string, unknown>>(
-  validators: Record<keyof T, (value: unknown) => string | null>,
-) {
-  return function validate(data: T): Record<keyof T, string> {
-    const errors: Record<keyof T, string> = {} as Record<keyof T, string>;
-
-    for (const [field, validator] of Object.entries(validators)) {
-      const error = validator(data[field as keyof T]);
-      if (error) {
-        errors[field as keyof T] = error;
-      }
-    }
-
-    return errors;
-  };
-}
-
-export function hasFormErrors(errors: Record<string, string>): boolean {
-  return Object.keys(errors).length > 0;
 }
 
 // Get the gravatar URL of an email.

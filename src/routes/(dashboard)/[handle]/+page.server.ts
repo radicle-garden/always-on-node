@@ -3,10 +3,15 @@ import { groupCommitsByWeek } from "$lib/commit";
 import { ResponseError } from "$lib/http-client/lib/fetcher";
 import { config } from "$lib/server/config";
 import { createHttpdClient } from "$lib/server/httpdClient";
-import { nodesService } from "$lib/server/services/nodes";
+import {
+  getNodeStatus,
+  getSeededReposForNode,
+  seedRepo,
+  unseedRepo,
+} from "$lib/server/services/nodes";
 import { stripeService } from "$lib/server/services/stripe";
 import { usersService } from "$lib/server/services/users";
-import { parseNodeStatus, parseRepositoryId } from "$lib/utils";
+import { parseRepositoryId } from "$lib/utils";
 import type { NodeStatus, PublicNodeInfo, UserProfile } from "$types/app";
 
 import { error, fail } from "@sveltejs/kit";
@@ -58,7 +63,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const nodeStatuses: Record<string, NodeStatus> = {};
 
   for (const node of profile.nodes || []) {
-    const seededResult = await nodesService.getSeededReposForNode(node.node_id);
+    const seededResult = await getSeededReposForNode(node.node_id);
     if (seededResult.success && seededResult.content) {
       const seeding = seededResult.content.filter(r => r.seeding);
       seededRepositoryIds.push(...seeding.map(r => r.repository_id));
@@ -71,20 +76,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         : Infinity;
 
       try {
-        const statusResult = await nodesService.getNodeStatus(
-          node.node_id,
-          currentUser,
-        );
+        const statusResult = await getNodeStatus(node.node_id, currentUser);
         if (statusResult.success && statusResult.content) {
-          const { isRunning, peers, sinceSeconds } = parseNodeStatus(
-            statusResult.content.stdout,
-          );
+          const nodeStatus = statusResult.content.nodeStatus;
           const isBooting =
-            isRunning && peers === 0 && nodeAgeMs < config.nodeBootingTimeoutMs;
+            nodeStatus.isRunning &&
+            nodeStatus.peers === 0 &&
+            nodeAgeMs < config.nodeBootingTimeoutMs;
           nodeStatuses[node.node_id] = {
-            isRunning,
-            peers,
-            sinceSeconds: sinceSeconds ?? 0,
+            isRunning: nodeStatus.isRunning,
+            peers: nodeStatus.peers,
+            sinceSeconds: nodeStatus.sinceSeconds ?? 0,
             size: statusResult.content.size,
             isBooting,
           };
@@ -209,7 +211,7 @@ export const actions = {
 
     const fullRid = `${parsedRid.prefix}${parsedRid.pubkey}`;
 
-    const result = await nodesService.seedRepo(nodeId, fullRid, success => {
+    const result = await seedRepo(nodeId, fullRid, success => {
       import("$lib/server/services/seedEvents").then(({ emitSeedComplete }) => {
         emitSeedComplete({ rid: fullRid, nodeId, success });
       });
@@ -240,7 +242,7 @@ export const actions = {
       return fail(400, { error: "Invalid Repository ID format" });
     }
 
-    const result = await nodesService.unseedRepo(
+    const result = await unseedRepo(
       nodeId,
       `${parsedRid.prefix}${parsedRid.pubkey}`,
     );

@@ -1,23 +1,30 @@
-import { parseSeedCommandResult } from "$lib/utils";
-
+import { Buffer } from "buffer";
 import { and, eq } from "drizzle-orm";
 import { execa } from "execa";
 import fs from "fs";
 import { readFile, readdir, rename, writeFile } from "fs/promises";
+import { base58btc } from "multiformats/bases/base58";
 import path from "path";
 
 import { DockerClient } from "@docker/node-sdk";
 
 import { config } from "../config";
 import { getDb, schema } from "../db";
-import {
-  type Node,
-  type SeededRadicleRepository,
-  type User,
-  createNodeData,
-  getRadHome,
-  userStoragePath,
-} from "../entities";
+import type { Node, SeededRadicleRepository, User } from "../entities";
+
+type NodeStatus =
+  | {
+      isRunning: boolean;
+      peers: number;
+      since: number;
+      sinceSeconds?: undefined;
+    }
+  | {
+      isRunning: boolean;
+      peers: number;
+      sinceSeconds: number;
+      since?: undefined;
+    };
 
 interface ServiceResult<T> {
   success: boolean;
@@ -25,6 +32,96 @@ interface ServiceResult<T> {
   error?: string;
   message?: string;
   statusCode: number;
+}
+
+function getRadHome(username: string): string | undefined {
+  return path.resolve(config.profileStoragePath, username);
+}
+
+function userStoragePath(username: string): string | undefined {
+  return path.resolve(config.profileStoragePath, username, "storage");
+}
+
+function createNodeData(
+  nodeId: string,
+  alias: string,
+  userId: number,
+): {
+  node_id: string;
+  did: string;
+  alias: string;
+  ssh_public_key: string;
+  user_id: number;
+  deleted: boolean;
+} {
+  return {
+    node_id: nodeId,
+    did: `did:key:${nodeId}`,
+    alias: alias,
+    ssh_public_key: extractSshPublicKeyFromDid(nodeId),
+    user_id: userId,
+    deleted: false,
+  };
+}
+
+function extractSshPublicKeyFromDid(nodeId: string): string {
+  if (!nodeId) {
+    return "";
+  }
+  const decoded = base58btc.decode(nodeId);
+
+  // Ed25519 multicodec prefix: 0xed 0x01
+  const ED25519_PREFIX = Uint8Array.from([0xed, 0x01]);
+  const prefixLen = ED25519_PREFIX.length;
+
+  const prefix = decoded.slice(0, prefixLen);
+  if (!prefix.every((byte, i) => byte === ED25519_PREFIX[i])) {
+    throw new Error("Unsupported key type or invalid prefix");
+  }
+
+  const keyBytes = decoded.slice(prefixLen);
+
+  return encodeSshEd25519(keyBytes);
+}
+
+function encodeSshEd25519(publicKey: Uint8Array): string {
+  const keyType = "ssh-ed25519";
+
+  const writeSshString = (data: string | Uint8Array): Buffer => {
+    const buf =
+      typeof data === "string" ? Buffer.from(data, "utf8") : Buffer.from(data);
+    const len = Buffer.alloc(4);
+    len.writeUInt32BE(buf.length, 0);
+    return Buffer.concat([len, buf]);
+  };
+
+  const sshBuf = Buffer.concat([
+    writeSshString(keyType),
+    writeSshString(publicKey),
+  ]);
+
+  return `${keyType} ${sshBuf.toString("base64")}`;
+}
+
+/**
+ * Example seed command result:
+ * ```
+ * ✓ Seeding policy updated for rad:z2X8Sn1o4pL7zVmXjcEvfUkiLS5jc with scope 'all'
+ * Fetching rad:z2X8Sn1o4pL7zVmXjcEvfUkiLS5jc from the network, found 2 potential seed(s).
+ * ✗ Target not met: could not fetch from [z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo, z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7], and required 2 more seed(s)
+ * ```
+ */
+function parseSeedCommandResult(
+  result: { stdout: string; stderr: string } | null,
+): boolean {
+  if (!result) {
+    return false;
+  }
+  const lines = result.stdout.split("\n");
+  if (lines.some(line => line.includes("✗ Target not met"))) {
+    return false;
+  }
+  return true;
 }
 
 async function createNode(user: User): Promise<Node | null> {
@@ -271,7 +368,7 @@ async function updateNodeConfig(
       statusCode: 202,
     };
   } catch (error) {
-    const errorMessage = `Failed to validate/write node config for ${nodeId}:`;
+    const errorMessage = `[Nodes] Failed to validate/write node config for ${nodeId}:`;
     console.error(errorMessage, error);
     return { success: false, error: errorMessage, statusCode: 500 };
   }
@@ -310,7 +407,7 @@ async function getConfigForNode(nodeId: string): Promise<ServiceResult<any>> {
 
     return { success: true, content: nodeConfig, statusCode: 200 };
   } catch (error) {
-    const errorMessage = `Error retrieving node config: ${error} for ${nodeId}`;
+    const errorMessage = `[Nodes] Error retrieving node config: ${error} for ${nodeId}`;
     console.error(errorMessage);
     return { success: false, error: errorMessage, statusCode: 500 };
   }
@@ -350,10 +447,10 @@ async function execNodeCommand(
   }
 }
 
-async function getNodeStatus(
+export async function getNodeStatus(
   nodeId: string,
   user: User,
-): Promise<ServiceResult<{ stdout: string; size?: number }>> {
+): Promise<ServiceResult<{ nodeStatus: NodeStatus; size?: number }>> {
   try {
     const db = await getDb();
     const node = await db.query.nodes.findFirst({
@@ -411,17 +508,87 @@ async function getNodeStatus(
 
     return {
       success: true,
-      content: { stdout: result.stdout, size },
+      content: { nodeStatus: parseNodeStatus(result.stdout), size },
       statusCode: 200,
     };
   } catch (dbError) {
-    const errorMessage = `Failed to retrieve node ${nodeId}`;
+    const errorMessage = `[Nodes] Failed to retrieve node ${nodeId}`;
     console.warn(errorMessage, dbError);
     return { success: false, error: errorMessage, statusCode: 500 };
   }
 }
 
-async function getSeededReposForNode(
+function parseNodeStatus(status: string): NodeStatus {
+  if (!status) {
+    return {
+      isRunning: false,
+      peers: 0,
+      since: 0,
+    };
+  }
+
+  try {
+    const lines = status.split("\n");
+    const isRunning =
+      lines.filter(line => line.includes("Node is running")).length >= 1;
+    const peers = lines.filter(line => line.includes("✓")).length - 2;
+
+    const timeUnits = ["second", "minute", "hour", "day", "month", "year"];
+    const timeUnitValues = {
+      second: 1,
+      minute: 60,
+      hour: 3600,
+      day: 86400,
+      month: 2592000,
+      year: 31536000,
+    };
+
+    const timeLines = lines.filter(line =>
+      timeUnits.some(unit => line.includes(unit)),
+    );
+
+    const timeValues = timeLines
+      .map(line => {
+        for (const unit of timeUnits) {
+          const match = line.match(
+            new RegExp(`(\\d+(?:\\.\\d+)?)\\s*${unit}s?`),
+          );
+          if (match) {
+            const value = parseFloat(match[1]);
+            return {
+              value,
+              unit,
+              seconds:
+                value * timeUnitValues[unit as keyof typeof timeUnitValues],
+            };
+          }
+        }
+        return null;
+      })
+      .filter(Boolean) as Array<{
+      value: number;
+      unit: string;
+      seconds: number;
+    }>;
+
+    const longestTime = timeValues.sort((a, b) => b.seconds - a.seconds)[0];
+    const sinceSeconds = longestTime ? longestTime.seconds : 0;
+
+    return {
+      isRunning,
+      peers,
+      sinceSeconds,
+    };
+  } catch {
+    return {
+      isRunning: false,
+      peers: 0,
+      sinceSeconds: 0,
+    };
+  }
+}
+
+export async function getSeededReposForNode(
   nodeId: string,
 ): Promise<ServiceResult<SeededRadicleRepository[]>> {
   try {
@@ -464,7 +631,7 @@ async function getSeededReposForNode(
   }
 }
 
-async function seedRepo(
+export async function seedRepo(
   nodeId: string,
   repositoryId: string,
   onSeedComplete?: (success: boolean) => void,
@@ -524,7 +691,7 @@ async function seedRepo(
   };
 }
 
-async function unseedRepo(
+export async function unseedRepo(
   nodeId: string,
   repositoryId: string,
 ): Promise<ServiceResult<void>> {
@@ -613,7 +780,7 @@ async function assignAvailablePort(node: Node): Promise<number> {
   return externalPort;
 }
 
-async function stopContainers(user: User): Promise<ServiceResult<void>> {
+export async function stopContainers(user: User): Promise<ServiceResult<void>> {
   try {
     const nodeAlias = `${user.handle}_seed`;
     const nodeContainerName = `${nodeAlias}-node`;
@@ -705,7 +872,7 @@ async function startContainers(user: User): Promise<ServiceResult<void>> {
   }
 }
 
-async function ensureNodeActiveForUser(
+export async function ensureNodeActiveForUser(
   userId: number,
 ): Promise<ServiceResult<void>> {
   try {
@@ -808,17 +975,4 @@ async function ensureNodeActiveForUser(
   }
 }
 
-export const nodesService = {
-  createNode,
-  updateNodeConfig,
-  getConfigForNode,
-  execNodeCommand,
-  getNodeStatus,
-  getSeededReposForNode,
-  seedRepo,
-  unseedRepo,
-  assignAvailablePort,
-  stopContainers,
-  startContainers,
-  ensureNodeActiveForUser,
-};
+export const testExports = { parseNodeStatus };
