@@ -319,8 +319,6 @@ export async function requestPasswordReset(
       );
       return {
         success: true,
-        message:
-          "If an account exists with this email, a reset link has been sent",
         statusCode: 200,
       };
     }
@@ -342,8 +340,6 @@ export async function requestPasswordReset(
     console.log(`[Users] Password reset email sent to: ${email}`);
     return {
       success: true,
-      message:
-        "If an account exists with this email, a reset link has been sent",
       statusCode: 200,
     };
   } catch (e) {

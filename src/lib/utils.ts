@@ -136,6 +136,10 @@ export function timeAgo(date: Date, short = false) {
   return `${Math.floor(days / 365)}${short ? "y" : " year"}${short || Math.floor(days / 365) === 1 ? "" : "s"}`;
 }
 
+export async function copyToClipboard(text: string) {
+  await navigator.clipboard.writeText(text);
+}
+
 export function unescapeHtml(text: string): string {
   const entities: Record<string, string> = {
     "&amp;": "&",
@@ -154,31 +158,31 @@ export function unescapeHtml(text: string): string {
 
 export function parseNodeStatus(status: string) {
   /**
-	 * Example Node status output:
-	 *
-		✓ Node is running and listening on 0.0.0.0:8776.
-
-		╭────────────────────────────────────────────────────────────────────────────╮
-		│ Node ID           Address                           ?   ⤭   Since          │
-		├────────────────────────────────────────────────────────────────────────────┤
-		│ z6Mkppz…4NbLwRh   seed.ivy.lat:8776                 ✓   🡥   1.62 minute(s) │
-		│ z6Mkmqo…4ebScxo   ash.radicle.garden:8776           !   🡥                  │
-		│ z6MkeUf…EBXQeDZ   postweb.nexus:8776                !   🡥                  │
-		│ z6MkrLM…ocNYPm7   seed.radicle.garden:8776          !   🡥                  │
-		│ z6Mkf3h…53bJAqe   radicle.git.gg:8776               ✓   🡥   1.63 minute(s) │
-		│ z6MkeTU…E2tKM4g   ssh.let.software:8776             ✓   🡥   1.65 minute(s) │
-		│ z6Mksqu…7327TEt   radicle.linuxw.info:8776          ✓   🡥   1.62 minute(s) │
-		│ z6MkqoF…MtnyJAm   seed.rapidexpedition.org:8776     !   🡥                  │
-		│ z6MkmkW…tkjEUty   seed.radicle.cylinder.tube:8776   !   🡥                  │
-		╰────────────────────────────────────────────────────────────────────────────╯
-		✗ Hint:
-			? … Status:
-					✓ … connected    ✗ … disconnected
-					! … attempted    • … initial
-			⤭ … Link Direction:
-					🡦 … inbound      🡥 … outbound
+   * Example Node status output:
    *
-	 */
+    ✓ Node is running and listening on 0.0.0.0:8776.
+
+    ╭────────────────────────────────────────────────────────────────────────────╮
+    │ Node ID           Address                           ?   ⤭   Since          │
+    ├────────────────────────────────────────────────────────────────────────────┤
+    │ z6Mkppz…4NbLwRh   seed.ivy.lat:8776                 ✓   🡥   1.62 minute(s) │
+    │ z6Mkmqo…4ebScxo   ash.radicle.garden:8776           !   🡥                  │
+    │ z6MkeUf…EBXQeDZ   postweb.nexus:8776                !   🡥                  │
+    │ z6MkrLM…ocNYPm7   seed.radicle.garden:8776          !   🡥                  │
+    │ z6Mkf3h…53bJAqe   radicle.git.gg:8776               ✓   🡥   1.63 minute(s) │
+    │ z6MkeTU…E2tKM4g   ssh.let.software:8776             ✓   🡥   1.65 minute(s) │
+    │ z6Mksqu…7327TEt   radicle.linuxw.info:8776          ✓   🡥   1.62 minute(s) │
+    │ z6MkqoF…MtnyJAm   seed.rapidexpedition.org:8776     !   🡥                  │
+    │ z6MkmkW…tkjEUty   seed.radicle.cylinder.tube:8776   !   🡥                  │
+    ╰────────────────────────────────────────────────────────────────────────────╯
+    ✗ Hint:
+      ? … Status:
+          ✓ … connected    ✗ … disconnected
+          ! … attempted    • … initial
+      ⤭ … Link Direction:
+          🡦 … inbound      🡥 … outbound
+   *
+   */
 
   // We want to know:
   // - Is the node running? (3 or more lines containing ✓)
@@ -261,6 +265,26 @@ export function parseNodeStatus(status: string) {
   }
 }
 
+/**
+ * Example seed command result:
+ * ```
+ * ✓ Seeding policy updated for rad:z2X8Sn1o4pL7zVmXjcEvfUkiLS5jc with scope 'all'
+ * Fetching rad:z2X8Sn1o4pL7zVmXjcEvfUkiLS5jc from the network, found 2 potential seed(s).
+ * ✗ Target not met: could not fetch from [z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo, z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7], and required 2 more seed(s)
+ * ```
+ */
+export function parseSeedCommandResult(
+  result: { stdout: string; stderr: string } | null,
+): boolean {
+  if (!result) {
+    return false;
+  }
+  const lines = result.stdout.split("\n");
+  if (lines.some(line => line.includes("✗ Target not met"))) {
+    return false;
+  }
+  return true;
+}
 export function createFormValidator<T extends Record<string, unknown>>(
   validators: Record<keyof T, (value: unknown) => string | null>,
 ) {

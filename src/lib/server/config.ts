@@ -23,6 +23,7 @@ export interface AppConfig {
   dockerHost: string;
   radicleNodeContainer: string;
   radicleHttpdContainer: string;
+  nodeBootingTimeoutMs: number;
   stripeSecretKey: string;
   stripeWebhookSecret: string;
   stripePriceId: string;
@@ -61,6 +62,9 @@ export function getConfig(): AppConfig {
       process.env.RADICLE_NODE_CONTAINER || configJson.radicleNodeContainer,
     radicleHttpdContainer:
       process.env.RADICLE_HTTPD_CONTAINER || configJson.radicleHttpdContainer,
+    nodeBootingTimeoutMs:
+      Number(process.env.NODE_BOOTING_TIMEOUT_MS) ||
+      configJson.nodeBootingTimeoutMs,
     stripeSecretKey: process.env.STRIPE_SECRET_SERVER_SIDE_KEY || "placeholder",
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
     stripePriceId: process.env.STRIPE_PRICE_ID || "",

@@ -1,3 +1,5 @@
+import type { WeeklyActivity } from "$lib/commit";
+import { groupCommitsByWeek } from "$lib/commit";
 import { ResponseError } from "$lib/http-client/lib/fetcher";
 import { config } from "$lib/server/config";
 import { createHttpdClient } from "$lib/server/httpdClient";
@@ -5,18 +7,11 @@ import { nodesService } from "$lib/server/services/nodes";
 import { stripeService } from "$lib/server/services/stripe";
 import { usersService } from "$lib/server/services/users";
 import { parseNodeStatus, parseRepositoryId } from "$lib/utils";
-import type { PublicNodeInfo, UserProfile } from "$types/app";
+import type { NodeStatus, PublicNodeInfo, UserProfile } from "$types/app";
 
 import { error, fail } from "@sveltejs/kit";
 
 import type { Actions, PageServerLoad } from "./$types";
-
-export interface NodeStatus {
-  isRunning: boolean;
-  peers: number;
-  sinceSeconds: number;
-  size?: number;
-}
 
 export interface RepoInfo {
   rid: string;
@@ -27,6 +22,7 @@ export interface RepoInfo {
   patches: { open: number; merged: number; draft: number; archived: number };
   lastCommit?: { time: number };
   syncing?: boolean;
+  activity?: WeeklyActivity[];
 }
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -69,6 +65,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     }
 
     if (isMe && currentUser) {
+      const fullNode = currentUser.nodes.find(n => n.node_id === node.node_id);
+      const nodeAgeMs = fullNode?.created_at
+        ? Date.now() - new Date(fullNode.created_at).getTime()
+        : Infinity;
+
       try {
         const statusResult = await nodesService.getNodeStatus(
           node.node_id,
@@ -78,11 +79,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
           const { isRunning, peers, sinceSeconds } = parseNodeStatus(
             statusResult.content.stdout,
           );
+          const isBooting =
+            isRunning && peers === 0 && nodeAgeMs < config.nodeBootingTimeoutMs;
           nodeStatuses[node.node_id] = {
             isRunning,
             peers,
             sinceSeconds: sinceSeconds ?? 0,
             size: statusResult.content.size,
+            isBooting,
           };
         } else {
           nodeStatuses[node.node_id] = {
@@ -90,6 +94,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
             peers: 0,
             sinceSeconds: 0,
             size: 0,
+            isBooting: nodeAgeMs < config.nodeBootingTimeoutMs,
           };
         }
       } catch {
@@ -98,6 +103,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
           peers: 0,
           sinceSeconds: 0,
           size: 0,
+          isBooting: nodeAgeMs < config.nodeBootingTimeoutMs,
         };
       }
     }
@@ -122,6 +128,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         // Ignore commit fetch errors
       }
 
+      const commits = await httpdClient.getActivity(rid);
+
       repositories.push({
         rid: repo.rid,
         name: projectData.data.name,
@@ -130,6 +138,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         issues: projectData.meta.issues,
         patches: projectData.meta.patches,
         lastCommit: lastCommitTime ? { time: lastCommitTime } : undefined,
+        activity: groupCommitsByWeek(commits.activity),
       });
     } catch (e) {
       if (e instanceof ResponseError && e.status === 404) {
@@ -198,16 +207,19 @@ export const actions = {
       return fail(400, { error: "Invalid Repository ID format" });
     }
 
-    const result = await nodesService.seedRepo(
-      nodeId,
-      `${parsedRid.prefix}${parsedRid.pubkey}`,
-    );
+    const fullRid = `${parsedRid.prefix}${parsedRid.pubkey}`;
+
+    const result = await nodesService.seedRepo(nodeId, fullRid, success => {
+      import("$lib/server/services/seedEvents").then(({ emitSeedComplete }) => {
+        emitSeedComplete({ rid: fullRid, nodeId, success });
+      });
+    });
 
     if (!result.success) {
       return fail(result.statusCode, { error: result.error });
     }
 
-    return { success: true };
+    return { success: true, rid: fullRid };
   },
 
   unseed: async ({ request, locals }) => {

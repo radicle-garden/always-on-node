@@ -1,24 +1,19 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
-  import { Card } from "$lib/components/ui/card";
   import { Input } from "$lib/components/ui/input";
-  import * as Tooltip from "$lib/components/ui/tooltip";
 
-  import type { RepoInfo } from "../routes/[handle]/+page.server";
+  import type { RepoInfo } from "../routes/(dashboard)/[handle]/+page.server";
 
   import Icon from "./Icon.svelte";
   import NewRepositoryDialog from "./NewRepositoryDialog.svelte";
   import RepositoryCard from "./RepositoryCard.svelte";
 
   let {
-    namespace,
     repositories,
     showCreateDialog,
     nodeId,
     nodeHttpdHostPort,
   }: {
     nodeHttpdHostPort: string;
-    namespace: string;
     repositories: RepoInfo[];
     showCreateDialog: boolean;
     nodeId?: string;
@@ -38,47 +33,39 @@
   );
 </script>
 
-<Card variant="outline" class="p-4">
-  <div class="flex flex-col gap-2">
-    <div class="flex items-center justify-between">
-      <div class="text-2xl font-medium">{namespace}'s repositories</div>
-      {#if showCreateDialog && nodeId}
-        <div class="flex items-center gap-2">
-          <NewRepositoryDialog {nodeId} />
-          <div>
-            <Tooltip.Provider>
-              <Tooltip.Root delayDuration={0}>
-                <Tooltip.Trigger>
-                  <div class="col-span-full">
-                    <Button disabled><Icon name="git" />Import</Button>
-                  </div>
-                </Tooltip.Trigger>
-                <Tooltip.Content>
-                  <p>Coming soon!</p>
-                </Tooltip.Content>
-              </Tooltip.Root>
-            </Tooltip.Provider>
+<div class="flex flex-col gap-2">
+  <div class="flex items-center justify-between">
+    <div class="txt-heading-l font-medium">Seeded repos</div>
+    {#if showCreateDialog && nodeId}
+      <div class="flex items-center gap-2">
+        <Input type="text" bind:value={filter} placeholder="Filter repos…" />
+        <NewRepositoryDialog {nodeId} />
+      </div>
+    {/if}
+  </div>
+  <div class="flex flex-col">
+    {#if filteredRepositories.length === 0}
+      <div
+        class="flex w-full flex-col items-center justify-center gap-3 border border-border-subtle bg-surface-canvas py-10 text-center">
+        <Icon name="seed" />
+        <div class="flex flex-col gap-2">
+          <div class="txt-heading-m">No repos yet</div>
+          <div class="txt-body-m-regular text-text-secondary">
+            There aren't any repos in your Garden yet
           </div>
         </div>
-      {/if}
-    </div>
-    <div class="flex max-w-md flex-col gap-2">
-      <Input
-        type="text"
-        bind:value={filter}
-        placeholder="filter repositories" />
-    </div>
-    <div class="flex flex-col gap-2">
-      {#if filteredRepositories.length === 0}
-        <div class="text-sm text-muted-foreground">No repositories found</div>
-      {/if}
-      {#each filteredRepositories as repo (repo.rid)}
+      </div>
+    {/if}
+    {#each filteredRepositories as repo, i (i)}
+      {@const r = repo as RepoInfo}
+      <div
+        class="border-r border-b border-l border-border-subtle bg-surface-canvas first:border-t last:border-b">
         <RepositoryCard
-          {repo}
+          repo={r}
           {nodeHttpdHostPort}
           {nodeId}
           showRemoveButton={showCreateDialog} />
-      {/each}
-    </div>
+      </div>
+    {/each}
   </div>
-</Card>
+</div>

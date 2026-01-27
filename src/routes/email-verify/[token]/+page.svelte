@@ -4,5 +4,5 @@
 </script>
 
 <div class="flex items-center justify-center p-8">
-  <p class="text-muted-foreground">Verifying email...</p>
+  <p class="text-muted-foreground">Verifying email…</p>
 </div>
