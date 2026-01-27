@@ -2,6 +2,8 @@
 - name: User setup
   hosts: prod
   become: true
+  vars_files:
+    - ../environments/{{ deploy_env | default('production') }}.yml
   tasks:
     - name: Create user that will run gardener apps
       ansible.builtin.user:

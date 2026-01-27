@@ -1,20 +1,33 @@
-name: Deploy to Production
+name: Deploy Application
 
 on:
   push:
     branches:
       - production
+      - main
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
 
 concurrency:
-  group: deploy-production
+  group: deploy-${{ github.event.inputs.environment || (github.ref == 'refs/heads/production' && 'production') || 'staging' }}
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Deploy Application
+    name: Deploy to ${{ github.event.inputs.environment || (github.ref == 'refs/heads/production' && 'Production') || 'Staging' }}
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/production' && 'production') || 'staging' }}
+
+    env:
+      DEPLOY_ENV: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/production' && 'production') || 'staging' }}
 
     steps:
       - name: Checkout code
@@ -72,11 +85,11 @@ jobs:
 
       - name: Create Ansible inventory
         run: |
-          cat > infra/ansible/prod.inventory << EOF
-          ${{ secrets.PROD_SERVER_HOST }} ansible_user=${{ secrets.PROD_SERVER_USER }} ansible_port=${{ secrets.PROD_SERVER_SSH_PORT }} ansible_ssh_private_key_file=~/.ssh/deploy_key ansible_ssh_common_args='-o CertificateFile=~/.ssh/deploy_key-cert.pub'
+          cat > infra/ansible/${{ env.DEPLOY_ENV }}.inventory << EOF
+          ${{ secrets.DEPLOY_SSH_HOST }} ansible_user=${{ secrets.DEPLOY_SSH_USER }} ansible_port=${{ secrets.DEPLOY_SSH_PORT }} ansible_ssh_private_key_file=~/.ssh/deploy_key ansible_ssh_common_args='-o CertificateFile=~/.ssh/deploy_key-cert.pub'
 
-          [prod]
-          ${{ secrets.PROD_SERVER_HOST }}
+          [${{ env.DEPLOY_ENV }}]
+          ${{ secrets.DEPLOY_SSH_HOST }}
           EOF
 
       - name: Create vault password file
@@ -98,9 +111,9 @@ jobs:
         run: |
           cd infra/ansible
           ansible-playbook \
-            -i prod.inventory \
+            -i ${{ env.DEPLOY_ENV }}.inventory \
             --vault-password-file .vault-password \
-            --extra-vars "deploy_archive=${{ github.workspace }}/deploy.tar.gz git_commit_hash=${{ steps.git.outputs.commit_hash }}" \
+            --extra-vars "deploy_archive=${{ github.workspace }}/deploy.tar.gz git_commit_hash=${{ steps.git.outputs.commit_hash }} deploy_env=${{ env.DEPLOY_ENV }}" \
             plays/20_app_deploy.yml
 
       - name: Clean up
@@ -108,4 +121,4 @@ jobs:
         run: |
           rm -f ~/.ssh/deploy_key ~/.ssh/deploy_key-cert.pub ~/.ssh/ca.pub
           rm -f infra/ansible/.vault-password
-          rm -f infra/ansible/prod.inventory
+          rm -f infra/ansible/${{ env.DEPLOY_ENV }}.inventory

@@ -1,8 +1,10 @@
 - name: Deploy apps
-  hosts: prod
+  hosts: "{{ deploy_env | default('production') }}"
   gather_facts: yes
   become: true
   become_user: "{{ system_username }}"
+  vars_files:
+    - ../environments/{{ deploy_env | default('production') }}.yml
   vars:
     deploy_date: "{{ ansible_date_time.date }}"
     releases_dir: "{{ app_dir }}/releases"
