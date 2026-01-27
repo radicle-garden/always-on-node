@@ -9,6 +9,8 @@ interface RegisterFormErrors {
   handle?: string;
   email?: string;
   password?: string;
+  confirmPassword?: string;
+  terms?: string;
   general?: string;
 }
 
@@ -26,6 +28,8 @@ export const actions = {
     const handle = data.get("handle")?.toString()?.trim();
     const email = data.get("email")?.toString()?.trim();
     const password = data.get("password")?.toString();
+    const confirmPassword = data.get("confirmPassword")?.toString();
+    const terms = data.get("terms")?.toString() === "on";
 
     const errors: RegisterFormErrors = {};
 
@@ -45,6 +49,16 @@ export const actions = {
       errors.password = "Password must be at least 4 characters";
     }
 
+    if (!confirmPassword) {
+      errors.confirmPassword = "Please confirm your password";
+    } else if (password !== confirmPassword) {
+      errors.confirmPassword = "Passwords do not match";
+    }
+
+    if (!terms) {
+      errors.terms = "You must accept the terms of service";
+    }
+
     if (Object.keys(errors).length > 0) {
       return fail(400, { handle, email, errors });
     }
@@ -59,6 +73,6 @@ export const actions = {
       });
     }
 
-    redirect(303, "/login?registered=true");
+    return { success: true, email };
   },
 } satisfies Actions;

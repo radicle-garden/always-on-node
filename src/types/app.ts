@@ -36,6 +36,14 @@ export type Node = {
   connect_address: string | null;
 };
 
+export type NodeStatus = {
+  isRunning: boolean;
+  peers: number;
+  sinceSeconds: number;
+  size?: number;
+  isBooting?: boolean;
+};
+
 export type SeededRadicleRepository = {
   id: number;
   repository_id: string;

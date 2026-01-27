@@ -1,3 +1,5 @@
+import { parseSeedCommandResult } from "$lib/utils";
+
 import { and, eq } from "drizzle-orm";
 import { execa } from "execa";
 import fs from "fs";
@@ -463,6 +465,7 @@ async function getSeededReposForNode(
 async function seedRepo(
   nodeId: string,
   repositoryId: string,
+  onSeedComplete?: (success: boolean) => void,
 ): Promise<ServiceResult<void>> {
   const db = await getDb();
   const node = await db.query.nodes.findFirst({
@@ -497,7 +500,13 @@ async function seedRepo(
     };
   }
 
-  execNodeCommand(node, "seed", [repositoryId]);
+  execNodeCommand(node, "seed", [repositoryId]).then(result => {
+    const success = parseSeedCommandResult(result);
+    console.log(
+      `[Nodes] Seed command completed for ${repositoryId}: ${success ? "success" : "failed"}`,
+    );
+    onSeedComplete?.(success);
+  });
 
   await db.insert(schema.seededRadicleRepositories).values({
     repository_id: repositoryId,

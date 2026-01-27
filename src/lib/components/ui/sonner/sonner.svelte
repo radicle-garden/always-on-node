@@ -11,5 +11,5 @@
 <Sonner
   theme={mode.current}
   class="toaster group"
-  style="--normal-bg: var(--popover); --normal-text: var(--popover-foreground); --normal-border: var(--border);"
+  style="--normal-bg: var(--color-surface-canvas); --normal-text: var(--color-text-primary); --normal-border: var(--color-border-border-subtle);"
   {...restProps} />

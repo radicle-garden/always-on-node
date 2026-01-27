@@ -6,6 +6,7 @@
       | "activity"
       | "archive"
       | "arrow-left"
+      | "arrow-right"
       | "arrow-up"
       | "attach"
       | "badge"
@@ -82,6 +83,11 @@
   {:else if name === "arrow-left"}
     <path
       d="M5.20703 8.5L7.70703 11L7 11.707L3.29297 8L7 4.29297L7.70703 5L5.20703 7.5L12.5 7.5L12.5 8.5L5.20703 8.5Z" />
+  {:else if name === "arrow-right"}
+    <path
+      d="M12 8L9 5M12 8L9 11M12 8L4 8"
+      stroke-linecap="square"
+      stroke="currentColor" />
   {:else if name === "arrow-up"}
     <path
       d="M8.5 12.5L7.5 12.5L7.5 5.20703L5 7.70703L4.29297 7L8 3.29297L11.707 7L11 7.70703L8.5 5.20703L8.5 12.5Z" />

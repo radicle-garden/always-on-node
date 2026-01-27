@@ -44,6 +44,6 @@ export const actions = {
       });
     }
 
-    return { success: true, email };
+    return { success: true, email, message: result.message };
   },
 } satisfies Actions;

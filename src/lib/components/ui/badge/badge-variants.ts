@@ -13,9 +13,9 @@ export const badgeVariants = tv({
       outline:
         "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
       success:
-        "bg-success text-success-foreground [a&]:hover:bg-success/90 border-transparent",
-      merged:
-        "bg-merged text-merged-foreground [a&]:hover:bg-merged/90 border-transparent",
+        "bg-badge-success-base/20 text-text-primary [a&]:hover:bg-badge-success-base/90 border-transparent",
+      warning:
+        "bg-badge-warning-base/20 text-text-primary [a&]:hover:bg-badge-warning-base/90 border-transparent",
     },
   },
   defaultVariants: {

@@ -1,84 +1,93 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
   import { resolve } from "$app/paths";
-  import * as NavigationMenu from "$lib/components/ui/navigation-menu";
+  import Logo from "$components/Logo.svelte";
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { gravatarURL } from "$lib/utils";
   import type { User } from "$types/app";
 
-  let { user }: { user: User | null } = $props();
+  import Icon from "./Icon.svelte";
+
+  interface Breadcrumb {
+    label: string;
+    href: string;
+  }
+
+  let { user, breadcrumbs }: { user: User | null; breadcrumbs: Breadcrumb[] } =
+    $props();
 
   let isLoggedIn = $derived(user !== null);
 </script>
 
-<div class="mx-auto flex min-h-16 justify-between">
-  <NavigationMenu.Root>
-    <NavigationMenu.List>
-      <NavigationMenu.Item>
-        <NavigationMenu.Link class="p-0 hover:bg-transparent" tabindex={-1}>
-          <a
-            href={resolve("/")}
-            class="flex flex-col items-start justify-start md:flex-row md:items-center md:gap-2">
-            <img
-              src="/img/radicle-logo.svg"
-              alt="Radicle"
-              class="h-full w-32" />
-            <span class="text-2xl font-extrabold text-garden-logo">garden</span>
+<div class="flex items-center justify-between">
+  <div class="flex items-center gap-1.5 text-text-tertiary">
+    <a href={resolve("/")}>
+      <Logo />
+    </a>
+    <div>/</div>
+    <div class="flex items-center gap-2">
+      {#each breadcrumbs as { label }, i (i)}
+        <div>
+          {label}
+        </div>
+      {/each}
+    </div>
+  </div>
+  <div class="ml-auto">
+    {#if isLoggedIn && user}
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger>
+          <a href={resolve(`/${user.handle}`)} class="flex items-center gap-2">
+            <div class="h-8 w-8">
+              <img
+                style:width="2rem"
+                alt="gravatar"
+                src={gravatarURL(user.email, 128)} />
+            </div>
           </a>
-        </NavigationMenu.Link>
-      </NavigationMenu.Item>
-    </NavigationMenu.List>
-  </NavigationMenu.Root>
-  <NavigationMenu.Root>
-    <NavigationMenu.List>
-      {#if isLoggedIn && user}
-        <NavigationMenu.Item>
-          <NavigationMenu.Link class="hover:bg-transparent" tabindex={-1}>
-            <a
-              href={resolve(`/${user.handle}`)}
-              class="flex items-center gap-2">
-              <div class="h-8 w-8">
-                <img
-                  style:width="2rem"
-                  alt="gravatar"
-                  src={gravatarURL(user.email, 32)} />
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content align="end">
+          <div class="flex flex-col gap-3">
+            <div class="flex max-w-73.5 items-center gap-2.5">
+              <img
+                class="h-16 w-16"
+                src={gravatarURL(user.email, 256)}
+                alt="gravatar" />
+              <div class="flex flex-col gap-1">
+                <div class="txt-heading-m line-clamp-1 text-text-primary">
+                  {user.handle}.radicle.garden
+                </div>
+                <div class="txt-body-s-regular text-text-tertiary">
+                  {user.email}
+                </div>
               </div>
-              {user.handle}
+            </div>
+            <div class="divider"></div>
+            <a href={resolve(`/help`)}>
+              <DropdownMenu.Item class="flex h-9 items-center gap-1">
+                <Icon name="help" />
+                Help
+              </DropdownMenu.Item>
             </a>
-          </NavigationMenu.Link>
-        </NavigationMenu.Item>
-        <NavigationMenu.Item>
-          <form
-            method="POST"
-            action="/logout"
-            use:enhance
-            class="flex items-center">
-            <button type="submit" class="logout-link">Logout</button>
-          </form>
-        </NavigationMenu.Item>
-      {:else}
-        <NavigationMenu.Item>
-          <NavigationMenu.Link class="hover:bg-transparent" tabindex={-1}>
-            <a href={resolve("/login")}>Login</a>
-          </NavigationMenu.Link>
-        </NavigationMenu.Item>
-      {/if}
-    </NavigationMenu.List>
-  </NavigationMenu.Root>
+            <a href={resolve(`/settings`)}>
+              <DropdownMenu.Item class="flex h-9 items-center gap-1">
+                <Icon name="settings" />
+                Settings
+              </DropdownMenu.Item>
+            </a>
+            <form method="POST" action="/logout" use:enhance>
+              <button type="submit" class="w-full">
+                <DropdownMenu.Item class="flex h-9 items-center gap-1">
+                  <Icon name="disconnect" />
+                  Logout
+                </DropdownMenu.Item>
+              </button>
+            </form>
+          </div>
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
+    {:else}
+      <a href={resolve("/login")}>Login</a>
+    {/if}
+  </div>
 </div>
-
-<style>
-  a,
-  .logout-link {
-    color: var(--foreground);
-    background: none;
-    border: none;
-    cursor: pointer;
-    font: inherit;
-    padding: 0;
-  }
-  a:hover,
-  .logout-link:hover {
-    color: var(--foreground);
-    text-decoration: none;
-  }
-</style>
