@@ -40,6 +40,109 @@ function getPortForNode(node: Node): number {
   return 7000 + Number(node.id);
 }
 
+async function createContainersForNode(
+  nodeAlias: string,
+  radHome: string,
+  radPort: number,
+): Promise<boolean> {
+  try {
+    const docker = await DockerClient.fromDockerHost(config.dockerHost);
+
+    console.log(`[Nodes] Pulling container images for ${nodeAlias}...`);
+
+    const nodeImage = config.radicleNodeContainer;
+    const httpdImage = config.radicleHttpdContainer;
+    const [nodeImageName, nodeImageTag] =
+      config.radicleNodeContainer.split(":");
+    const [httpdImageName, httpdImageTag] =
+      config.radicleHttpdContainer.split(":");
+
+    const nodeImagePull = docker.imageCreate({
+      fromImage: nodeImageName,
+      tag: nodeImageTag,
+      platform: "linux/arm64",
+    });
+    const httpdImagePull = docker.imageCreate({
+      fromImage: httpdImageName,
+      tag: httpdImageTag,
+      platform: "linux/arm64",
+    });
+
+    await nodeImagePull.wait();
+    await httpdImagePull.wait();
+    console.log(`[Nodes] Images pulled successfully for ${nodeAlias}`);
+
+    const { node: nodeContainerName, httpd: httpdContainerName } =
+      getContainerNames(nodeAlias);
+    const nodeContainer = await docker.containerCreate(
+      {
+        Image: nodeImage,
+        Env: [
+          "RUST_LOG=debug",
+          "RUST_BACKTRACE=1",
+          "GIT_TRACE=1",
+          "GIT_TRACE_PACKET=1",
+          "RAD_HOME=/radicle",
+          "RAD_PASSPHRASE=",
+        ],
+        Cmd: ["--log", "debug", "--listen", "0.0.0.0:8776"],
+        ExposedPorts: {
+          "8776/tcp": {},
+        },
+        Healthcheck: {
+          Test: ["CMD-SHELL", "/usr/local/bin/radicle-healthcheck"],
+          Interval: 10_000_000_000, // ns
+          Timeout: 5_000_000_000, // ns
+          Retries: 10,
+        },
+        HostConfig: {
+          Binds: [`${radHome}:/radicle`],
+          PortBindings: {
+            "8776/tcp": [{ HostPort: String(radPort) }],
+          },
+          RestartPolicy: {
+            Name: "always",
+          },
+          UsernsMode: "keep-id:uid=11011,gid=11011",
+        },
+      },
+      { name: nodeContainerName, platform: "linux/arm64" },
+    );
+
+    console.log(
+      `[Nodes] Created node container ${nodeContainerName} with ID: ${nodeContainer.Id}`,
+    );
+
+    const httpdContainer = await docker.containerCreate(
+      {
+        Image: httpdImage,
+        Env: ["RUST_LOG=debug", "RUST_BACKTRACE=1", "RAD_HOME=/radicle"],
+        Cmd: ["--listen", `/radicle/httpd.sock`],
+        HostConfig: {
+          Binds: [`${radHome}:/radicle`],
+          RestartPolicy: {
+            Name: "always",
+          },
+          UsernsMode: "keep-id:uid=11011,gid=11011",
+        },
+      },
+      { name: httpdContainerName, platform: "linux/arm64" },
+    );
+
+    console.log(
+      `[Nodes] Created httpd container ${httpdContainerName} with ID: ${httpdContainer.Id}`,
+    );
+
+    return true;
+  } catch (error) {
+    console.error(
+      `[Nodes] Failed to create containers for ${nodeAlias}:`,
+      error,
+    );
+    return false;
+  }
+}
+
 async function createNode(user: User): Promise<Node | null> {
   const nodeAlias = getNodeAlias(user.handle);
 
@@ -131,92 +234,14 @@ async function createNode(user: User): Promise<Node | null> {
         return null;
       }
 
-      const docker = await DockerClient.fromDockerHost(config.dockerHost);
-
-      console.log(`[Nodes] Pulling container images for ${nodeAlias}...`);
-
-      const nodeImage = config.radicleNodeContainer;
-      const httpdImage = config.radicleHttpdContainer;
-      const [nodeImageName, nodeImageTag] =
-        config.radicleNodeContainer.split(":");
-      const [httpdImageName, httpdImageTag] =
-        config.radicleHttpdContainer.split(":");
-
-      const nodeImagePull = docker.imageCreate({
-        fromImage: nodeImageName,
-        tag: nodeImageTag,
-        platform: "linux/arm64",
-      });
-      const httpdImagePull = docker.imageCreate({
-        fromImage: httpdImageName,
-        tag: httpdImageTag,
-        platform: "linux/arm64",
-      });
-
-      await nodeImagePull.wait();
-      await httpdImagePull.wait();
-      console.log(`[Nodes] Images pulled successfully for ${nodeAlias}`);
-
-      const { node: nodeContainerName, httpd: httpdContainerName } =
-        getContainerNames(nodeAlias);
-      const nodeContainer = await docker.containerCreate(
-        {
-          Image: nodeImage,
-          Env: [
-            "RUST_LOG=debug",
-            "RUST_BACKTRACE=1",
-            "GIT_TRACE=1",
-            "GIT_TRACE_PACKET=1",
-            "RAD_HOME=/radicle",
-            "RAD_PASSPHRASE=",
-          ],
-          Cmd: ["--log", "debug", "--listen", "0.0.0.0:8776"],
-          ExposedPorts: {
-            "8776/tcp": {},
-          },
-          Healthcheck: {
-            Test: ["CMD-SHELL", "/usr/local/bin/radicle-healthcheck"],
-            Interval: 10_000_000_000, // ns
-            Timeout: 5_000_000_000, // ns
-            Retries: 10,
-          },
-          HostConfig: {
-            Binds: [`${radHome}:/radicle`],
-            PortBindings: {
-              "8776/tcp": [{ HostPort: String(radPort) }],
-            },
-            RestartPolicy: {
-              Name: "always",
-            },
-            UsernsMode: "keep-id:uid=11011,gid=11011",
-          },
-        },
-        { name: nodeContainerName, platform: "linux/arm64" },
+      const containersCreated = await createContainersForNode(
+        nodeAlias,
+        radHome,
+        radPort,
       );
-
-      console.log(
-        `[Nodes] Created node container ${nodeContainerName} with ID: ${nodeContainer.Id}`,
-      );
-
-      const httpdContainer = await docker.containerCreate(
-        {
-          Image: httpdImage,
-          Env: ["RUST_LOG=debug", "RUST_BACKTRACE=1", "RAD_HOME=/radicle"],
-          Cmd: ["--listen", `/radicle/httpd.sock`],
-          HostConfig: {
-            Binds: [`${radHome}:/radicle`],
-            RestartPolicy: {
-              Name: "always",
-            },
-            UsernsMode: "keep-id:uid=11011,gid=11011",
-          },
-        },
-        { name: httpdContainerName, platform: "linux/arm64" },
-      );
-
-      console.log(
-        `[Nodes] Created httpd container ${httpdContainerName} with ID: ${httpdContainer.Id}`,
-      );
+      if (!containersCreated) {
+        return null;
+      }
 
       console.log(
         `[Nodes] Containers created but not started. Will be started after subscription is active.`,
