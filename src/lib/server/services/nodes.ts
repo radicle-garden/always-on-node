@@ -25,8 +25,23 @@ interface ServiceResult<T> {
   statusCode: number;
 }
 
+function getNodeAlias(handle: string): string {
+  return `${handle}_seed`;
+}
+
+function getContainerNames(nodeAlias: string) {
+  return {
+    node: `${nodeAlias}-node`,
+    httpd: `${nodeAlias}-httpd`,
+  };
+}
+
+function getPortForNode(node: Node): number {
+  return 7000 + Number(node.id);
+}
+
 async function createNode(user: User): Promise<Node | null> {
-  const nodeAlias = `${user.handle}_seed`;
+  const nodeAlias = getNodeAlias(user.handle);
 
   const temporaryRadHome = path.resolve(
     config.profileStoragePath,
@@ -142,7 +157,8 @@ async function createNode(user: User): Promise<Node | null> {
       await httpdImagePull.wait();
       console.log(`[Nodes] Images pulled successfully for ${nodeAlias}`);
 
-      const nodeContainerName = `${nodeAlias}-node`;
+      const { node: nodeContainerName, httpd: httpdContainerName } =
+        getContainerNames(nodeAlias);
       const nodeContainer = await docker.containerCreate(
         {
           Image: nodeImage,
@@ -182,7 +198,6 @@ async function createNode(user: User): Promise<Node | null> {
         `[Nodes] Created node container ${nodeContainerName} with ID: ${nodeContainer.Id}`,
       );
 
-      const httpdContainerName = `${nodeAlias}-httpd`;
       const httpdContainer = await docker.containerCreate(
         {
           Image: httpdImage,
@@ -317,7 +332,7 @@ async function execNodeCommand(
   radSubcommand: string,
   args: string[] = [],
 ): Promise<{ stdout: string; stderr: string } | null> {
-  const containerName = `${node.alias}-node`;
+  const { node: containerName } = getContainerNames(node.alias);
 
   try {
     const { stdout, stderr } = await execa("podman", [
@@ -600,8 +615,7 @@ async function unseedRepo(
 
 async function assignAvailablePort(node: Node): Promise<number> {
   const db = await getDb();
-  const nodeEntryId = node.id;
-  const externalPort = 7000 + Number(nodeEntryId);
+  const externalPort = getPortForNode(node);
   const connectAddress = `${config.nodesConnectFQDN}:${externalPort}`;
 
   await db
@@ -614,9 +628,9 @@ async function assignAvailablePort(node: Node): Promise<number> {
 
 async function stopContainers(user: User): Promise<ServiceResult<void>> {
   try {
-    const nodeAlias = `${user.handle}_seed`;
-    const nodeContainerName = `${nodeAlias}-node`;
-    const httpdContainerName = `${nodeAlias}-httpd`;
+    const nodeAlias = getNodeAlias(user.handle);
+    const { node: nodeContainerName, httpd: httpdContainerName } =
+      getContainerNames(nodeAlias);
 
     const docker = await DockerClient.fromDockerHost(config.dockerHost);
 
@@ -657,9 +671,9 @@ async function stopContainers(user: User): Promise<ServiceResult<void>> {
 
 async function startContainers(user: User): Promise<ServiceResult<void>> {
   try {
-    const nodeAlias = `${user.handle}_seed`;
-    const nodeContainerName = `${nodeAlias}-node`;
-    const httpdContainerName = `${nodeAlias}-httpd`;
+    const nodeAlias = getNodeAlias(user.handle);
+    const { node: nodeContainerName, httpd: httpdContainerName } =
+      getContainerNames(nodeAlias);
 
     const docker = await DockerClient.fromDockerHost(config.dockerHost);
 
