@@ -95,7 +95,9 @@ async function createNode(user: User): Promise<Node | null> {
       }
       const currentConfig = configResult.content as {
         node: { externalAddresses: string[] };
+        preferredSeeds: string[];
       };
+      currentConfig.preferredSeeds = config.nodePreferredSeeds;
 
       console.log(
         `[Nodes] Updating node config for ${persistedNode.node_id}: ${JSON.stringify(currentConfig)}`,

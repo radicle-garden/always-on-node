@@ -13,6 +13,10 @@
   "radicleNodeContainer": "quay.io/radicle_garden/radicle-node:1.6.1",
   "radicleHttpdContainer": "quay.io/radicle_garden/radicle-httpd:0.23.0",
   "nodeBootingTimeoutMs": 60000,
+  "nodePreferredSeeds": [
+    "z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.xyz:8776",
+    "z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo@rosa.radicle.xyz:8776"
+  ],
   "public": {
     "defaultHttpdApiHostname": "localhost",
     "defaultHttpdApiPort": 9999,

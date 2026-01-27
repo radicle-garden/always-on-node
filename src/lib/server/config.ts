@@ -24,6 +24,7 @@ export interface AppConfig {
   radicleNodeContainer: string;
   radicleHttpdContainer: string;
   nodeBootingTimeoutMs: number;
+  nodePreferredSeeds: string[];
   stripeSecretKey: string;
   stripeWebhookSecret: string;
   stripePriceId: string;
@@ -65,6 +66,9 @@ export function getConfig(): AppConfig {
     nodeBootingTimeoutMs:
       Number(process.env.NODE_BOOTING_TIMEOUT_MS) ||
       configJson.nodeBootingTimeoutMs,
+    nodePreferredSeeds:
+      process.env.NODE_PREFERRED_SEEDS?.split(",") ||
+      configJson.nodePreferredSeeds,
     stripeSecretKey: process.env.STRIPE_SECRET_SERVER_SIDE_KEY || "placeholder",
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
     stripePriceId: process.env.STRIPE_PRICE_ID || "",
