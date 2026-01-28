@@ -1,6 +1,8 @@
-- name: Install systemd exporter
+- name: Install systemd and container monitoring
   hosts: prod
   gather_facts: no
+  vars_files:
+    - ../environments/{{ deploy_env | default('production') }}.yml
   tasks:
     - name: Create Systemd-Exporter Quadlet
       containers.podman.podman_container:
@@ -41,37 +43,9 @@
         - reload systemd
         - restart systemd_exporter
 
-    - name: Ensure systemd has reloaded services
-      meta: flush_handlers
-
-    - name: Enable systemd monitoring services
-      systemd:
-        name: "{{ item }}"
-        enabled: yes
-        state: started
-        scope: user
-      loop:
-        - "systemd_exporter.service"
-        - "cadvisor.service"
-
-  handlers:
-    - name: reload systemd
-      systemd:
-        daemon_reload: yes
-        scope: user
-    - name: restart systemd_exporter
-      systemd:
-        name: "systemd_exporter.service"
-        state: restarted
-        scope: user
-
-- name: Install container monitoring
-  hosts: radworks
-  gather_facts: no
-  become: true
-  become_user: root
-  tasks:
     - name: Create cAdvisor Quadlet
+      become: true
+      become_user: root
       containers.podman.podman_container:
         name: cadvisor
         image: "gcr.io/cadvisor/cadvisor:v0.49.1"
@@ -111,9 +85,44 @@
         - reload systemd
         - restart cadvisor
 
+    - name: Ensure systemd has reloaded services
+      meta: flush_handlers
+
+    - name: Enable systemd monitoring services
+      systemd:
+        name: "systemd_exporter.service"
+        enabled: yes
+        state: started
+        scope: user
+
+    - name: Enable container monitoring services
+      systemd:
+        name: "cadvisor.service"
+        enabled: yes
+        state: started
+        scope: user
+
+  handlers:
+    - name: reload systemd
+      systemd:
+        daemon_reload: yes
+        scope: user
+    - name: restart systemd_exporter
+      systemd:
+        name: "systemd_exporter.service"
+        state: restarted
+        scope: user
+    - name: restart cadvisor
+      systemd:
+        name: "cadvisor.service"
+        state: restarted
+
+
 - name: Install Alloy
   hosts: prod
   become: true
+  vars_files:
+    - ../environments/{{ deploy_env | default('production') }}.yml
 
   tasks:
     - name: Ensure alloy can read journald
