@@ -157,30 +157,54 @@ loki.process "cron" {
 }
 
 
-// Node logs
-loki.source.journal "garden_nodes" {
-  max_age    = "12h"
-  forward_to = [loki.write.grafana_cloud_loki.receiver]
-  relabel_rules = loki.relabel.garden_nodes.rules
-  labels     = {app = "garden-nodes", job = "garden", instance = "{{ inventory_hostname }}"}
+// Node logs (from podman containers)
+discovery.docker "nodes" {
+  host = "unix:///run/podman/podman.sock"
 }
 
-loki.relabel "garden_nodes" {
+discovery.relabel "podman_nodes" {
+  targets = discovery.docker.nodes.targets
+
+  // Only keep containers with names ending in _seed (radicle node containers)
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = ".*_seed"
+    action        = "keep"
+  }
+
+  // Add container name as a label
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    target_label  = "container_name"
+  }
+}
+
+loki.source.docker "garden_nodes" {
+  host       = "unix:///run/podman/podman.sock"
+  targets    = discovery.relabel.podman_nodes.output
+  forward_to = [loki.process.garden_nodes.receiver]
+  relabel_rules = loki.relabel.garden_nodes_labels.rules
+}
+
+loki.relabel "garden_nodes_labels" {
   forward_to = []
 
-    // Only logs from the garden services, as they are handled separately
-    rule {
-      source_labels = ["__journal__systemd_user_unit"]
-      target_label  = "systemd_user_unit"
-    }
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    target_label  = "container_name"
+  }
+}
 
-    // Only logs from the garden services, as they are handled separately
-    rule {
-      source_labels = ["systemd_user_unit"]
-      regex         = ".*_seed.service"
-      action        = "keep"
-    }
+loki.process "garden_nodes" {
+  forward_to = [loki.write.grafana_cloud_loki.receiver]
 
+  stage.static_labels {
+    values = {
+      app      = "garden-nodes",
+      job      = "garden",
+      instance = "{{ inventory_hostname }}",
+    }
+  }
 }
 
 
