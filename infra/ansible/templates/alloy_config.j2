@@ -106,7 +106,7 @@ loki.relabel "journal_other" {
 // Always-on node logs
 loki.source.journal "garden_always_on_node" {
   max_age    = "12h"
-  forward_to = [loki.process.always-on-node.receiver]
+  forward_to = [loki.process.garden_always_on_node.receiver]
   matches    = "_SYSTEMD_USER_UNIT=always-on-node.service"
   labels     = {app = "always-on-node", job = "garden", instance = "{{ inventory_hostname }}"}
 }
@@ -156,76 +156,55 @@ loki.process "cron" {
   forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
 
-
-// Node logs (from podman containers)
-discovery.docker "nodes" {
-  host = "unix:///run/podman/podman.sock"
+// Container logs (via journald, not socket)
+loki.source.journal "garden_containers" {
+  max_age       = "12h"
+  forward_to    = [loki.process.garden_containers.receiver]
+  relabel_rules = loki.relabel.garden_containers.rules
+  labels        = {job = "garden", instance = "{{ inventory_hostname }}"}
 }
 
-discovery.relabel "podman_nodes" {
-  targets = discovery.docker.nodes.targets
-
-  // Only keep containers with names ending in _seed (radicle node containers)
-  rule {
-    source_labels = ["__meta_docker_container_name"]
-    regex         = ".*_seed"
-    action        = "keep"
-  }
-
-  // Add container name as a label
-  rule {
-    source_labels = ["__meta_docker_container_name"]
-    target_label  = "container_name"
-  }
-}
-
-loki.source.docker "garden_nodes" {
-  host       = "unix:///run/podman/podman.sock"
-  targets    = discovery.relabel.podman_nodes.output
-  forward_to = [loki.process.garden_nodes.receiver]
-  relabel_rules = loki.relabel.garden_nodes_labels.rules
-}
-
-loki.relabel "garden_nodes_labels" {
+loki.relabel "garden_containers" {
   forward_to = []
 
+  // Only keep logs from Podman containers (they have CONTAINER_NAME set)
   rule {
-    source_labels = ["__meta_docker_container_name"]
-    target_label  = "container_name"
+    source_labels = ["__journal_container_name"]
+    regex         = ".+"
+    action        = "keep"
   }
 }
 
-loki.process "garden_nodes" {
+loki.process "garden_containers" {
   forward_to = [loki.write.grafana_cloud_loki.receiver]
+
+  stage.labels {
+    values = {
+      container_name = "CONTAINER_NAME",
+    }
+  }
 
   stage.static_labels {
     values = {
-      app      = "garden-nodes",
-      job      = "garden",
-      instance = "{{ inventory_hostname }}",
+      app = "garden",
     }
   }
 }
-
 
 
 // ###############################
 // #### Metrics Configuration ####
 // ###############################
 
-// Host Cadvisor on the Docker socket to expose container metrics.
-prometheus.exporter.cadvisor "containers" {
-  docker_host = "unix:///run/podman/podman.sock"
-
-  storage_duration = "5m"
-}
-
-
-// Configure a prometheus.scrape component to collect cadvisor metrics.
-prometheus.scrape "scraper" {
-  targets    = prometheus.exporter.cadvisor.containers.targets
-  forward_to = [ prometheus.relabel.cadvisor_metrics.receiver ]
-
+// Container metrics (via cAdvisor HTTP endpoint)
+prometheus.scrape "cadvisor" {
+  targets = [
+    {
+      "__address__" = "localhost:{{ cadvisor_port }}",
+      "job"         = "cadvisor",
+    },
+  ]
+  forward_to      = [prometheus.relabel.cadvisor_metrics.receiver]
   scrape_interval = "30s"
 }
 
@@ -245,7 +224,6 @@ prometheus.relabel "cadvisor_metrics" {
 loki.write "grafana_cloud_loki" {
   endpoint {
     url       = "{{ grafana_cloud_loki_url }}"
-    tenant_id = "radicle-garden"
     basic_auth {
       username = "{{ grafana_cloud_logs_username }}"
       password = "{{ grafana_cloud_api_key }}"

@@ -249,6 +249,12 @@ async function createNode(user: User): Promise<Node | null> {
       const nodeContainer = await docker.containerCreate(
         {
           Image: nodeImage,
+          Labels: {
+            app: "garden",
+            component: "radicle-node",
+            "user.handle": user.handle,
+            "node.id": persistedNode.node_id,
+          },
           Env: [
             "RUST_LOG=debug",
             "RUST_BACKTRACE=1",
@@ -290,6 +296,12 @@ async function createNode(user: User): Promise<Node | null> {
       const httpdContainer = await docker.containerCreate(
         {
           Image: httpdImage,
+          Labels: {
+            app: "garden",
+            component: "radicle-httpd",
+            "user.handle": user.handle,
+            "node.id": persistedNode.node_id,
+          },
           Env: ["RUST_LOG=debug", "RUST_BACKTRACE=1", "RAD_HOME=/radicle"],
           Cmd: ["--listen", `/radicle/httpd.sock`],
           HostConfig: {
