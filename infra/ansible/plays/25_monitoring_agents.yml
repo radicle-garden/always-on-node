@@ -1,0 +1,132 @@
+- name: Install systemd and container monitoring
+  hosts: "{{ deploy_env | default('production') }}"
+  gather_facts: no
+  vars_files:
+    - ../environments/{{ deploy_env | default('production') }}.yml
+  tasks:
+    - name: Create Systemd-Exporter Quadlet
+      containers.podman.podman_container:
+        name: systemd_exporter
+        image: "quay.io/prometheuscommunity/systemd-exporter:main"
+        command:
+          - --log.level=info
+          - --systemd.collector.user
+          - --systemd.collector.enable-restart-count
+          - --systemd.collector.enable-ip-accounting
+          - --systemd.collector.unit-include=always-on-node.service
+        env:
+          XDG_RUNTIME_DIR: "/run/user/{{ unix_user_id }}"
+        ports:
+          - "{{ systemd_exporter_port }}:9558"
+        volumes:
+          - "/proc:/host/proc:ro"
+          - "/run/systemd:/run/systemd:ro"
+          - "/run/user/{{ unix_user_id }}:/run/user/{{ unix_user_id }}:ro"
+        user: "{{ unix_user_id }}:{{ unix_group_id }}" # important that systemd_exporter runs as the same user
+        userns_mode: "keep-id:uid={{ unix_user_id }},gid={{ unix_group_id }}"
+        state: quadlet
+        restart_policy: on-failure
+        log_driver: journald
+        recreate: true
+        annotation:
+          org.systemd.property.KillMode: "'none'"
+        quadlet_options:
+          - "AutoUpdate=local"
+          #          - "Pull=newer"
+          - |
+            [Unit]
+            After=podman-user-wait-network-online.service
+
+            [Install]
+            WantedBy=default.target
+      notify:
+        - reload systemd
+        - restart systemd_exporter
+
+    - name: Create cAdvisor Quadlet
+      containers.podman.podman_container:
+        name: cadvisor
+        image: "gcr.io/cadvisor/cadvisor:v0.49.1"
+        command:
+          - "housekeeping_interval=10s"
+        ports:
+          - "{{ cadvisor_port }}:8080"
+        volumes:
+          - "/run/user/{{ unix_user_id }}/podman/podman.sock:/var/run/docker.sock:ro"
+        state: quadlet
+        restart_policy: on-failure
+        log_driver: journald
+        recreate: true
+        quadlet_options:
+          - "AutoUpdate=local"
+          - |
+            [Unit]
+            After=podman-user-wait-network-online.service
+
+            [Install]
+            WantedBy=default.target
+      notify:
+        - reload systemd
+        - restart cadvisor
+
+    - name: Ensure systemd has reloaded services
+      meta: flush_handlers
+
+    - name: Enable systemd monitoring services
+      systemd:
+        name: "systemd_exporter.service"
+        enabled: yes
+        state: started
+        scope: user
+        daemon_reload: yes
+
+    - name: Enable container monitoring services
+      systemd:
+        name: "cadvisor.service"
+        enabled: yes
+        state: started
+        scope: user
+        daemon_reload: yes
+
+  handlers:
+    - name: reload systemd
+      systemd:
+        daemon_reload: yes
+        scope: user
+    - name: restart systemd_exporter
+      systemd:
+        name: "systemd_exporter.service"
+        state: restarted
+        scope: user
+    - name: restart cadvisor
+      systemd:
+        name: "cadvisor.service"
+        state: restarted
+        scope: user
+
+- name: Install Alloy
+  hosts: "{{ deploy_env | default('production') }}"
+  become: true
+  vars_files:
+    - ../environments/{{ deploy_env | default('production') }}.yml
+
+  tasks:
+    - name: Ensure alloy can read journald
+      ansible.builtin.file:
+        path: /var/log/journal
+        group: systemd-journal
+        recurse: true
+
+    - name: Install Alloy
+      ansible.builtin.include_role:
+        name: grafana.grafana.alloy
+      vars:
+        alloy_user_groups:
+          - systemd-journal
+        alloy_config: "{{ lookup('ansible.builtin.template', '../templates/alloy_config.j2') }}"
+
+    - name: Restart Alloy to pick up group membership
+      ansible.builtin.systemd:
+        name: alloy
+        state: restarted
+        daemon_reload: yes

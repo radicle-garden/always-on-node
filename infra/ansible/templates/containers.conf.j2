@@ -1,5 +1,6 @@
 [containers]
-log_driver="json-file"
+log_driver="journald"
+log_tag='{% raw %}{{index .Config.Labels `app`}}||{{index .Config.Labels `component`}}||{{index .Config.Labels `garden_user`}}||{{index .Config.Labels `node_id`}}{% endraw %}'
 dns_servers=["10.89.0.1", "127.0.0.53", "1.1.1.1"]
 
 [engine]

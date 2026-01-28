@@ -277,6 +277,12 @@ async function createNode(user: User): Promise<Node | null> {
             },
             UsernsMode: "keep-id:uid=11011,gid=11011",
           },
+          Labels: {
+            app: "garden",
+            component: "radicle-node",
+            garden_user: user.handle,
+            node_id: persistedNode.node_id,
+          },
         },
         { name: nodeContainerName, platform: "linux/arm64" },
       );
@@ -298,6 +304,12 @@ async function createNode(user: User): Promise<Node | null> {
               Name: "always",
             },
             UsernsMode: "keep-id:uid=11011,gid=11011",
+          },
+          Labels: {
+            app: "garden",
+            component: "radicle-httpd",
+            garden_user: user.handle,
+            node_id: persistedNode.node_id,
           },
         },
         { name: httpdContainerName, platform: "linux/arm64" },
