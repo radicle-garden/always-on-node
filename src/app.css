@@ -76,6 +76,21 @@
 
   --color-badge-success-base: var(--color-accent-green-500);
   --color-badge-warning-base: var(--color-semantic-amber-500);
+
+  /* Radii */
+  --radius-*: initial;
+  --radius-xs: 0.0625rem;
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-full: 99rem;
+
+  /* Shadows */
+  --shadow-*: initial;
+  --shadow-1: 0px 2px 2px 0px var(--color-surface-alpha-mid);
+  --shadow-2: 0px 3px 4px 0px var(--color-surface-alpha-mid);
+  --shadow-3: 0px 4px 6px 0px var(--color-surface-alpha-mid);
+  --shadow-4: 0px 5px 8px 0px var(--color-surface-alpha-mid);
 }
 
 :root {

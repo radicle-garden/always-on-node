@@ -3,7 +3,6 @@
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
   import LogoText from "$components/LogoText.svelte";
-  import * as Alert from "$lib/components/ui/alert";
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
@@ -11,13 +10,15 @@
   let { form } = $props();
 
   let isSubmitting = $state(false);
+  let email = $derived(form?.email ?? "");
+  let password = $state("");
 
   const verified = page.url.searchParams.get("verified");
   const pwReset = page.url.searchParams.get("pw-reset");
 </script>
 
 <div
-  class="flex w-[400px] flex-col items-center justify-center bg-surface-canvas p-8">
+  class="flex w-full flex-col items-center justify-center bg-surface-canvas p-8 sm:w-100">
   <div class="flex h-full w-full flex-col items-start justify-start gap-8">
     <LogoText />
     <div class="txt-heading-xxl">
@@ -54,7 +55,7 @@
           isSubmitting = false;
         };
       }}
-      class="flex w-full max-w-sm flex-col gap-6">
+      class="flex w-full flex-col gap-6">
       <div class="grid gap-2">
         <Label for="email">Email address</Label>
         <Input
@@ -63,11 +64,13 @@
           type="email"
           placeholder="email@example.com"
           class="border"
-          value={form?.email ?? ""}
+          bind:value={email}
           aria-invalid={!!form?.errors?.email}
           required />
         {#if form?.errors?.email}
-          <div class="text-destructive text-sm">{form.errors.email}</div>
+          <div class="text-sm text-feedback-error-text">
+            {form.errors.email}
+          </div>
         {/if}
       </div>
       <div class="grid gap-2">
@@ -79,11 +82,14 @@
           name="password"
           type="password"
           class="border"
+          bind:value={password}
           aria-invalid={!!form?.errors?.password}
           required
           placeholder="******" />
         {#if form?.errors?.password}
-          <div class="text-destructive text-sm">{form.errors.password}</div>
+          <div class="text-sm text-feedback-error-text">
+            {form.errors.password}
+          </div>
         {/if}
         <a
           href={resolve("/forgot-password")}
@@ -91,15 +97,14 @@
           Forgot password?
         </a>
         {#if form?.errors?.general}
-          <Alert.Root variant="destructive">
-            <Alert.Title>Unable to login</Alert.Title>
-            <Alert.Description>{form.errors.general}</Alert.Description>
-          </Alert.Root>
+          <div class="text-sm text-feedback-error-text">
+            {form.errors.general}
+          </div>
         {/if}
       </div>
       <div class="flex w-full items-center">
         <div class="ml-auto">
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting || !email || !password}>
             {isSubmitting ? "Logging in…" : "Log in"}
           </Button>
         </div>

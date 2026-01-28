@@ -40,6 +40,9 @@
 {#snippet toasterErrorIcon()}<Icon name="cross" />{/snippet}
 
 <Toaster
+  toastOptions={{
+    style: "border-radius: var(--radius-sm);",
+  }}
   loadingIcon={toasterLoadingIcon}
   successIcon={toasterSuccessIcon}
   errorIcon={toasterErrorIcon} />
@@ -49,12 +52,9 @@
     <Header user={data.user} {breadcrumbs} />
   </header>
   <main
-    class="relative flex w-full items-center justify-center overflow-y-auto text-text-primary">
+    class="relative flex w-full items-center justify-center overflow-y-auto p-6 text-text-primary md:p-0">
     <div class="w-full max-w-[700px]">
       {@render children()}
     </div>
   </main>
-  <footer class="mt-auto flex items-center justify-center gap-2 py-4 text-sm">
-    &copy; {new Date().getFullYear()} Radicle <Icon name="seed" />
-  </footer>
 </div>

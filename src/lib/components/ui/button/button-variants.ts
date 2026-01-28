@@ -11,16 +11,18 @@ export const buttonVariants = tv({
   variants: {
     variant: {
       default:
-        "bg-surface-alpha-mid text-text-secondary shadow-xs hover:bg-surface-alpha-strong",
-      success:
-        "bg-success text-success-foreground shadow-xs hover:bg-success/90",
-      warning: "bg-feedback-warning-bg text-feedback-warning-text shadow-xs",
+        "bg-surface-alpha-mid text-text-secondary hover:bg-surface-alpha-strong",
+      success: "bg-success text-success-foreground hover:bg-success/90",
+      warning: "bg-feedback-warning-bg text-feedback-warning-text",
       destructive:
-        "bg-feedback-error-bg shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 text-white",
+        "bg-surface-error-primary hover:bg-surface-error-primary/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 text-text-on-brand",
+      destructiveSecondary:
+        "bg-feedback-error-bg hover:bg-feedback-error-bg/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 text-code-error",
       outline:
-        "bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 border",
-      secondary:
-        "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
+        "bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 border",
+      secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+      primary:
+        "bg-surface-brand-secondary text-text-on-brand hover:bg-brand-hover",
       ghost:
         "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
       link: "text-primary underline-offset-4 hover:underline",

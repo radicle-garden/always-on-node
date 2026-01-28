@@ -4,6 +4,7 @@
   import PaymentSection from "$components/PaymentSection.svelte";
   import RepositoriesWithFilter from "$components/RepositoriesWithFilter.svelte";
   import Throbber from "$components/Throbber.svelte";
+  import * as Alert from "$lib/components/ui/alert";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
   import type { UserProfile } from "$types/app";
@@ -40,7 +41,7 @@
   {:else if nodeStatuses[nodeId].isRunning && nodeStatuses[nodeId].peers === 0}
     <Badge variant="warning">
       <Icon name="hourglass" />
-      <span class="txt-body-s-semibold">Offline - no peers</span>
+      <span class="txt-body-s-semibold">Offline</span>
     </Badge>
   {:else}
     <Badge variant="destructive">
@@ -52,15 +53,34 @@
 
 {#if profile}
   <div class="flex w-full flex-col gap-8">
-    {#if isMe && data.user?.email_verified}
+    {#if isMe && data.user?.email_verified && !hasSubscription}
       <PaymentSection
         subscriptionStatus={data.subscriptionStatus}
         stripePriceId={data.stripePriceId} />
     {/if}
+    {#if nodeStatuses[nodeId].isRunning && nodeStatuses[nodeId].peers === 0}
+      <Alert.Root variant="warning">
+        <Alert.Description class="flex items-start gap-1">
+          <div class="mt-0.5">
+            <Icon name="guide" />
+          </div>
+          <!-- prettier-ignore -->
+          <div class="block">
+            Your node is running but it has no peers. Ask for help in <a
+              href="https://radicle.zulipchat.com/"
+              target="_blank"
+              class="inline-flex items-center gap-1 underline">
+              Zulip
+            </a>.
+          </div>
+        </Alert.Description>
+      </Alert.Root>
+    {/if}
     {#if hasSubscription}
-      <div class="flex w-full items-end gap-4">
-        <div class="flex items-center gap-2">
-          <div class="txt-heading-xxxl">Garden</div>
+      <div class="flex w-full items-start gap-4 sm:items-end">
+        <div
+          class="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+          <div class="txt-heading-xl sm:txt-heading-xxxl">Garden</div>
           {#if isMe && nodeStatuses[nodeId]}
             {@render nodeStatus()}
           {/if}

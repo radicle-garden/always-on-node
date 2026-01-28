@@ -12,7 +12,7 @@
 
 <div class="flex flex-col gap-8">
   <div class="txt-heading-xxl">Help</div>
-  <div class="grid grid-cols-2 gap-8">
+  <div class="grid grid-cols-1 grid-rows-2 gap-8 sm:grid-cols-2 sm:grid-rows-1">
     <div class="flex flex-col gap-8 rounded-sm bg-surface-subtle p-6">
       <div class="flex flex-col gap-2">
         <div class="txt-heading-m">Support</div>

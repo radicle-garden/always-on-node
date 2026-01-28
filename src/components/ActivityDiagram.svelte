@@ -6,9 +6,11 @@
     activity: WeeklyActivity[];
     viewBoxHeight: number;
     styleColor: string;
+    containerWidth: number;
   }
 
-  const { id, activity, viewBoxHeight, styleColor }: Props = $props();
+  const { id, activity, viewBoxHeight, styleColor, containerWidth }: Props =
+    $props();
 
   const viewBoxWidth = 493;
 
@@ -104,7 +106,7 @@
 </script>
 
 <svg
-  style:min-width="185px"
+  style:min-width={containerWidth ? `${containerWidth}px` : "185px"}
   style:flex-shrink="none"
   style:color={styleColor}
   viewBox="0 0 {viewBoxWidth} {heightWithPadding}"

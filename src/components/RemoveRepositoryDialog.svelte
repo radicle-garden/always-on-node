@@ -1,7 +1,7 @@
 <script lang="ts">
   import Icon from "$components/Icon.svelte";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog";
   import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
+  import * as Dialog from "$lib/components/ui/dialog";
 
   import type { RepoInfo } from "../routes/(dashboard)/[handle]/+page.server";
 
@@ -33,8 +33,8 @@
   }
 </script>
 
-<AlertDialog.Root bind:open>
-  <AlertDialog.Trigger>
+<Dialog.Root bind:open>
+  <Dialog.Trigger>
     <Button
       tabindex={-1}
       variant={repo.syncing ? "warning" : "default"}
@@ -43,6 +43,11 @@
       }}
       onmouseleave={() => {
         hover = false;
+      }}
+      onclick={e => {
+        e.stopPropagation();
+        e.preventDefault();
+        open = true;
       }}>
       {#if hover}
         <Icon name="cross" />
@@ -55,28 +60,35 @@
         Seeding
       {/if}
     </Button>
-  </AlertDialog.Trigger>
-  <AlertDialog.Content class="min-w-fit">
-    <AlertDialog.Header>
-      <AlertDialog.Title>{title}</AlertDialog.Title>
-      <AlertDialog.Description>
+  </Dialog.Trigger>
+  <Dialog.Content showCloseButton={false} class="min-w-fit">
+    <Dialog.Header>
+      <Dialog.Title>{title}</Dialog.Title>
+      <Dialog.Description>
         {description}
-      </AlertDialog.Description>
+      </Dialog.Description>
       <div class="border border-border-subtle">
         <RepositoryCard
           {repo}
           {nodeHttpdHostPort}
           {nodeId}
-          showRemoveButton={false} />
+          showRemoveButton={false}
+          asLink={false} />
       </div>
-    </AlertDialog.Header>
-    <AlertDialog.Footer class="grid grid-cols-2 gap-2">
-      <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-      <AlertDialog.Action
+    </Dialog.Header>
+    <Dialog.Footer class="grid grid-cols-2 gap-2">
+      <Button
+        type="button"
+        onclick={() => {
+          open = false;
+        }}>
+        Cancel
+      </Button>
+      <Button
         class={[buttonVariants({ variant: "destructive" })]}
         onclick={handleConfirm}>
-        Remove Repository
-      </AlertDialog.Action>
-    </AlertDialog.Footer>
-  </AlertDialog.Content>
-</AlertDialog.Root>
+        Remove repository
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>

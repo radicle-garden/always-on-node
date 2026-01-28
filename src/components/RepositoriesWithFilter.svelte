@@ -35,13 +35,20 @@
 
 <div class="flex flex-col gap-2">
   <div class="flex items-center justify-between">
-    <div class="txt-heading-l font-medium">Seeded repos</div>
+    <div class="txt-heading-l line-clamp-1 font-medium">Seeded repos</div>
     {#if showCreateDialog && nodeId}
       <div class="flex items-center gap-2">
-        <Input type="text" bind:value={filter} placeholder="Filter repos…" />
+        <Input
+          type="text"
+          bind:value={filter}
+          placeholder="Filter repos…"
+          class="hidden md:block" />
         <NewRepositoryDialog {nodeId} />
       </div>
     {/if}
+  </div>
+  <div class="flex items-center gap-2 md:hidden">
+    <Input type="text" bind:value={filter} placeholder="Filter repos…" />
   </div>
   <div class="flex flex-col">
     {#if filteredRepositories.length === 0}
@@ -59,7 +66,7 @@
     {#each filteredRepositories as repo, i (i)}
       {@const r = repo as RepoInfo}
       <div
-        class="border-r border-b border-l border-border-subtle bg-surface-canvas first:border-t last:border-b">
+        class="border-r border-b border-l border-border-subtle bg-surface-canvas first:rounded-t-sm first:border-t last:rounded-b-sm last:border-b">
         <RepositoryCard
           repo={r}
           {nodeHttpdHostPort}

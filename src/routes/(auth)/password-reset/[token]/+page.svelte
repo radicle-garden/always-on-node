@@ -1,7 +1,7 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
+  import { resolve } from "$app/paths";
   import LogoText from "$components/LogoText.svelte";
-  import * as Alert from "$lib/components/ui/alert";
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
@@ -12,11 +12,14 @@
 </script>
 
 <div
-  class="flex w-[400px] flex-col items-center justify-center gap-8 bg-surface-canvas p-8">
+  class="flex w-full flex-col items-center justify-center bg-surface-canvas p-8 sm:w-100">
   <div class="flex h-full w-full flex-col items-start justify-start gap-8">
     <LogoText />
     <div class="txt-heading-xxl">Set new password</div>
-    <div class="txt-body-l-regular">Enter your new password below.</div>
+    <div class="txt-body-l-regular">
+      Or <a href={resolve("/login")} class="underline">log in</a>
+      to your existing account
+    </div>
   </div>
   <form
     method="POST"
@@ -39,7 +42,7 @@
         required
         placeholder="******" />
       {#if form?.errors?.password}
-        <p class="text-destructive text-sm">{form.errors.password}</p>
+        <p class="text-sm text-feedback-error-text">{form.errors.password}</p>
       {/if}
     </div>
     <div class="grid gap-2">
@@ -53,16 +56,13 @@
         required
         placeholder="******" />
       {#if form?.errors?.confirmPassword}
-        <p class="text-destructive text-sm">
+        <p class="text-sm text-feedback-error-text">
           {form.errors.confirmPassword}
         </p>
       {/if}
     </div>
     {#if form?.errors?.general}
-      <Alert.Root variant="destructive">
-        <Alert.Title>Unable to reset password</Alert.Title>
-        <Alert.Description>{form.errors.general}</Alert.Description>
-      </Alert.Root>
+      <div class="text-sm text-feedback-error-text">{form.errors.general}</div>
     {/if}
     <div class="flex w-full items-center">
       <div class="ml-auto">

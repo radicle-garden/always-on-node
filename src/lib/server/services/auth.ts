@@ -47,7 +47,7 @@ export async function authenticateUser(
     }
 
     if (!verifyPassword(password, user.password_hash)) {
-      return { user: null, error: "Incorrect username or password." };
+      return { user: null, error: "That's the wrong username or password" };
     }
 
     return { user };

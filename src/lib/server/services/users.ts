@@ -74,7 +74,7 @@ export async function createNewUser(
       if (existingUser.email === email) {
         return {
           success: false,
-          error: "A user with this email already exists",
+          error: "Someone has an account with this email already",
           content: null,
           statusCode: 400,
         };
@@ -82,7 +82,7 @@ export async function createNewUser(
       if (existingUser.handle === handle) {
         return {
           success: false,
-          error: "A user with this handle already exists",
+          error: "Someone has an account with this username already",
           content: null,
           statusCode: 400,
         };
@@ -295,7 +295,7 @@ export async function resetPassword(
     console.warn(`[Users] Failed to reset password:`, e);
     return {
       success: false,
-      error: "Failed to reset password",
+      error: "Couldn't reset password",
       statusCode: 500,
     };
   }
@@ -332,7 +332,7 @@ export async function requestPasswordReset(
       console.warn(`[Users] Failed to send password reset email to ${email}`);
       return {
         success: false,
-        error: "Failed to send password reset email",
+        error: "Couldn't send password reset email",
         statusCode: 500,
       };
     }
@@ -346,7 +346,7 @@ export async function requestPasswordReset(
     console.warn(`[Users] Failed to process password reset request:`, e);
     return {
       success: false,
-      error: "Failed to process password reset request",
+      error: "Couldn't process password reset request",
       statusCode: 500,
     };
   }

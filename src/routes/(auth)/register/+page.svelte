@@ -9,9 +9,15 @@
   let { form } = $props();
 
   let isSubmitting = $state(false);
+  let handle = $derived(form?.handle ?? "");
+  let email = $derived(form?.email ?? "");
+  let password = $state("");
+  let confirmPassword = $state("");
+  let termsAccepted = $state(false);
 </script>
 
-<div class="w-[400px] bg-surface-canvas p-8">
+<div
+  class="flex w-full flex-col items-center justify-center bg-surface-canvas p-8 sm:w-100">
   <div class="flex h-full w-full flex-col items-start justify-start gap-8">
     <div>
       <LogoText />
@@ -30,6 +36,7 @@
       <div class="flex items-center gap-4">
         Didn't receive it?
         <Button
+          variant="primary"
           onclick={() => {
             window.location.reload();
           }}>
@@ -59,18 +66,25 @@
         class="w-full">
         <div class="flex flex-col gap-4">
           <div class="grid gap-2">
-            <Label for="handle">Username (cannot be changed!)</Label>
+            <Label for="handle" class="flex w-full flex-col items-start">
+              <div>Username</div>
+              <div class="text-sm text-text-tertiary">
+                This can't be changed
+              </div>
+            </Label>
             <Input
               id="handle"
               name="handle"
               type="text"
               placeholder="username"
               class="border"
-              value={form?.handle ?? ""}
+              bind:value={handle}
               aria-invalid={!!form?.errors?.handle}
               required />
             {#if form?.errors?.handle}
-              <p class="text-destructive text-sm">{form.errors.handle}</p>
+              <p class="text-sm text-feedback-error-text">
+                {form.errors.handle}
+              </p>
             {/if}
           </div>
           <div class="grid gap-2">
@@ -81,11 +95,13 @@
               type="email"
               class="border"
               placeholder="email@example.com"
-              value={form?.email ?? ""}
+              bind:value={email}
               aria-invalid={!!form?.errors?.email}
               required />
             {#if form?.errors?.email}
-              <p class="text-destructive text-sm">{form.errors.email}</p>
+              <p class="text-sm text-feedback-error-text">
+                {form.errors.email}
+              </p>
             {/if}
           </div>
           <div class="grid gap-2">
@@ -95,11 +111,14 @@
               name="password"
               type="password"
               class="border"
+              bind:value={password}
               aria-invalid={!!form?.errors?.password}
               required
               placeholder="************" />
             {#if form?.errors?.password}
-              <p class="text-destructive text-sm">{form.errors.password}</p>
+              <p class="text-sm text-feedback-error-text">
+                {form.errors.password}
+              </p>
             {/if}
           </div>
           <div class="grid gap-2">
@@ -109,34 +128,48 @@
               name="confirmPassword"
               type="password"
               class="border"
+              bind:value={confirmPassword}
               aria-invalid={!!form?.errors?.confirmPassword}
               required
               placeholder="************" />
             {#if form?.errors?.confirmPassword}
-              <p class="text-destructive text-sm">
+              <p class="text-sm text-feedback-error-text">
                 {form.errors.confirmPassword}
               </p>
             {/if}
           </div>
           {#if form?.errors?.general}
-            <div>
-              Unable to create account: {form.errors.general}
+            <div class="text-sm text-feedback-error-text">
+              {form.errors.general}
             </div>
           {/if}
           {#if form?.errors?.terms}
-            <p class="text-destructive text-sm">{form.errors.terms}</p>
+            <p class="text-sm text-feedback-error-text">{form.errors.terms}</p>
           {/if}
           <div class="flex w-full items-center">
             <div class="flex items-center gap-1">
-              <input type="checkbox" id="terms" name="terms" required />
-              <Label for="terms">
-                I accept the <a href={resolve("/terms")} class="underline">
+              <input
+                type="checkbox"
+                id="terms"
+                name="terms"
+                bind:checked={termsAccepted}
+                required />
+              <Label for="terms" class="flex items-center gap-1">
+                <div>I accept the</div>
+                <a href={resolve("/terms")} class="underline">
                   Terms of Service
                 </a>
               </Label>
             </div>
             <div class="ml-auto">
-              <Button type="submit" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                disabled={isSubmitting ||
+                  !handle ||
+                  !email ||
+                  !password ||
+                  !confirmPassword ||
+                  !termsAccepted}>
                 {isSubmitting ? "Signing up…" : "Sign up"}
               </Button>
             </div>

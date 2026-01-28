@@ -4,6 +4,7 @@
   import { Button } from "$lib/components/ui/button";
   import * as Dialog from "$lib/components/ui/dialog";
   import { Input } from "$lib/components/ui/input";
+  import { truncateText } from "$lib/utils";
 
   import { toast } from "svelte-sonner";
 
@@ -55,7 +56,7 @@
       Seed repo
     </Button>
   </Dialog.Trigger>
-  <Dialog.Content>
+  <Dialog.Content showCloseButton={false}>
     <form
       method="POST"
       action="?/seed"
@@ -72,7 +73,8 @@
             if (seededRid) {
               toast.promise(waitForSeedCompletion(seededRid), {
                 loading: "Syncing repository…",
-                success: "Repository synced successfully",
+                success: () =>
+                  `Repository ${truncateText(seededRid)} synced successfully`,
                 error: "Failed to sync repository",
               });
             }
@@ -100,8 +102,15 @@
           bind:value={rid} />
       </Dialog.Description>
       <Dialog.Footer class="grid grid-cols-2 gap-2">
-        <Button type="button" onclick={() => (open = false)}>Cancel</Button>
-        <Button type="submit" disabled={!rid || isSubmitting}>
+        <Button
+          type="button"
+          onclick={() => {
+            open = false;
+            rid = "";
+          }}>
+          Cancel
+        </Button>
+        <Button variant="primary" type="submit" disabled={!rid || isSubmitting}>
           {isSubmitting ? "Adding…" : "Add"}
         </Button>
       </Dialog.Footer>

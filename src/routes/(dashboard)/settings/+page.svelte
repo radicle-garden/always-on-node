@@ -61,9 +61,9 @@
   <div class="flex flex-col gap-2">
     <div class="txt-heading-m">Plan</div>
     <div
-      class="flex w-full items-start border border-border-subtle bg-surface-canvas p-6">
+      class="flex w-full flex-col items-start gap-4 border border-border-subtle bg-surface-canvas p-6 sm:flex-row">
       <div class="flex flex-col gap-2">
-        <div class="txt-heading-xxl">Garden</div>
+        <div class="txt-heading-xl">Garden</div>
         <div class="txt-body-m-regular text-text-secondary">Always on node</div>
       </div>
       <div class="ml-auto">
@@ -88,7 +88,7 @@
       <ToggleGroup.Root
         type="single"
         onValueChange={handleThemeChange}
-        class="txt-body-m-regular"
+        class="txt-body-m-regular gap-4"
         value={userPrefersMode.current as "light" | "dark" | "system"}>
         <ToggleGroup.Item value="light" aria-label="Light theme">
           Light
@@ -105,7 +105,7 @@
   <div class="divider"></div>
   <div class="flex flex-col gap-4">
     <div class="txt-heading-m">Account</div>
-    <div class="flex items-start">
+    <div class="flex flex-col items-start gap-4 sm:flex-row">
       <div class="flex flex-col gap-2">
         <div class="txt-body-m-semibold">Delete account</div>
         <div class="txt-body-m-regular text-text-secondary">
@@ -115,7 +115,7 @@
       <div class="ml-auto">
         <AlertDialog.Root>
           <AlertDialog.Trigger>
-            <Button variant="destructive">Delete account</Button>
+            <Button variant="destructiveSecondary">Delete account</Button>
           </AlertDialog.Trigger>
           <AlertDialog.Content>
             <AlertDialog.Title>Not implemented</AlertDialog.Title>
