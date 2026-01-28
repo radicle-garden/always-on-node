@@ -1,5 +1,5 @@
 - name: Install systemd and container monitoring
-  hosts: prod
+  hosts: "{{ deploy_env | default('production') }}"
   gather_facts: no
   vars_files:
     - ../environments/{{ deploy_env | default('production') }}.yml
