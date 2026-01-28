@@ -215,7 +215,7 @@ loki.process "garden_nodes" {
 
 // Host Cadvisor on the Docker socket to expose container metrics.
 prometheus.exporter.cadvisor "containers" {
-  docker_host = "unix:///var/run/docker.sock"
+  docker_host = "unix:///run/podman/podman.sock"
 
   storage_duration = "5m"
 }
