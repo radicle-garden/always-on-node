@@ -2,9 +2,9 @@ name: Deploy Application
 
 on:
   push:
-    branches:
-      - production
-      - main
+#    branches:
+#      - production
+#      - main
   workflow_dispatch:
     inputs:
       environment:
