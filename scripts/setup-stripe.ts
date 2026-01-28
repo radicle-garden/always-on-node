@@ -7,7 +7,7 @@ import Stripe from "stripe";
 dotenv.config({ path: path.join(process.cwd(), ".env"), quiet: true });
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_SERVER_SIDE_KEY || "", {
-  apiVersion: "2025-12-15.clover",
+  apiVersion: "2026-01-28.clover",
 });
 
 interface SetupResult {
@@ -96,7 +96,7 @@ async function setupStripe(): Promise<SetupResult> {
           "invoice.payment_failed",
           "customer.subscription.trial_will_end",
         ],
-        api_version: "2025-12-15.clover",
+        api_version: "2026-01-28.clover",
       });
       webhookSecret = webhook.secret || "";
       console.log(`✅ Created webhook: ${webhook.id}`);

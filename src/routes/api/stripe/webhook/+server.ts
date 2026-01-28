@@ -11,7 +11,7 @@ import type { RequestHandler } from "./$types";
 const log = createServiceLogger("Stripe");
 
 const stripe = new Stripe(config.stripeSecretKey, {
-  apiVersion: "2025-12-15.clover",
+  apiVersion: "2026-01-28.clover",
 });
 
 export const POST: RequestHandler = async ({ request }) => {
