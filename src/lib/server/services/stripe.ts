@@ -4,8 +4,11 @@ import Stripe from "stripe";
 import { config } from "../config";
 import { getDb, schema } from "../db";
 import type { User } from "../db/schema";
+import { createServiceLogger } from "../logger";
 
 import { ensureNodeActiveForUser, stopContainers } from "./nodes";
+
+const log = createServiceLogger("Stripe");
 
 interface ServiceResult<T> {
   success: boolean;
@@ -88,7 +91,7 @@ async function getOrCreateStripeCustomer(
       stripe_customer_id: customer.id,
     });
 
-    console.log(`[Stripe] Created customer ${customer.id} for user ${user.id}`);
+    log.info("Created customer", { customerId: customer.id, userId: user.id });
 
     return {
       success: true,
@@ -96,7 +99,7 @@ async function getOrCreateStripeCustomer(
       statusCode: 200,
     };
   } catch (error) {
-    console.error("[Stripe] Failed to get or create customer:", error);
+    log.error("Failed to get or create customer", { error });
     return {
       success: false,
       error: "Failed to create customer",
@@ -151,9 +154,7 @@ async function createCheckoutSession(
       cancel_url: cancelUrl,
     });
 
-    console.log(
-      `[Stripe] Created checkout session ${session.id} for user ${userId}`,
-    );
+    log.info("Created checkout session", { sessionId: session.id, userId });
 
     return {
       success: true,
@@ -161,7 +162,7 @@ async function createCheckoutSession(
       statusCode: 200,
     };
   } catch (error) {
-    console.error("[Stripe] Failed to create checkout session:", error);
+    log.error("Failed to create checkout session", { error });
     return {
       success: false,
       error: "Failed to create checkout session",
@@ -194,7 +195,7 @@ async function createCustomerPortalSession(
       return_url: returnUrl,
     });
 
-    console.log(`[Stripe] Created portal session for user ${userId}`);
+    log.info("Created portal session", { userId });
 
     return {
       success: true,
@@ -202,7 +203,7 @@ async function createCustomerPortalSession(
       statusCode: 200,
     };
   } catch (error) {
-    console.error("[Stripe] Failed to create portal session:", error);
+    log.error("Failed to create portal session", { error });
     return {
       success: false,
       error: "Failed to create portal session",
@@ -225,9 +226,9 @@ async function syncSubscriptionFromEvent(
     });
 
     if (!customer) {
-      console.error(
-        `[Stripe] Customer not found for subscription ${subscription.id}`,
-      );
+      log.error("Customer not found for subscription", {
+        subscriptionId: subscription.id,
+      });
       return;
     }
 
@@ -239,9 +240,9 @@ async function syncSubscriptionFromEvent(
     });
 
     if (!subscription.items.data || subscription.items.data.length === 0) {
-      console.error(
-        `[Stripe] No items found in subscription ${subscription.id}`,
-      );
+      log.error("No items found in subscription", {
+        subscriptionId: subscription.id,
+      });
       return;
     }
 
@@ -282,10 +283,10 @@ async function syncSubscriptionFromEvent(
       await db.insert(schema.stripeSubscriptions).values(subscriptionData);
     }
   } catch (error) {
-    console.error(
-      `[Stripe] Failed to sync subscription ${subscription.id}:`,
+    log.error("Failed to sync subscription", {
+      subscriptionId: subscription.id,
       error,
-    );
+    });
   }
 }
 
@@ -296,10 +297,7 @@ async function syncSubscriptionFromStripe(
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
     await syncSubscriptionFromEvent(subscription);
   } catch (error) {
-    console.error(
-      `[Stripe] Failed to sync subscription ${subscriptionId}:`,
-      error,
-    );
+    log.error("Failed to sync subscription", { subscriptionId, error });
   }
 }
 
@@ -321,20 +319,22 @@ async function handleWebhookEvent(
         ) {
           const userId = Number(subscription.metadata.user_id);
           if (!userId || isNaN(userId)) {
-            console.error(
-              `[Stripe] Invalid or missing user_id in subscription metadata: ${subscription.metadata.user_id}`,
-            );
+            log.error("Invalid or missing user_id in subscription metadata", {
+              metadataUserId: subscription.metadata.user_id,
+            });
             break;
           }
 
-          console.log(
-            `[Stripe] Activating node for user ${userId} (subscription ${subscription.status})`,
-          );
+          log.info("Activating node for user", {
+            userId,
+            status: subscription.status,
+          });
           const result = await ensureNodeActiveForUser(userId);
           if (!result.success) {
-            console.error(
-              `[Stripe] Failed to activate node for user ${userId}: ${result.error}`,
-            );
+            log.error("Failed to activate node for user", {
+              userId,
+              error: result.error,
+            });
             // Note: We don't fail the webhook here because the subscription
             // has already been synced to the database. Returning 500 would
             // cause Stripe to retry, but the subscription state is correct.
@@ -348,29 +348,31 @@ async function handleWebhookEvent(
         ) {
           const userId = Number(subscription.metadata.user_id);
           if (!userId || isNaN(userId)) {
-            console.error(
-              `[Stripe] Invalid or missing user_id in subscription metadata: ${subscription.metadata.user_id}`,
-            );
+            log.error("Invalid or missing user_id in subscription metadata", {
+              metadataUserId: subscription.metadata.user_id,
+            });
             break;
           }
 
-          console.log(
-            `[Stripe] Stopping containers for user ${userId} (subscription ${subscription.status})`,
-          );
+          log.info("Stopping containers for user", {
+            userId,
+            status: subscription.status,
+          });
           const user = await db.query.users.findFirst({
             where: eq(schema.users.id, userId),
           });
 
           if (!user) {
-            console.error(`[Stripe] User ${userId} not found`);
+            log.error("User not found", { userId });
             break;
           }
 
           const result = await stopContainers(user);
           if (!result.success) {
-            console.error(
-              `[Stripe] Failed to stop containers for user ${userId}: ${result.error}`,
-            );
+            log.error("Failed to stop containers for user", {
+              userId,
+              error: result.error,
+            });
             // Note: Subscription state already synced - don't fail webhook.
           }
         }
@@ -383,29 +385,30 @@ async function handleWebhookEvent(
 
         const userId = Number(subscription.metadata.user_id);
         if (!userId || isNaN(userId)) {
-          console.error(
-            `[Stripe] Invalid or missing user_id in subscription metadata: ${subscription.metadata.user_id}`,
-          );
+          log.error("Invalid or missing user_id in subscription metadata", {
+            metadataUserId: subscription.metadata.user_id,
+          });
           break;
         }
 
-        console.log(
-          `[Stripe] Stopping containers for user ${userId} (subscription deleted)`,
-        );
+        log.info("Stopping containers for user (subscription deleted)", {
+          userId,
+        });
         const user = await db.query.users.findFirst({
           where: eq(schema.users.id, userId),
         });
 
         if (!user) {
-          console.error(`[Stripe] User ${userId} not found`);
+          log.error("User not found", { userId });
           break;
         }
 
         const result = await stopContainers(user);
         if (!result.success) {
-          console.error(
-            `[Stripe] Failed to stop containers for user ${userId}: ${result.error}`,
-          );
+          log.error("Failed to stop containers for user", {
+            userId,
+            error: result.error,
+          });
           // Note: Subscription state already synced - don't fail webhook.
         }
         break;
@@ -413,27 +416,29 @@ async function handleWebhookEvent(
 
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
-        console.warn(
-          `[Stripe] Payment failed for customer ${invoice.customer}`,
-        );
+        log.warn("Payment failed for customer", {
+          customerId: invoice.customer,
+        });
         break;
       }
 
       case "customer.subscription.trial_will_end": {
         const subscription = event.data.object as Stripe.Subscription;
-        console.log(
-          `[Stripe] Trial ending soon for subscription ${subscription.id}`,
-        );
+        log.info("Trial ending soon for subscription", {
+          subscriptionId: subscription.id,
+        });
         break;
       }
 
       default:
-        console.log(`[Stripe] No handler implemented for event: ${event.type}`);
+        log.debug("No handler implemented for event", {
+          eventType: event.type,
+        });
     }
 
     return { success: true, statusCode: 200 };
   } catch (error) {
-    console.error(`[Stripe] Webhook handler error:`, error);
+    log.error("Webhook handler error", { error });
     return {
       success: false,
       error: "Webhook handler failed",
@@ -488,7 +493,7 @@ async function getSubscriptionStatus(
       statusCode: 200,
     };
   } catch (error) {
-    console.error("[Stripe] Failed to get subscription status:", error);
+    log.error("Failed to get subscription status", { error });
     return {
       success: false,
       error: "Failed to get subscription status",

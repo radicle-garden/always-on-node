@@ -11,6 +11,7 @@ import { DockerClient } from "@docker/node-sdk";
 import { config } from "../config";
 import { getDb, schema } from "../db";
 import type { Node, SeededRadicleRepository, User } from "../entities";
+import { createServiceLogger } from "../logger";
 
 type NodeStatus =
   | {
@@ -25,6 +26,8 @@ type NodeStatus =
       sinceSeconds: number;
       since?: undefined;
     };
+
+const log = createServiceLogger("Nodes");
 
 interface ServiceResult<T> {
   success: boolean;
@@ -140,7 +143,7 @@ async function createNode(user: User): Promise<Node | null> {
   };
 
   try {
-    console.log(`[Nodes] Creating radicle identity for ${user.handle}`);
+    log.info("Creating radicle identity", { handle: user.handle });
 
     await execa(radBinary, ["auth", "--alias", nodeAlias], { env });
 
@@ -153,13 +156,11 @@ async function createNode(user: User): Promise<Node | null> {
       { env },
     );
 
-    console.log(
-      `[Nodes] Created a new profile! Public Key: ${sshPublicKey}, Node ID: ${nodeId}`,
-    );
+    log.info("Created a new profile", { sshPublicKey, nodeId });
 
     try {
       const db = await getDb();
-      console.log(`[Nodes] Creating new node with id: ${nodeId}`);
+      log.info("Creating new node", { nodeId });
 
       const nodeData = createNodeData(nodeId, nodeAlias, user.id);
       const [persistedNode] = await db
@@ -171,7 +172,7 @@ async function createNode(user: User): Promise<Node | null> {
 
       const radHome = getRadHome(user.handle);
       if (!radHome) {
-        console.error(`[Nodes] Failed to get RAD_HOME for user ${user.handle}`);
+        log.warn("Failed to get RAD_HOME for user", { handle: user.handle });
         return null;
       }
 
@@ -185,9 +186,9 @@ async function createNode(user: User): Promise<Node | null> {
 
       const configResult = await getConfigForNode(persistedNode.node_id);
       if (!configResult.success) {
-        console.warn(
-          `[Nodes] Failed to retrieve default node config for node ${persistedNode.node_id}`,
-        );
+        log.warn("Failed to retrieve default node config", {
+          nodeId: persistedNode.node_id,
+        });
         return null;
       }
       const currentConfig = configResult.content as {
@@ -196,9 +197,10 @@ async function createNode(user: User): Promise<Node | null> {
       };
       currentConfig.preferredSeeds = config.nodePreferredSeeds;
 
-      console.log(
-        `[Nodes] Updating node config for ${persistedNode.node_id}: ${JSON.stringify(currentConfig)}`,
-      );
+      log.info("Updating node config", {
+        nodeId: persistedNode.node_id,
+        config: currentConfig,
+      });
       if (persistedNode.connect_address) {
         currentConfig.node.externalAddresses.push(
           persistedNode.connect_address,
@@ -211,15 +213,15 @@ async function createNode(user: User): Promise<Node | null> {
         currentConfig,
       );
       if (!nodeConfigResult.success) {
-        console.warn(
-          `[Nodes] Failed to update node config for node ${persistedNode.node_id}`,
-        );
+        log.warn("Failed to update node config", {
+          nodeId: persistedNode.node_id,
+        });
         return null;
       }
 
       const docker = await DockerClient.fromDockerHost(config.dockerHost);
 
-      console.log(`[Nodes] Pulling container images for ${nodeAlias}...`);
+      log.debug("Pulling container images", { nodeAlias });
 
       const nodeImage = config.radicleNodeContainer;
       const httpdImage = config.radicleHttpdContainer;
@@ -241,7 +243,7 @@ async function createNode(user: User): Promise<Node | null> {
 
       await nodeImagePull.wait();
       await httpdImagePull.wait();
-      console.log(`[Nodes] Images pulled successfully for ${nodeAlias}`);
+      log.debug("Images pulled successfully", { nodeAlias });
 
       const nodeContainerName = `${nodeAlias}-node`;
       const nodeContainer = await docker.containerCreate(
@@ -279,9 +281,10 @@ async function createNode(user: User): Promise<Node | null> {
         { name: nodeContainerName, platform: "linux/arm64" },
       );
 
-      console.log(
-        `[Nodes] Created node container ${nodeContainerName} with ID: ${nodeContainer.Id}`,
-      );
+      log.info("Created node container", {
+        containerName: nodeContainerName,
+        containerId: nodeContainer.Id,
+      });
 
       const httpdContainerName = `${nodeAlias}-httpd`;
       const httpdContainer = await docker.containerCreate(
@@ -300,26 +303,26 @@ async function createNode(user: User): Promise<Node | null> {
         { name: httpdContainerName, platform: "linux/arm64" },
       );
 
-      console.log(
-        `[Nodes] Created httpd container ${httpdContainerName} with ID: ${httpdContainer.Id}`,
-      );
+      log.info("Created httpd container", {
+        containerName: httpdContainerName,
+        containerId: httpdContainer.Id,
+      });
 
-      console.log(
-        `[Nodes] Containers created but not started. Will be started after subscription is active.`,
+      log.info(
+        "Containers created but not started. Will be started after subscription is active.",
       );
 
       return persistedNode;
     } catch (nodeInsertErr) {
-      console.error(
-        `[Nodes] Failed to insert node into database:`,
-        nodeInsertErr,
-      );
+      log.error("Failed to insert node into database", {
+        error: nodeInsertErr,
+      });
       return null;
     }
   } catch (cliError) {
     const message =
       cliError instanceof Error ? cliError.message : String(cliError);
-    console.error("[Nodes] Error during CLI steps:", message);
+    log.error("Error during CLI steps", { message });
     return null;
   }
 }
@@ -331,9 +334,7 @@ async function updateNodeConfig(
   nodeConfig: any,
 ): Promise<ServiceResult<void>> {
   const db = await getDb();
-  console.log(
-    `[Nodes] Updating node config for ${nodeId}: ${JSON.stringify(nodeConfig)}`,
-  );
+  log.info("Updating node config", { nodeId, nodeConfig });
 
   const node = await db.query.nodes.findFirst({
     where: and(
@@ -344,9 +345,7 @@ async function updateNodeConfig(
   });
 
   if (!node || node.user?.id !== user.id) {
-    console.warn(
-      `[Nodes] No active node found with node_id: ${nodeId} for user`,
-    );
+    log.warn("No active node found for user", { nodeId });
     return {
       success: false,
       error: `No active node found with node_id: ${nodeId}`,
@@ -368,9 +367,12 @@ async function updateNodeConfig(
       statusCode: 202,
     };
   } catch (error) {
-    const errorMessage = `[Nodes] Failed to validate/write node config for ${nodeId}:`;
-    console.error(errorMessage, error);
-    return { success: false, error: errorMessage, statusCode: 500 };
+    log.error("Failed to validate/write node config", { nodeId, error });
+    return {
+      success: false,
+      error: `Failed to validate/write node config for ${nodeId}:`,
+      statusCode: 500,
+    };
   }
 }
 
@@ -392,7 +394,7 @@ async function getConfigForNode(nodeId: string): Promise<ServiceResult<any>> {
     });
 
     if (!node) {
-      console.warn(`[Nodes] No active node found with node_id: ${nodeId}`);
+      log.warn("No active node found", { nodeId });
       return {
         success: false,
         error: `No active node found with node_id: ${nodeId}`,
@@ -407,9 +409,12 @@ async function getConfigForNode(nodeId: string): Promise<ServiceResult<any>> {
 
     return { success: true, content: nodeConfig, statusCode: 200 };
   } catch (error) {
-    const errorMessage = `[Nodes] Error retrieving node config: ${error} for ${nodeId}`;
-    console.error(errorMessage);
-    return { success: false, error: errorMessage, statusCode: 500 };
+    log.error("Error retrieving node config", { nodeId, error });
+    return {
+      success: false,
+      error: `Error retrieving node config: ${error} for ${nodeId}`,
+      statusCode: 500,
+    };
   }
 }
 
@@ -433,16 +438,16 @@ async function execNodeCommand(
       ...args,
     ]);
 
-    console.log(`[Nodes] Node command output:\n${stdout}`);
+    log.debug("Node command output", { stdout });
     if (stderr) {
-      console.warn(`[Nodes] Node command stderr:\n${stderr}`);
+      log.warn("Node command stderr", { stderr });
     }
 
     return { stdout, stderr };
   } catch (cliError: unknown) {
     const errorMessage =
       cliError instanceof Error ? cliError.message : String(cliError);
-    console.warn(`[Nodes] Failed to run command in container: ${errorMessage}`);
+    log.warn("Failed to run command in container", { error: errorMessage });
     return null;
   }
 }
@@ -462,7 +467,7 @@ export async function getNodeStatus(
     });
 
     if (!node || node.user?.id !== user.id) {
-      console.warn(`[Nodes] No active node found with node_id: ${nodeId}`);
+      log.warn("No active node found", { nodeId });
       return {
         success: false,
         error: `No active node found with node_id: ${nodeId}`,
@@ -494,15 +499,10 @@ export async function getNodeStatus(
         if (!Number.isNaN(sizeInKb) && sizeInKb >= 0) {
           size = sizeInKb * 1024; // Convert to bytes.
         } else {
-          console.warn(
-            `[Nodes] Invalid du output for node ${nodeId}: "${duOutput}"`,
-          );
+          log.warn("Invalid du output", { nodeId, duOutput });
         }
       } catch (duError) {
-        console.warn(
-          `[Nodes] Failed to get storage size for node ${nodeId}:`,
-          duError,
-        );
+        log.warn("Failed to get storage size", { nodeId, error: duError });
       }
     }
 
@@ -512,9 +512,12 @@ export async function getNodeStatus(
       statusCode: 200,
     };
   } catch (dbError) {
-    const errorMessage = `[Nodes] Failed to retrieve node ${nodeId}`;
-    console.warn(errorMessage, dbError);
-    return { success: false, error: errorMessage, statusCode: 500 };
+    log.error("Failed to retrieve node", { nodeId, error: dbError });
+    return {
+      success: false,
+      error: `Failed to retrieve node ${nodeId}`,
+      statusCode: 500,
+    };
   }
 }
 
@@ -606,7 +609,7 @@ export async function getSeededReposForNode(
     });
 
     if (!node) {
-      console.warn(`[Nodes] No node found with node_id: ${nodeId}`);
+      log.warn("No node found", { nodeId });
       return {
         success: false,
         error: `No node found with node_id: ${nodeId}`,
@@ -616,18 +619,25 @@ export async function getSeededReposForNode(
 
     const seededRepos = node.seededRepositories || [];
 
-    console.log(
-      `[Nodes] Retrieved seeded repositories for node ${nodeId}: ${JSON.stringify(seededRepos)}`,
-    );
+    log.debug("Retrieved seeded repositories", {
+      nodeId,
+      count: seededRepos.length,
+    });
     return {
       success: true,
       content: seededRepos,
       statusCode: 200,
     };
   } catch (dbError) {
-    const errorMessage = `Failed to retrieve seeded repositories for node ${nodeId}`;
-    console.warn(errorMessage, dbError);
-    return { success: false, error: errorMessage, statusCode: 500 };
+    log.error("Failed to retrieve seeded repositories", {
+      nodeId,
+      error: dbError,
+    });
+    return {
+      success: false,
+      error: `Failed to retrieve seeded repositories for node ${nodeId}`,
+      statusCode: 500,
+    };
   }
 }
 
@@ -645,7 +655,7 @@ export async function seedRepo(
   });
 
   if (!node) {
-    console.warn(`[Nodes] No active node found with node_id: ${nodeId}`);
+    log.warn("No active node found", { nodeId });
     return {
       success: false,
       error: `No active node found with node_id: ${nodeId}`,
@@ -671,9 +681,7 @@ export async function seedRepo(
 
   execNodeCommand(node, "seed", [repositoryId]).then(result => {
     const success = parseSeedCommandResult(result);
-    console.log(
-      `[Nodes] Seed command completed for ${repositoryId}: ${success ? "success" : "failed"}`,
-    );
+    log.info("Seed command completed", { repositoryId, success });
     onSeedComplete?.(success);
   });
 
@@ -704,7 +712,7 @@ export async function unseedRepo(
   });
 
   if (!node) {
-    console.warn(`[Nodes] No active node found with node_id: ${nodeId}`);
+    log.warn("No active node found", { nodeId });
     return {
       success: false,
       error: `No active node found with node_id: ${nodeId}`,
@@ -730,9 +738,7 @@ export async function unseedRepo(
 
   const unseedResult = await execNodeCommand(node, "unseed", [repositoryId]);
   if (!unseedResult) {
-    console.log(
-      `[Nodes] Failed to unseed repository ${repositoryId} by node ${nodeId}`,
-    );
+    log.warn("Failed to unseed repository", { repositoryId, nodeId });
     return {
       success: false,
       error: `Failed to unseed repository ${repositoryId} by node ${nodeId}`,
@@ -746,9 +752,7 @@ export async function unseedRepo(
     "--no-confirm",
   ]);
   if (!cleanResult) {
-    console.log(
-      `[Nodes] Failed to clean repository ${repositoryId} by node ${nodeId}`,
-    );
+    log.warn("Failed to clean repository", { repositoryId, nodeId });
   }
 
   await db
@@ -792,29 +796,33 @@ export async function stopContainers(user: User): Promise<ServiceResult<void>> {
       const nodeContainer = await docker.containerInspect(nodeContainerName);
       if (nodeContainer.State?.Running && nodeContainer.Id) {
         await docker.containerStop(nodeContainer.Id);
-        console.log(`[Nodes] Stopped node container ${nodeContainerName}`);
+        log.info("Stopped node container", {
+          containerName: nodeContainerName,
+        });
       }
     } catch {
-      console.warn(
-        `[Nodes] Node container not found or already stopped: ${nodeContainerName}`,
-      );
+      log.warn("Node container not found or already stopped", {
+        containerName: nodeContainerName,
+      });
     }
 
     try {
       const httpdContainer = await docker.containerInspect(httpdContainerName);
       if (httpdContainer.State?.Running && httpdContainer.Id) {
         await docker.containerStop(httpdContainer.Id);
-        console.log(`[Nodes] Stopped httpd container ${httpdContainerName}`);
+        log.info("Stopped httpd container", {
+          containerName: httpdContainerName,
+        });
       }
     } catch {
-      console.warn(
-        `[Nodes] HTTPD container not found or already stopped: ${httpdContainerName}`,
-      );
+      log.warn("HTTPD container not found or already stopped", {
+        containerName: httpdContainerName,
+      });
     }
 
     return { success: true, message: "Containers stopped", statusCode: 200 };
   } catch (error) {
-    console.error(`[Nodes] Failed to stop containers:`, error);
+    log.error("Failed to stop containers", { error });
     return {
       success: false,
       error: "Failed to stop containers",
@@ -835,10 +843,14 @@ async function startContainers(user: User): Promise<ServiceResult<void>> {
       const nodeContainer = await docker.containerInspect(nodeContainerName);
       if (!nodeContainer.State?.Running && nodeContainer.Id) {
         await docker.containerStart(nodeContainer.Id);
-        console.log(`[Nodes] Started node container ${nodeContainerName}`);
+        log.info("Started node container", {
+          containerName: nodeContainerName,
+        });
       }
     } catch {
-      console.warn(`[Nodes] Node container not found: ${nodeContainerName}`);
+      log.warn("Node container not found", {
+        containerName: nodeContainerName,
+      });
       return {
         success: false,
         error: "Node container not found",
@@ -850,10 +862,14 @@ async function startContainers(user: User): Promise<ServiceResult<void>> {
       const httpdContainer = await docker.containerInspect(httpdContainerName);
       if (!httpdContainer.State?.Running && httpdContainer.Id) {
         await docker.containerStart(httpdContainer.Id);
-        console.log(`[Nodes] Started httpd container ${httpdContainerName}`);
+        log.info("Started httpd container", {
+          containerName: httpdContainerName,
+        });
       }
     } catch {
-      console.warn(`[Nodes] HTTPD container not found: ${httpdContainerName}`);
+      log.warn("HTTPD container not found", {
+        containerName: httpdContainerName,
+      });
       return {
         success: false,
         error: "HTTPD container not found",
@@ -863,7 +879,7 @@ async function startContainers(user: User): Promise<ServiceResult<void>> {
 
     return { success: true, message: "Containers started", statusCode: 200 };
   } catch (error) {
-    console.error(`[Nodes] Failed to start containers:`, error);
+    log.error("Failed to start containers", { error });
     return {
       success: false,
       error: "Failed to start containers",
@@ -896,17 +912,13 @@ export async function ensureNodeActiveForUser(
     }
 
     if (user.nodes.length > 0) {
-      console.log(
-        `[Nodes] User ${userId} has existing node, starting containers`,
-      );
+      log.info("User has existing node, starting containers", { userId });
       const startResult = await startContainers(user);
 
       // If containers don't exist (404), the node DB entry exists but
       // containers were destroyed - create a new node.
       if (!startResult.success && startResult.statusCode === 404) {
-        console.log(
-          `[Nodes] Containers not found for user ${userId}, creating new node`,
-        );
+        log.info("Containers not found, creating new node", { userId });
         // Mark existing node as deleted since its containers are gone.
         await db
           .update(schema.nodes)
@@ -922,16 +934,14 @@ export async function ensureNodeActiveForUser(
           };
         }
 
-        console.log(
-          `[Nodes] New node created, starting containers for user ${userId}`,
-        );
+        log.info("New node created, starting containers", { userId });
         return await startContainers(user);
       }
 
       return startResult;
     }
 
-    console.log(`[Nodes] Creating node for user ${userId}`);
+    log.info("Creating node for user", { userId });
     const node = await createNode(user);
 
     if (!node) {
@@ -947,9 +957,9 @@ export async function ensureNodeActiveForUser(
       });
 
       if (refreshedUser && refreshedUser.nodes.length > 0) {
-        console.log(
-          `[Nodes] Node created by another process, starting containers for user ${userId}`,
-        );
+        log.info("Node created by another process, starting containers", {
+          userId,
+        });
         return await startContainers(refreshedUser);
       }
 
@@ -960,13 +970,10 @@ export async function ensureNodeActiveForUser(
       };
     }
 
-    console.log(`[Nodes] Node created, starting containers for user ${userId}`);
+    log.info("Node created, starting containers", { userId });
     return await startContainers(user);
   } catch (error) {
-    console.error(
-      `[Nodes] Failed to ensure node active for user ${userId}:`,
-      error,
-    );
+    log.error("Failed to ensure node active for user", { userId, error });
     return {
       success: false,
       error: "Failed to activate node",

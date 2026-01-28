@@ -1,8 +1,11 @@
+import { createServiceLogger } from "$lib/server/logger";
 import { stripeService } from "$lib/server/services/stripe";
 
 import { json } from "@sveltejs/kit";
 
 import type { RequestHandler } from "./$types";
+
+const log = createServiceLogger("Stripe");
 
 export const POST: RequestHandler = async ({ locals, url }) => {
   if (!locals.user) {
@@ -22,7 +25,7 @@ export const POST: RequestHandler = async ({ locals, url }) => {
 
     return json({ url: result.content });
   } catch (error) {
-    console.error("[API] Portal session error:", error);
+    log.error("Portal session error", { error });
     return json({ error: "Failed to create portal session" }, { status: 500 });
   }
 };

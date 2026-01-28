@@ -3,6 +3,7 @@ import { groupCommitsByWeek } from "$lib/commit";
 import { ResponseError } from "$lib/http-client/lib/fetcher";
 import { config } from "$lib/server/config";
 import { createHttpdClient } from "$lib/server/httpdClient";
+import { createServiceLogger } from "$lib/server/logger";
 import {
   getNodeStatus,
   getSeededReposForNode,
@@ -17,6 +18,8 @@ import type { NodeStatus, PublicNodeInfo, UserProfile } from "$types/app";
 import { error, fail } from "@sveltejs/kit";
 
 import type { Actions, PageServerLoad } from "./$types";
+
+const log = createServiceLogger("Nodes");
 
 export interface RepoInfo {
   rid: string;
@@ -144,7 +147,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       });
     } catch (e) {
       if (e instanceof ResponseError && e.status === 404) {
-        console.info(`[Profile] Repo ${rid} not synced yet`);
+        log.info("Repo not synced yet", { rid });
         repositories.push({
           rid,
           name: "",
@@ -155,7 +158,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
           syncing: true,
         });
       } else {
-        console.warn(`[Profile] Failed to fetch repo ${rid}:`, e);
+        log.warn("Failed to fetch repo", { rid, error: e });
         repositories.push({
           rid,
           name: "",

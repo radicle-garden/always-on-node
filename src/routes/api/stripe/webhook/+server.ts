@@ -1,4 +1,5 @@
 import { config } from "$lib/server/config";
+import { createServiceLogger } from "$lib/server/logger";
 import { stripeService } from "$lib/server/services/stripe";
 
 import Stripe from "stripe";
@@ -6,6 +7,8 @@ import Stripe from "stripe";
 import { json } from "@sveltejs/kit";
 
 import type { RequestHandler } from "./$types";
+
+const log = createServiceLogger("Stripe");
 
 const stripe = new Stripe(config.stripeSecretKey, {
   apiVersion: "2025-12-15.clover",
@@ -19,7 +22,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
   try {
     if (!signature) {
-      console.error("[Webhook] Missing stripe-signature header");
+      log.warn("Missing stripe-signature header");
       return json(
         {
           error: "Missing signature",
@@ -34,14 +37,15 @@ export const POST: RequestHandler = async ({ request }) => {
       signature,
       config.stripeWebhookSecret,
     );
-    console.log(`[Webhook] Received event: ${event.type} (${event.id})`);
+    log.info("Received event", { eventType: event.type, eventId: event.id });
 
     const result = await stripeService.handleWebhookEvent(event);
 
     if (!result.success) {
-      console.error(
-        `[Webhook] Handler failed for ${event.type}: ${result.error}`,
-      );
+      log.error("Handler failed", {
+        eventType: event.type,
+        error: result.error,
+      });
       return json(
         {
           error: result.error,
@@ -52,10 +56,13 @@ export const POST: RequestHandler = async ({ request }) => {
       );
     }
 
-    console.log(`[Webhook] Successfully processed ${event.type} (${event.id})`);
+    log.info("Successfully processed event", {
+      eventType: event.type,
+      eventId: event.id,
+    });
     return json({ received: true, eventType: event.type, eventId: event.id });
   } catch (error) {
-    console.error("[Webhook] Error processing webhook:", error);
+    log.error("Error processing webhook", { error });
 
     if (error instanceof Stripe.errors.StripeSignatureVerificationError) {
       return json(

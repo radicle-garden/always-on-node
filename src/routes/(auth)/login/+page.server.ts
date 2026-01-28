@@ -1,3 +1,4 @@
+import { createServiceLogger } from "$lib/server/logger";
 import {
   authenticateUser,
   getUserFromSession,
@@ -7,6 +8,8 @@ import {
 import { fail, isRedirect, redirect } from "@sveltejs/kit";
 
 import type { Actions, PageServerLoad } from "./$types";
+
+const log = createServiceLogger("Auth");
 
 interface LoginFormErrors {
   email?: string;
@@ -62,7 +65,7 @@ export const actions = {
       if (isRedirect(err)) {
         throw err;
       }
-      console.error("[Login] Error:", err);
+      log.error("Login error", { error: err });
       return fail(500, {
         email,
         errors: {

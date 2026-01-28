@@ -6,6 +6,9 @@ import type { Cookies } from "@sveltejs/kit";
 import { config } from "../config";
 import { getDb, schema } from "../db";
 import { type Node, type User, verifyPassword } from "../entities";
+import { createServiceLogger } from "../logger";
+
+const log = createServiceLogger("Auth");
 
 const SESSION_COOKIE_NAME = "garden_session";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 14; // 2 weeks in seconds
@@ -52,7 +55,7 @@ export async function authenticateUser(
 
     return { user };
   } catch (err) {
-    console.error("[Auth] Error authenticating user:", err);
+    log.warn("Error authenticating user", { error: err });
     return { user: null, error: "Authentication failed." };
   }
 }

@@ -1,23 +1,29 @@
 import { initializeDatabase } from "$lib/server/db";
+import { createServiceLogger } from "$lib/server/logger";
 import { getUserFromSession } from "$lib/server/services/auth";
 import { ensureNodeActiveForUser } from "$lib/server/services/nodes";
 import { stripeService } from "$lib/server/services/stripe";
 
 import type { Handle, ServerInit } from "@sveltejs/kit";
 
+const log = createServiceLogger("Hooks");
+
 export const init: ServerInit = async () => {
   await initializeDatabase();
   const usersWithActiveSubscriptions =
     await stripeService.getUsersWithActiveSubscription();
-  console.log(
-    `[Hooks] Found ${usersWithActiveSubscriptions.length} users with active subscriptions`,
-  );
+  log.info("Found users with active subscriptions", {
+    count: usersWithActiveSubscriptions.length,
+  });
   for (const user of usersWithActiveSubscriptions) {
     try {
-      console.log(`[Hooks] Ensuring node active for user ${user.id}`);
+      log.info("Ensuring node active for user", { userId: user.id });
       await ensureNodeActiveForUser(user.id);
     } catch (e) {
-      console.log(`[Hooks] Error activating node for user ${user.id}: ${e}`);
+      log.error("Error activating node for user", {
+        userId: user.id,
+        error: e,
+      });
     }
   }
 };

@@ -4,8 +4,11 @@ import jwt, { type JwtPayload } from "jsonwebtoken";
 import { config } from "../config";
 import { getDb, schema } from "../db";
 import { type User, profileFromUser, setPassword } from "../entities";
+import { createServiceLogger } from "../logger";
 
 import { emailService } from "./email";
+
+const log = createServiceLogger("Users");
 
 interface ServiceResult<T> {
   success: boolean;
@@ -34,7 +37,7 @@ export async function retrieveUserByHandle(
     });
 
     if (!user) {
-      console.log(`[Users] No user found with handle: ${username}`);
+      log.warn("No user found with handle", { handle: username });
       return {
         success: false,
         error: `No user found with handle: ${username}`,
@@ -48,7 +51,7 @@ export async function retrieveUserByHandle(
       statusCode: 200,
     };
   } catch (err) {
-    console.error(`[Users] Failed to retrieve user ${username}:`, err);
+    log.error("Failed to retrieve user", { handle: username, error: err });
     return {
       success: false,
       error: "Failed to retrieve user",
@@ -101,9 +104,7 @@ export async function createNewUser(
       };
     }
 
-    console.log(
-      `[Users] Creating user with handle: ${handle} and email: ${email}`,
-    );
+    log.info("Creating user", { handle, email });
 
     const [savedUser] = await db
       .insert(schema.users)
@@ -117,7 +118,7 @@ export async function createNewUser(
       .returning();
 
     if (!savedUser) {
-      console.warn(`[Users] Failed to save user`);
+      log.warn("Failed to save user");
       return {
         success: false,
         error: `Failed to save user`,
@@ -126,9 +127,10 @@ export async function createNewUser(
       };
     }
 
-    console.log(
-      `[Users] New user: ${savedUser.email} signed up with id: ${savedUser.id}`,
-    );
+    log.info("New user signed up", {
+      email: savedUser.email,
+      userId: savedUser.id,
+    });
 
     const emailResult = await emailService.sendVerificationEmail(
       savedUser.id.toString(),
@@ -137,9 +139,9 @@ export async function createNewUser(
     );
 
     if (!emailResult.success) {
-      console.warn(
-        `[Users] Failed to send email verification code to ${savedUser.email}`,
-      );
+      log.warn("Failed to send email verification code", {
+        email: savedUser.email,
+      });
       // Don't fail the registration, but log the error
     }
 
@@ -150,7 +152,7 @@ export async function createNewUser(
       statusCode: 201,
     };
   } catch (instErr) {
-    console.warn(`[Users] User insert error:`, instErr);
+    log.error("User insert error", { error: instErr });
     return {
       success: false,
       error: `User insert error`,
@@ -175,12 +177,12 @@ export async function verifyEmailAddress(
     });
 
     if (!user) {
-      console.warn(`[Users] User not found with id: ${userToVerify.id}`);
+      log.warn("User not found", { userId: userToVerify.id });
       return { success: false, error: `User not found`, statusCode: 404 };
     }
 
     if (user.email_verified) {
-      console.log(`[Users] Email already verified for user: ${user.id}`);
+      log.info("Email already verified", { userId: user.id });
       return {
         success: true,
         message: `Email already verified`,
@@ -193,16 +195,14 @@ export async function verifyEmailAddress(
       .set({ email_verified: true })
       .where(eq(schema.users.id, user.id));
 
-    console.log(
-      `[Users] Successfully verified email address for user: ${user.id}`,
-    );
+    log.info("Successfully verified email address", { userId: user.id });
     return {
       success: true,
       message: `Email verified successfully. Please complete payment to activate your node.`,
       statusCode: 200,
     };
   } catch (e) {
-    console.warn(`[Users] Failed to verify email address:`, e);
+    log.error("Failed to verify email address", { error: e });
     return {
       success: false,
       error: `Failed to verify email address`,
@@ -223,7 +223,7 @@ export async function verifyPasswordResetToken(
     });
 
     if (!user) {
-      console.warn(`[Users] User not found with id: ${decoded.id}`);
+      log.warn("User not found", { userId: decoded.id });
       return {
         success: false,
         error: "Invalid or expired reset link",
@@ -232,7 +232,7 @@ export async function verifyPasswordResetToken(
     }
 
     if (user.email !== decoded.email) {
-      console.warn(`[Users] Token email mismatch for user: ${user.id}`);
+      log.warn("Token email mismatch", { userId: user.id });
       return {
         success: false,
         error: "Invalid or expired reset link",
@@ -246,7 +246,7 @@ export async function verifyPasswordResetToken(
       statusCode: 200,
     };
   } catch (e) {
-    console.warn(`[Users] Failed to verify password reset token:`, e);
+    log.warn("Failed to verify password reset token", { error: e });
     return {
       success: false,
       error: "Invalid or expired reset link",
@@ -285,14 +285,14 @@ export async function resetPassword(
       .set({ password_hash: setPassword(newPassword) })
       .where(eq(schema.users.id, userId));
 
-    console.log(`[Users] Successfully reset password for user: ${userId}`);
+    log.info("Successfully reset password", { userId });
     return {
       success: true,
       message: "Password reset successfully",
       statusCode: 200,
     };
   } catch (e) {
-    console.warn(`[Users] Failed to reset password:`, e);
+    log.error("Failed to reset password", { error: e });
     return {
       success: false,
       error: "Couldn't reset password",
@@ -314,9 +314,7 @@ export async function requestPasswordReset(
     });
 
     if (!user) {
-      console.log(
-        `[Users] Password reset requested for non-existent email: ${email}`,
-      );
+      log.info("Password reset requested for non-existent email", { email });
       return {
         success: true,
         statusCode: 200,
@@ -329,7 +327,7 @@ export async function requestPasswordReset(
     );
 
     if (!emailResult.success) {
-      console.warn(`[Users] Failed to send password reset email to ${email}`);
+      log.warn("Failed to send password reset email", { email });
       return {
         success: false,
         error: "Couldn't send password reset email",
@@ -337,13 +335,13 @@ export async function requestPasswordReset(
       };
     }
 
-    console.log(`[Users] Password reset email sent to: ${email}`);
+    log.info("Password reset email sent", { email });
     return {
       success: true,
       statusCode: 200,
     };
   } catch (e) {
-    console.warn(`[Users] Failed to process password reset request:`, e);
+    log.error("Failed to process password reset request", { error: e });
     return {
       success: false,
       error: "Couldn't process password reset request",
@@ -368,10 +366,7 @@ export async function retrieveUserWithSubscription(userId: number) {
     });
     return user;
   } catch (e) {
-    console.warn(
-      `[Users] Failed to retrieve user with subscription for userId: ${userId}`,
-      e,
-    );
+    log.warn("Failed to retrieve user with subscription", { userId, error: e });
     return null;
   }
 }

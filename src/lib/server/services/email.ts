@@ -2,13 +2,16 @@ import jwt from "jsonwebtoken";
 import { Resend } from "resend";
 
 import { config } from "../config";
+import { createServiceLogger } from "../logger";
+
+const log = createServiceLogger("Email");
 
 class EmailService {
   private resend: Resend | null = null;
 
   private getResendClient(): Resend | null {
     if (!config.resendApiKey) {
-      console.warn("[Email] RESEND_API_KEY is not configured");
+      log.warn("RESEND_API_KEY is not configured");
       return null;
     }
     if (!this.resend) {
@@ -24,7 +27,7 @@ class EmailService {
   ): Promise<boolean> {
     const senderAddress = config.emailSenderAddress;
     if (!senderAddress) {
-      console.error("[Email] EMAIL_SENDER_ADDRESS is not configured");
+      log.warn("EMAIL_SENDER_ADDRESS is not configured");
       return false;
     }
 
@@ -41,10 +44,11 @@ class EmailService {
     });
 
     if (error) {
-      console.warn(
-        `[Email] Failed to send email with subject: "${emailSubject}" to ${emailRecipient}:`,
+      log.warn("Failed to send email", {
+        subject: emailSubject,
+        recipient: emailRecipient,
         error,
-      );
+      });
       return false;
     }
     return true;
@@ -55,7 +59,7 @@ class EmailService {
     recipientEmail: string,
     recipientName: string,
   ): Promise<{ success: boolean; error?: string }> {
-    console.log(`[Email] Sending email verification code to ${recipientEmail}`);
+    log.info("Sending email verification code", { recipient: recipientEmail });
 
     const token = jwt.sign(
       {
@@ -69,7 +73,7 @@ class EmailService {
     );
 
     const url = this.buildVerificationLink(token);
-    console.log(`[Email] Verification link: ${url}`);
+    log.debug("Verification link generated", { url });
 
     const VERIFICATION_EMAIL_SUBJECT = `[Radicle Garden] Please verify your email address.`;
     const VERIFICATION_EMAIL_BODY = `
@@ -91,7 +95,7 @@ class EmailService {
 
     const senderAddress = config.emailSenderAddress;
     if (!senderAddress) {
-      console.error("[Email] EMAIL_SENDER_ADDRESS is not configured");
+      log.warn("EMAIL_SENDER_ADDRESS is not configured");
       return {
         success: false,
         error: "EMAIL_SENDER_ADDRESS is not configured",
@@ -111,7 +115,7 @@ class EmailService {
     });
 
     if (error) {
-      console.warn(`[Email] Failed to send verification email:`, error);
+      log.warn("Failed to send verification email", { error });
       return { success: false, error: "Failed to send verification email" };
     }
 
@@ -122,7 +126,7 @@ class EmailService {
     userId: string,
     recipientEmail: string,
   ): Promise<{ success: boolean; error?: string }> {
-    console.log(`[Email] Sending password reset email to ${recipientEmail}`);
+    log.info("Sending password reset email", { recipient: recipientEmail });
     const token = jwt.sign(
       {
         id: userId,
@@ -135,7 +139,7 @@ class EmailService {
     );
 
     const url = this.buildPasswordResetLink(token);
-    console.log(`[Email] Password reset link: ${url}`);
+    log.debug("Password reset link generated", { url });
 
     const PASSWORD_RESET_EMAIL_SUBJECT = `[Radicle Garden] Password reset request.`;
     const PASSWORD_RESET_EMAIL_BODY = `
@@ -156,7 +160,7 @@ class EmailService {
 
     const senderAddress = config.emailSenderAddress;
     if (!senderAddress) {
-      console.error("[Email] EMAIL_SENDER_ADDRESS is not configured");
+      log.warn("EMAIL_SENDER_ADDRESS is not configured");
       return {
         success: false,
         error: "EMAIL_SENDER_ADDRESS is not configured",
@@ -176,7 +180,7 @@ class EmailService {
     });
 
     if (error) {
-      console.warn(`[Email] Failed to send password reset email:`, error);
+      log.warn("Failed to send password reset email", { error });
       return { success: false, error: "Failed to send password reset email" };
     }
 
