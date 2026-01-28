@@ -5,5 +5,6 @@ yarn.lock
 bun.lock
 bun.lockb
 infra/containers/radicle-node/heartwood
-infra/ansible/group_vars/prod.yml
+infra/ansible/environments/staging.yml
+infra/ansible/environments/production.yml
 migrations
