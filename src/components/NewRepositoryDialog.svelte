@@ -56,7 +56,7 @@
       Seed repo
     </Button>
   </Dialog.Trigger>
-  <Dialog.Content showCloseButton={false}>
+  <Dialog.Content>
     <form
       method="POST"
       action="?/seed"
