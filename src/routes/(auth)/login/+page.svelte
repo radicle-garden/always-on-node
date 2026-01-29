@@ -15,6 +15,7 @@
 
   const verified = page.url.searchParams.get("verified");
   const pwReset = page.url.searchParams.get("pw-reset");
+  const deleted = page.url.searchParams.get("deleted");
 </script>
 
 <div
@@ -22,7 +23,9 @@
   <div class="flex h-full w-full flex-col items-start justify-start gap-8">
     <LogoText />
     <div class="txt-heading-xxl">
-      {#if verified === "true"}
+      {#if deleted === "true"}
+        Account deleted
+      {:else if verified === "true"}
         Email verified
       {:else if pwReset === "success"}
         Password reset
@@ -33,7 +36,9 @@
       {/if}
     </div>
     <div class="txt-body-l-regular">
-      {#if verified === "true"}
+      {#if deleted === "true"}
+        Your account has been successfully deleted.
+      {:else if verified === "true"}
         You can now log in with your email and password.
       {:else if pwReset === "success"}
         You can now log in with your new password.

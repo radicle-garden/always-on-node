@@ -3,10 +3,17 @@ import jwt, { type JwtPayload } from "jsonwebtoken";
 
 import { config } from "../config";
 import { getDb, schema } from "../db";
-import { type User, profileFromUser, setPassword } from "../entities";
+import {
+  type User,
+  profileFromUser,
+  setPassword,
+  verifyPassword,
+} from "../entities";
 import { createServiceLogger } from "../logger";
 
 import { emailService } from "./email";
+import { stopContainers } from "./nodes";
+import { stripeService } from "./stripe";
 
 const log = createServiceLogger("Users");
 
@@ -68,9 +75,11 @@ export async function createNewUser(
   try {
     const db = await getDb();
 
-    // Check if user already exists
     const existingUser = await db.query.users.findFirst({
-      where: or(eq(schema.users.email, email), eq(schema.users.handle, handle)),
+      where: and(
+        or(eq(schema.users.email, email), eq(schema.users.handle, handle)),
+        eq(schema.users.deleted, false),
+      ),
     });
 
     if (existingUser) {
@@ -92,7 +101,6 @@ export async function createNewUser(
       }
     }
 
-    // Validate handle format
     const handleRegex = /^[a-zA-Z]+[a-zA-Z0-9_-]+$/;
     if (!handleRegex.test(handle)) {
       return {
@@ -436,6 +444,136 @@ export async function retrieveUserWithSubscription(userId: number) {
   }
 }
 
+export interface CanDeleteResult {
+  canDelete: boolean;
+  reason?: string;
+}
+
+export async function canDeleteAccount(
+  userId: number,
+): Promise<ServiceResult<CanDeleteResult>> {
+  try {
+    const subscriptionResult =
+      await stripeService.getSubscriptionStatus(userId);
+
+    if (!subscriptionResult.success) {
+      return {
+        success: false,
+        error: "Failed to check subscription status",
+        statusCode: 500,
+      };
+    }
+
+    const status = subscriptionResult.content;
+
+    if (!status?.hasSubscription) {
+      return {
+        success: true,
+        content: { canDelete: true },
+        statusCode: 200,
+      };
+    }
+
+    if (status.status === "active" || status.status === "trialing") {
+      return {
+        success: true,
+        content: {
+          canDelete: false,
+          reason: "Your subscription is still active.",
+        },
+        statusCode: 200,
+      };
+    }
+
+    if (
+      status.currentPeriodEnd &&
+      new Date(status.currentPeriodEnd) > new Date()
+    ) {
+      const endDate = new Date(status.currentPeriodEnd).toLocaleDateString();
+      return {
+        success: true,
+        content: {
+          canDelete: false,
+          reason: `Your subscription ends on ${endDate}. You can delete your account after this date.`,
+        },
+        statusCode: 200,
+      };
+    }
+
+    return {
+      success: true,
+      content: { canDelete: true },
+      statusCode: 200,
+    };
+  } catch (e) {
+    log.error("Failed to check if account can be deleted", {
+      userId,
+      error: e,
+    });
+    return {
+      success: false,
+      error: "Failed to check account status",
+      statusCode: 500,
+    };
+  }
+}
+
+export async function deleteUser(
+  userId: number,
+  password: string,
+): Promise<ServiceResult<void>> {
+  const db = await getDb();
+
+  const user = await db.query.users.findFirst({
+    where: and(eq(schema.users.id, userId), eq(schema.users.deleted, false)),
+  });
+
+  if (!user) {
+    return { success: false, error: "User not found", statusCode: 404 };
+  }
+
+  if (!verifyPassword(password, user.password_hash)) {
+    return { success: false, error: "Incorrect password", statusCode: 401 };
+  }
+
+  const canDeleteResult = await canDeleteAccount(userId);
+  if (!canDeleteResult.success || !canDeleteResult.content?.canDelete) {
+    return {
+      success: false,
+      error: canDeleteResult.content?.reason || "Account cannot be deleted",
+      statusCode: 400,
+    };
+  }
+
+  try {
+    await stopContainers(user);
+
+    await db
+      .update(schema.users)
+      .set({
+        deleted: true,
+        password_hash: "",
+        description: null,
+      })
+      .where(eq(schema.users.id, userId));
+
+    await db
+      .update(schema.nodes)
+      .set({ deleted: true })
+      .where(eq(schema.nodes.user_id, userId));
+
+    log.info("User account soft deleted", { userId });
+    return { success: true, statusCode: 200 };
+  } catch (e) {
+    log.error("Failed to delete user account", { userId, error: e });
+    return {
+      success: false,
+      error: "Failed to delete account",
+      statusCode: 500,
+    };
+  }
+}
+
 export const usersService = {
   retrieveUserByHandle,
   createNewUser,
@@ -445,4 +583,6 @@ export const usersService = {
   requestPasswordReset,
   resendVerificationEmail,
   retrieveUserWithSubscription,
+  canDeleteAccount,
+  deleteUser,
 };
