@@ -13,8 +13,23 @@
   let subscriptionStatus = $derived(data.subscriptionStatus);
   let stripePriceId = $derived(data.stripePriceId);
 
-  function handleThemeChange(value: string) {
-    setMode(value as "light" | "dark" | "system");
+  let mounted = $state(false);
+  let themeValue = $state<"light" | "dark" | "system">("system");
+
+  $effect(() => {
+    mounted = true;
+    if (userPrefersMode.current) {
+      themeValue = userPrefersMode.current;
+    }
+  });
+
+  function handleThemeChange(value: string | undefined) {
+    if (value) {
+      themeValue = value as "light" | "dark" | "system";
+      setMode(value as "light" | "dark" | "system");
+    } else {
+      themeValue = userPrefersMode.current ?? "system";
+    }
   }
 
   async function handlePortal() {
@@ -57,7 +72,7 @@
   }
 </script>
 
-<div class="flex flex-col gap-8">
+<div class="flex flex-col gap-8" class:invisible={!mounted}>
   <div class="flex flex-col gap-2">
     <div class="txt-heading-m">Plan</div>
     <div
@@ -70,12 +85,12 @@
         {#if subscriptionStatus?.hasSubscription}
           <Button onclick={handlePortal}>
             Manage subscription
-            <Icon name="arrow-right" />
+            <Icon name="open-external" />
           </Button>
         {:else}
           <Button onclick={handleCheckout}>
             Start your free trial
-            <Icon name="arrow-right" />
+            <Icon name="open-external" />
           </Button>
         {/if}
       </div>
@@ -89,7 +104,7 @@
         type="single"
         onValueChange={handleThemeChange}
         class="txt-body-m-regular gap-4"
-        value={userPrefersMode.current as "light" | "dark" | "system"}>
+        bind:value={themeValue}>
         <ToggleGroup.Item value="light" aria-label="Light theme">
           Light
         </ToggleGroup.Item>

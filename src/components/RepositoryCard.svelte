@@ -55,7 +55,30 @@
   }
 </script>
 
-{#snippet cardContent()}
+{#if showRemoveButton && nodeId}
+  <form
+    bind:this={formRef}
+    method="POST"
+    action="?/unseed"
+    use:enhance={() => {
+      return async ({ result, update }) => {
+        if (result.type === "success") {
+          toast.success(`Stopped seeding ${repo.name || "repository"}`);
+          await update();
+        } else if (result.type === "failure") {
+          toast.error(
+            (result.data as { error?: string })?.error ||
+              "Failed to stop seeding repository",
+          );
+        }
+      };
+    }}>
+    <input type="hidden" name="nodeId" value={nodeId} />
+    <input type="hidden" name="rid" value={repo.rid} />
+  </form>
+{/if}
+
+<div class="p-4">
   {#if repo.syncing}
     <div class="flex h-full flex-col justify-between gap-6">
       <div class="flex flex-col gap-2">
@@ -102,12 +125,23 @@
         <div class="truncate font-medium">
           <div class="flex items-center gap-2">
             <RepoAvatar name={repo.name} rid={repo.rid} styleWidth="2rem" />
-            <div class="txt-body-l-semibold flex min-w-0 items-center gap-1">
-              <span class="truncate">{repo.name || "Untitled"}</span>
-              {#if hover}
-                <Icon name="open-external" />
-              {/if}
-            </div>
+            {#if asLink}
+              <a
+                href={`https://app.radicle.xyz/nodes/${nodeHttpdHostPort}/${repo.rid}`}
+                target="_blank"
+                class="txt-body-l-semibold flex min-w-0 items-center gap-1 hover:underline"
+                onmouseenter={() => (hover = true)}
+                onmouseleave={() => (hover = false)}>
+                <span class="truncate">{repo.name || "Untitled"}</span>
+                {#if hover}
+                  <Icon name="open-external" />
+                {/if}
+              </a>
+            {:else}
+              <div class="txt-body-l-semibold flex min-w-0 items-center gap-1">
+                <span class="truncate">{repo.name || "Untitled"}</span>
+              </div>
+            {/if}
           </div>
         </div>
         <div class="ml-auto flex items-center gap-2">
@@ -147,7 +181,8 @@
 
       <div class="flex flex-col gap-2">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2 font-mono text-text-tertiary">
+          <div
+            class="txt-code-regular flex items-center gap-2 font-mono text-text-tertiary">
             <div
               class="flex items-center gap-1"
               title={`${repo.issues.open} issue${repo.issues.open === 1 ? "" : "s"}`}>
@@ -170,48 +205,4 @@
       </div>
     </div>
   {/if}
-{/snippet}
-
-{#if showRemoveButton && nodeId}
-  <form
-    bind:this={formRef}
-    method="POST"
-    action="?/unseed"
-    use:enhance={() => {
-      return async ({ result, update }) => {
-        if (result.type === "success") {
-          toast.success(`Stopped seeding ${repo.name || "repository"}`);
-          await update();
-        } else if (result.type === "failure") {
-          toast.error(
-            (result.data as { error?: string })?.error ||
-              "Failed to stop seeding repository",
-          );
-        }
-      };
-    }}>
-    <input type="hidden" name="nodeId" value={nodeId} />
-    <input type="hidden" name="rid" value={repo.rid} />
-  </form>
-{/if}
-
-{#if asLink}
-  <a
-    class="block p-4"
-    class:hover:bg-surface-subtle={!repo.syncing}
-    class:cursor-pointer={!repo.syncing}
-    onmouseenter={() => {
-      hover = true;
-    }}
-    onmouseleave={() => {
-      hover = false;
-    }}
-    href={`https://app.radicle.xyz/nodes/${nodeHttpdHostPort}/${repo.rid}`}
-    target="_blank">
-    {@render cardContent()}
-  </a>
-{:else}
-  <div class="p-4">
-    {@render cardContent()}
-  </div>
-{/if}
+</div>

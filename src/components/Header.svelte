@@ -14,8 +14,15 @@
     href: string;
   }
 
-  let { user, breadcrumbs }: { user: User | null; breadcrumbs: Breadcrumb[] } =
-    $props();
+  let {
+    user,
+    breadcrumbs,
+    fqdn,
+  }: {
+    user: User | null;
+    breadcrumbs: Breadcrumb[];
+    fqdn: string;
+  } = $props();
 
   let isLoggedIn = $derived(user !== null);
   let isMobileMenuOpen = $state(false);
@@ -42,7 +49,7 @@
             alt="gravatar" />
           <div class="flex flex-col gap-1">
             <div class="txt-heading-m line-clamp-1 break-all text-text-primary">
-              {user.handle}.radicle.garden
+              {user.handle}.{fqdn}
             </div>
             <div
               class="txt-body-s-regular line-clamp-1 break-all text-text-tertiary">
@@ -99,7 +106,7 @@
             alt="gravatar" />
           <div class="flex flex-col gap-1">
             <div class="txt-heading-m line-clamp-1 break-all text-text-primary">
-              {user.handle}.radicle.garden
+              {user.handle}.{fqdn}
             </div>
             <div
               class="txt-body-s-regular line-clamp-1 break-all text-text-tertiary">

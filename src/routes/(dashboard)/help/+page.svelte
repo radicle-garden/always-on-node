@@ -25,7 +25,7 @@
         target="_blank"
         class="flex items-center gap-2 font-bold text-brand-hover">
         Open Zulip
-        <Icon name="arrow-right" />
+        <Icon name="open-external" />
       </a>
     </div>
     <div class="flex flex-col gap-8 rounded-sm bg-surface-subtle p-6">
@@ -40,7 +40,7 @@
         target="_blank"
         class="flex items-center gap-2 font-bold text-brand-hover">
         Get in touch
-        <Icon name="arrow-right" />
+        <Icon name="open-external" />
       </a>
     </div>
   </div>

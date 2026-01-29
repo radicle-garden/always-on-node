@@ -87,23 +87,18 @@
         </div>
         <div class="ml-auto">
           <Button
-            onclick={() => {
-              window.open(
-                `https://app.radicle.xyz/nodes/${nodeHttpdHostPort}`,
-                "_blank",
-              );
-            }}>
+            href={`https://app.radicle.xyz/nodes/${nodeHttpdHostPort}`}
+            target="_blank">
             View node
             <Icon name="open-external" />
           </Button>
         </div>
       </div>
-      {#if nodeId && nodeStatuses[nodeId]}
-        <NodeStorage
-          {node}
-          nodeStatus={nodeStatuses[nodeId]}
-          {userMaxDiskUsageBytes} />
-      {/if}
+      <NodeStorage
+        {node}
+        {repositories}
+        nodeStatus={nodeStatuses[nodeId]}
+        {userMaxDiskUsageBytes} />
     {/if}
   </div>
   <div class="col-span-12 flex w-full flex-col gap-8">
