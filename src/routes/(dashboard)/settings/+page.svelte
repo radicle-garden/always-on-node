@@ -1,17 +1,25 @@
 <script lang="ts">
+  import { enhance } from "$app/forms";
   import Icon from "$components/Icon.svelte";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog";
   import { Button } from "$lib/components/ui/button";
+  import * as Dialog from "$lib/components/ui/dialog";
+  import { Input } from "$lib/components/ui/input";
+  import { Label } from "$lib/components/ui/label";
   import * as ToggleGroup from "$lib/components/ui/toggle-group";
 
   import { setMode, userPrefersMode } from "mode-watcher";
 
-  import type { PageData } from "./$types";
+  import type { ActionData, PageData } from "./$types";
 
-  let { data }: { data: PageData } = $props();
+  let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let subscriptionStatus = $derived(data.subscriptionStatus);
   let stripePriceId = $derived(data.stripePriceId);
+  let canDeleteAccount = $derived(data.canDeleteAccount);
+
+  let deletePassword = $state("");
+  let isDeleting = $state(false);
+  let deleteDialogOpen = $state(false);
 
   let mounted = $state(false);
   let themeValue = $state<"light" | "dark" | "system">("system");
@@ -128,20 +136,75 @@
         </div>
       </div>
       <div class="ml-auto">
-        <AlertDialog.Root>
-          <AlertDialog.Trigger>
-            <Button variant="destructiveSecondary">Delete account</Button>
-          </AlertDialog.Trigger>
-          <AlertDialog.Content>
-            <AlertDialog.Title>Not implemented</AlertDialog.Title>
-            <AlertDialog.Description>
-              This feature is not yet available.
-            </AlertDialog.Description>
-            <AlertDialog.Footer>
-              <AlertDialog.Cancel>Ok</AlertDialog.Cancel>
-            </AlertDialog.Footer>
-          </AlertDialog.Content>
-        </AlertDialog.Root>
+        <Dialog.Root bind:open={deleteDialogOpen}>
+          <Dialog.Trigger
+            onclick={e => {
+              e.stopPropagation();
+              e.preventDefault();
+              if (canDeleteAccount.canDelete) {
+                deleteDialogOpen = true;
+              } else {
+                deleteDialogOpen = false;
+              }
+            }}
+            title={canDeleteAccount.reason}>
+            <Button
+              variant="destructiveSecondary"
+              disabled={!canDeleteAccount.canDelete}>
+              Delete account
+            </Button>
+          </Dialog.Trigger>
+          <Dialog.Content class="flex flex-col gap-4">
+            <div class="txt-body-l-semibold">Delete your account?</div>
+            <div>
+              This will permanently delete your account. Enter your password to
+              confirm.
+            </div>
+            <form
+              method="POST"
+              action="?/deleteAccount"
+              use:enhance={() => {
+                isDeleting = true;
+                return async ({ update }) => {
+                  await update();
+                  isDeleting = false;
+                };
+              }}
+              class="mt-4 flex flex-col gap-4">
+              <div class="grid gap-2">
+                <Label for="delete-password">Password</Label>
+                <Input
+                  id="delete-password"
+                  name="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  bind:value={deletePassword}
+                  required />
+              </div>
+              {#if form?.deleteError}
+                <div class="text-sm text-feedback-error-text">
+                  {form.deleteError}
+                </div>
+              {/if}
+              <Dialog.Footer class="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  onclick={() => {
+                    deleteDialogOpen = false;
+                    deletePassword = "";
+                  }}>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="destructive"
+                  disabled={isDeleting || !deletePassword}>
+                  {isDeleting ? "Deleting..." : "Delete account"}
+                </Button>
+              </Dialog.Footer>
+            </form>
+          </Dialog.Content>
+        </Dialog.Root>
       </div>
     </div>
   </div>

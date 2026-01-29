@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   integer,
@@ -6,20 +6,32 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-export const users = pgTable("user", {
-  id: serial("id").primaryKey(),
-  email: text("email").notNull().unique(),
-  email_verified: boolean("email_verified").notNull().default(false),
-  password_hash: text("password_hash").notNull(),
-  created_at: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  deleted: boolean("deleted").notNull().default(false),
-  handle: text("handle").notNull().unique(),
-  description: text("description"),
-});
+export const users = pgTable(
+  "user",
+  {
+    id: serial("id").primaryKey(),
+    email: text("email").notNull(),
+    email_verified: boolean("email_verified").notNull().default(false),
+    password_hash: text("password_hash").notNull(),
+    created_at: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    deleted: boolean("deleted").notNull().default(false),
+    handle: text("handle").notNull(),
+    description: text("description"),
+  },
+  table => [
+    uniqueIndex("user_email_unique_idx")
+      .on(table.email)
+      .where(sql`${table.deleted} IS NOT TRUE`),
+    uniqueIndex("user_handle_unique_idx")
+      .on(table.handle)
+      .where(sql`${table.deleted} IS NOT TRUE`),
+  ],
+);
 
 export const nodes = pgTable("node", {
   id: serial("id").primaryKey(),
