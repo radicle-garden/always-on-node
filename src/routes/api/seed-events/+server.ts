@@ -2,11 +2,21 @@ import { onSeedComplete } from "$lib/server/services/seedEvents";
 
 import type { RequestHandler } from "@sveltejs/kit";
 
-export const GET: RequestHandler = async ({ url }) => {
-  const rid = url.searchParams.get("rid");
+export const GET: RequestHandler = async ({ url, locals }) => {
+  if (!locals.user) {
+    return new Response("Unauthorized", { status: 401 });
+  }
 
-  if (!rid) {
-    return new Response("Missing rid parameter", { status: 400 });
+  const rid = url.searchParams.get("rid");
+  const nodeId = url.searchParams.get("nodeId");
+
+  if (!rid || !nodeId) {
+    return new Response("Missing rid or nodeId parameter", { status: 400 });
+  }
+
+  const userOwnsNode = locals.user.nodes.some(n => n.node_id === nodeId);
+  if (!userOwnsNode) {
+    return new Response("Forbidden", { status: 403 });
   }
 
   let unsubscribe: (() => void) | null = null;
@@ -19,7 +29,7 @@ export const GET: RequestHandler = async ({ url }) => {
       controller.enqueue(encoder.encode("event: connected\ndata: {}\n\n"));
 
       unsubscribe = onSeedComplete(event => {
-        if (event.rid === rid && !closed) {
+        if (event.rid === rid && event.nodeId === nodeId && !closed) {
           closed = true;
           const data = JSON.stringify(event);
           controller.enqueue(

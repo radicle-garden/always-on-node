@@ -19,7 +19,7 @@
   function waitForSeedCompletion(seededRid: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const eventSource = new EventSource(
-        `/api/seed-events?rid=${encodeURIComponent(seededRid)}`,
+        `/api/seed-events?rid=${encodeURIComponent(seededRid)}&nodeId=${encodeURIComponent(nodeId)}`,
       );
 
       const cleanup = () => eventSource.close();

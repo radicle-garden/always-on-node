@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { invalidateAll } from "$app/navigation";
   import Icon from "$components/Icon.svelte";
   import NodeStorage from "$components/NodeStorage.svelte";
   import PaymentSection from "$components/PaymentSection.svelte";
@@ -8,6 +9,8 @@
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
   import type { UserProfile } from "$types/app";
+
+  import { SvelteSet } from "svelte/reactivity";
 
   import type { PageData } from "./$types";
 
@@ -25,6 +28,37 @@
     `${data.user?.handle}.${data.publicServiceHostPort}`,
   );
   let userMaxDiskUsageBytes = $derived(data.userMaxDiskUsageBytes);
+
+  const subscribedRids = new SvelteSet<string>();
+  $effect(() => {
+    if (!nodeId) return;
+    const syncingRepos = repositories.filter(
+      r => r.syncing && !subscribedRids.has(r.rid),
+    );
+    if (syncingRepos.length === 0) return;
+    const eventSources: EventSource[] = [];
+    for (const repo of syncingRepos) {
+      subscribedRids.add(repo.rid);
+      const eventSource = new EventSource(
+        `/api/seed-events?rid=${encodeURIComponent(repo.rid)}&nodeId=${encodeURIComponent(nodeId)}`,
+      );
+      eventSource.addEventListener("seedComplete", async () => {
+        eventSource.close();
+        subscribedRids.delete(repo.rid);
+        await invalidateAll();
+      });
+      eventSource.onerror = () => {
+        eventSource.close();
+        subscribedRids.delete(repo.rid);
+      };
+      eventSources.push(eventSource);
+    }
+    return () => {
+      for (const es of eventSources) {
+        es.close();
+      }
+    };
+  });
 </script>
 
 {#snippet nodeStatus()}
