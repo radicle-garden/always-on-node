@@ -9,6 +9,8 @@
   let { form } = $props();
 
   let isSubmitting = $state(false);
+  let isResending = $state(false);
+  let resendSuccess = $state(false);
   let handle = $derived(form?.handle ?? "");
   let email = $derived(form?.email ?? "");
   let password = $state("");
@@ -33,16 +35,39 @@
         Click the link in the email to verify your account. If you don't see it,
         check your spam folder.
       </div>
-      <div class="flex items-center gap-4">
+      <form
+        method="POST"
+        action="?/resend"
+        use:enhance={() => {
+          isResending = true;
+          return async ({ update, result }) => {
+            await update();
+            isResending = false;
+            if (result.type === "success") {
+              resendSuccess = true;
+              setTimeout(() => {
+                resendSuccess = false;
+              }, 5000);
+            }
+          };
+        }}
+        class="flex items-center gap-4">
+        <input type="hidden" name="email" value={form?.email} />
         Didn't receive it?
         <Button
           variant="primary"
-          onclick={() => {
-            window.location.reload();
-          }}>
-          Resend email
+          type="submit"
+          disabled={isResending || resendSuccess}>
+          {#if resendSuccess}
+            Email sent!
+          {:else}
+            {isResending ? "Sending…" : "Resend email"}
+          {/if}
         </Button>
-      </div>
+      </form>
+      {#if form?.resendError}
+        <p class="text-sm text-feedback-error-text">{form.resendError}</p>
+      {/if}
       <div class="txt-body-l-regular">
         Already verified? <a href={resolve("/login")} class="underline">
           Log in
@@ -56,6 +81,7 @@
       </div>
       <form
         method="POST"
+        action="?/register"
         use:enhance={() => {
           isSubmitting = true;
           return async ({ update }) => {

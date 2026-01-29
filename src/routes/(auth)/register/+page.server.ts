@@ -23,7 +23,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 };
 
 export const actions = {
-  default: async ({ request }) => {
+  register: async ({ request }) => {
     const data = await request.formData();
     const handle = data.get("handle")?.toString()?.trim();
     const email = data.get("email")?.toString()?.trim();
@@ -73,6 +73,33 @@ export const actions = {
       });
     }
 
-    return { success: true, email };
+    return { success: true, email, resent: false, resendError: undefined };
+  },
+
+  resend: async ({ request }) => {
+    const data = await request.formData();
+    const email = data.get("email")?.toString()?.trim();
+
+    if (!email) {
+      return fail(400, {
+        success: false,
+        email,
+        resent: false,
+        resendError: "Email is required",
+      });
+    }
+
+    const result = await usersService.resendVerificationEmail(email);
+
+    if (!result.success) {
+      return fail(result.statusCode, {
+        success: false,
+        email,
+        resent: false,
+        resendError: result.error,
+      });
+    }
+
+    return { success: true, email, resent: true, resendError: undefined };
   },
 } satisfies Actions;

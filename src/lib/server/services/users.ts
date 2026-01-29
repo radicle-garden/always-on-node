@@ -185,7 +185,6 @@ export async function verifyEmailAddress(
       log.info("Email already verified", { userId: user.id });
       return {
         success: true,
-        message: `Email already verified`,
         statusCode: 200,
       };
     }
@@ -301,6 +300,72 @@ export async function resetPassword(
   }
 }
 
+export async function resendVerificationEmail(
+  email: string,
+): Promise<ServiceResult<void>> {
+  try {
+    const db = await getDb();
+    const user = await db.query.users.findFirst({
+      where: and(
+        eq(schema.users.email, email),
+        eq(schema.users.deleted, false),
+      ),
+    });
+
+    if (!user) {
+      log.info("Verification email resend requested for non-existent email", {
+        email,
+      });
+      // Return success to avoid leaking information about registered emails
+      return {
+        success: true,
+        statusCode: 200,
+      };
+    }
+
+    if (user.email_verified) {
+      log.info(
+        "Verification email resend requested for already verified user",
+        {
+          email,
+        },
+      );
+      return {
+        success: true,
+        statusCode: 200,
+      };
+    }
+
+    const emailResult = await emailService.sendVerificationEmail(
+      user.id.toString(),
+      user.email,
+      user.handle,
+    );
+
+    if (!emailResult.success) {
+      log.warn("Failed to resend verification email", { email });
+      return {
+        success: false,
+        error: "Couldn't send verification email",
+        statusCode: 500,
+      };
+    }
+
+    log.info("Verification email resent", { email });
+    return {
+      success: true,
+      statusCode: 200,
+    };
+  } catch (e) {
+    log.error("Failed to resend verification email", { error: e });
+    return {
+      success: false,
+      error: "Couldn't resend verification email",
+      statusCode: 500,
+    };
+  }
+}
+
 export async function requestPasswordReset(
   email: string,
 ): Promise<ServiceResult<void>> {
@@ -378,5 +443,6 @@ export const usersService = {
   verifyPasswordResetToken,
   resetPassword,
   requestPasswordReset,
+  resendVerificationEmail,
   retrieveUserWithSubscription,
 };

@@ -19,7 +19,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 };
 
 export const actions = {
-  default: async ({ request }) => {
+  send: async ({ request }) => {
     const data = await request.formData();
     const email = data.get("email")?.toString()?.trim();
 
@@ -44,6 +44,47 @@ export const actions = {
       });
     }
 
-    return { success: true, email, message: result.message };
+    return {
+      success: true,
+      email,
+      message: result.message,
+      resent: false,
+      resendError: undefined,
+    };
+  },
+
+  resend: async ({ request }) => {
+    const data = await request.formData();
+    const email = data.get("email")?.toString()?.trim();
+
+    if (!email) {
+      return fail(400, {
+        success: false,
+        email,
+        message: undefined,
+        resent: false,
+        resendError: "Email is required",
+      });
+    }
+
+    const result = await usersService.requestPasswordReset(email);
+
+    if (!result.success) {
+      return fail(result.statusCode, {
+        success: false,
+        email,
+        message: undefined,
+        resent: false,
+        resendError: result.error,
+      });
+    }
+
+    return {
+      success: true,
+      email,
+      message: undefined,
+      resent: true,
+      resendError: undefined,
+    };
   },
 } satisfies Actions;
