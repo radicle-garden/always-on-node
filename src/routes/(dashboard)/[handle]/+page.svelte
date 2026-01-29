@@ -100,6 +100,7 @@
       </div>
       <NodeStorage
         {node}
+        {repositories}
         nodeStatus={nodeStatuses[nodeId]}
         {userMaxDiskUsageBytes} />
     {/if}

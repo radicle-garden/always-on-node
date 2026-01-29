@@ -15,9 +15,9 @@ export const buttonVariants = tv({
       success: "bg-success text-success-foreground hover:bg-success/90",
       warning: "bg-feedback-warning-bg text-feedback-warning-text",
       destructive:
-        "bg-surface-error-primary hover:bg-surface-error-primary/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 text-text-on-brand",
+        "bg-feedback-error-border hover:bg-feedback-error-border/90 text-text-on-brand",
       destructiveSecondary:
-        "bg-feedback-error-bg hover:bg-feedback-error-bg/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 text-code-error",
+        "bg-feedback-error-bg hover:bg-feedback-error-bg/90 text-code-error",
       outline:
         "bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 border",
       secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",

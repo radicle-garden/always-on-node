@@ -34,16 +34,18 @@
 </script>
 
 <div class="flex flex-col gap-2">
-  <div class="flex items-center justify-between">
+  <div class="flex items-center">
     <div class="txt-heading-l line-clamp-1 font-medium">Seeded repos</div>
     {#if showCreateDialog && nodeId}
-      <div class="flex items-center gap-2">
+      <div class="ml-auto flex items-center gap-2">
         <Input
           type="text"
           bind:value={filter}
           placeholder="Filter repos…"
           class="hidden md:block" />
-        <NewRepositoryDialog {nodeId} />
+        <div>
+          <NewRepositoryDialog {nodeId} />
+        </div>
       </div>
     {/if}
   </div>

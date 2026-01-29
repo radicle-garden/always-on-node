@@ -12,7 +12,7 @@
 </script>
 
 <div
-  class="flex w-full flex-col items-center justify-center bg-surface-canvas p-8 sm:w-100">
+  class="flex w-full flex-col items-center justify-center gap-8 bg-surface-canvas p-8 sm:w-100">
   <div class="flex h-full w-full flex-col items-start justify-start gap-8">
     <LogoText />
     <div class="txt-heading-xxl">Set new password</div>

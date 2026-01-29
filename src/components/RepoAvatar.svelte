@@ -24,4 +24,10 @@
 
 {#if dataUri}
   <img style:width={styleWidth} src={dataUri} alt="Repo Avatar" />
+{:else}
+  <div
+    style:width={styleWidth}
+    style:height={styleWidth}
+    class="bg-surface-subtle">
+  </div>
 {/if}

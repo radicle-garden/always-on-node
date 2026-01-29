@@ -47,9 +47,9 @@
   successIcon={toasterSuccessIcon}
   errorIcon={toasterErrorIcon} />
 
-<div class="flex min-h-screen flex-col items-center bg-surface-base">
+<div class="flex min-h-screen flex-col items-center bg-surface-base pb-8">
   <header class="min-h-16 w-full px-4 py-2">
-    <Header user={data.user} {breadcrumbs} />
+    <Header user={data.user} {breadcrumbs} fqdn={data.fqdn} />
   </header>
   <main
     class="relative flex w-full items-center justify-center overflow-y-auto p-6 text-text-primary md:p-0">
