@@ -61,7 +61,7 @@
       {/if}
     </Button>
   </Dialog.Trigger>
-  <Dialog.Content showCloseButton={false} class="min-w-fit">
+  <Dialog.Content class="min-w-fit">
     <Dialog.Header>
       <Dialog.Title>{title}</Dialog.Title>
       <Dialog.Description>
