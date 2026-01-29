@@ -28,17 +28,17 @@
 </script>
 
 {#snippet nodeStatus()}
-  {#if nodeStatuses[nodeId].isRunning && nodeStatuses[nodeId].peers > 0}
+  {#if nodeStatuses[nodeId]?.isRunning && nodeStatuses[nodeId].peers > 0}
     <Badge variant="success">
       <Throbber />
       <span class="txt-body-s-semibold">Online</span>
     </Badge>
-  {:else if nodeStatuses[nodeId].isBooting}
+  {:else if nodeStatuses[nodeId]?.isBooting}
     <Badge variant="warning">
       <Throbber color="var(--color-badge-warning-base)" />
       <span class="txt-body-s-semibold">Booting</span>
     </Badge>
-  {:else if nodeStatuses[nodeId].isRunning && nodeStatuses[nodeId].peers === 0}
+  {:else if nodeStatuses[nodeId]?.isRunning && nodeStatuses[nodeId].peers === 0}
     <Badge variant="warning">
       <Icon name="hourglass" />
       <span class="txt-body-s-semibold">Offline</span>
@@ -58,7 +58,7 @@
         subscriptionStatus={data.subscriptionStatus}
         stripePriceId={data.stripePriceId} />
     {/if}
-    {#if nodeStatuses[nodeId].isRunning && nodeStatuses[nodeId].peers === 0}
+    {#if nodeStatuses[nodeId]?.isRunning && nodeStatuses[nodeId].peers === 0}
       <Alert.Root variant="warning">
         <Alert.Description class="flex items-start gap-1">
           <div class="mt-0.5">
@@ -81,7 +81,7 @@
         <div
           class="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
           <div class="txt-heading-xl sm:txt-heading-xxxl">Garden</div>
-          {#if isMe && nodeStatuses[nodeId]}
+          {#if isMe && nodeId && nodeStatuses[nodeId]}
             {@render nodeStatus()}
           {/if}
         </div>
@@ -98,10 +98,12 @@
           </Button>
         </div>
       </div>
-      <NodeStorage
-        {node}
-        nodeStatus={nodeStatuses[nodeId]}
-        {userMaxDiskUsageBytes} />
+      {#if nodeId && nodeStatuses[nodeId]}
+        <NodeStorage
+          {node}
+          nodeStatus={nodeStatuses[nodeId]}
+          {userMaxDiskUsageBytes} />
+      {/if}
     {/if}
   </div>
   <div class="col-span-12 flex w-full flex-col gap-8">
