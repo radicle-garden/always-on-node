@@ -400,21 +400,21 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("fonts/Booton-Regular.woff2");
+  src: url("/fonts/Booton-Regular.woff2");
 }
 
 @font-face {
   font-family: "Booton";
   font-weight: 468;
   font-display: swap;
-  src: url("fonts/Booton-Medium.woff2");
+  src: url("/fonts/Booton-Medium.woff2");
 }
 
 @font-face {
   font-family: "Booton";
   font-weight: 600;
   font-display: swap;
-  src: url("fonts/Booton-SemiBold.woff2");
+  src: url("/fonts/Booton-SemiBold.woff2");
 }
 
 @font-face {
@@ -422,7 +422,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("fonts/JetBrainsMono-Regular.woff2");
+  src: url("/fonts/JetBrainsMono-Regular.woff2");
 }
 
 @font-face {
@@ -430,21 +430,21 @@
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url("fonts/JetBrainsMono-Medium.woff2");
+  src: url("/fonts/JetBrainsMono-Medium.woff2");
 }
 
 @font-face {
   font-family: "JetBrains Mono";
   font-weight: 600;
   font-display: swap;
-  src: url("fonts/JetBrainsMono-SemiBold.woff2");
+  src: url("/fonts/JetBrainsMono-SemiBold.woff2");
 }
 
 @font-face {
   font-family: "JetBrains Mono";
   font-weight: 700;
   font-display: swap;
-  src: url("fonts/JetBrainsMono-Bold.woff2");
+  src: url("/fonts/JetBrainsMono-Bold.woff2");
 }
 
 :root {
