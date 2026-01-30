@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 import * as path from "path";
 
-import configJson from "./config.json";
+import configJson from "./config.json" with { type: "json" };
 
 const __dirname = path.resolve();
 dotenv.config({ path: path.join(__dirname, ".env"), quiet: true });

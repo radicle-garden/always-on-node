@@ -12,6 +12,10 @@ const config = {
       $types: "./src/types",
       "@http-client": "./http-client",
     },
+    csrf: {
+      trustedOrigins:
+        process.env.NODE_ENV === "test" ? ["http://localhost:3000"] : undefined,
+    },
   },
 };
 
