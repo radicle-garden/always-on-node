@@ -4,6 +4,7 @@ import {
   getUserFromSession,
   setSessionCookie,
 } from "$lib/server/services/auth";
+import { stripeService } from "$lib/server/services/stripe";
 
 import { fail, isRedirect, redirect } from "@sveltejs/kit";
 
@@ -17,10 +18,22 @@ interface LoginFormErrors {
   general?: string;
 }
 
+async function getRedirectUrl(userId: number, handle: string): Promise<string> {
+  const subscriptionResult = await stripeService.getSubscriptionStatus(userId);
+  if (subscriptionResult.success && subscriptionResult.content) {
+    const { hasSubscription } = subscriptionResult.content;
+    if (hasSubscription) {
+      return `/${handle}`;
+    }
+  }
+  return "/start-trial";
+}
+
 export const load: PageServerLoad = async ({ cookies }) => {
   const user = await getUserFromSession(cookies);
   if (user) {
-    redirect(303, `/${user.handle}`);
+    const redirectUrl = await getRedirectUrl(user.id, user.handle);
+    redirect(303, redirectUrl);
   }
   return {};
 };
@@ -60,7 +73,9 @@ export const actions = {
       }
 
       setSessionCookie(cookies, user.id, user.created_at);
-      redirect(303, `/${user.handle}`);
+
+      const redirectUrl = await getRedirectUrl(user.id, user.handle);
+      redirect(303, redirectUrl);
     } catch (err) {
       if (isRedirect(err)) {
         throw err;

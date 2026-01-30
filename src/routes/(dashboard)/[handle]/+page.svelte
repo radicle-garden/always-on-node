@@ -2,7 +2,6 @@
   import { invalidateAll } from "$app/navigation";
   import Icon from "$components/Icon.svelte";
   import NodeStorage from "$components/NodeStorage.svelte";
-  import PaymentSection from "$components/PaymentSection.svelte";
   import RepositoriesWithFilter from "$components/RepositoriesWithFilter.svelte";
   import Throbber from "$components/Throbber.svelte";
   import * as Alert from "$lib/components/ui/alert";
@@ -87,11 +86,6 @@
 
 {#if profile}
   <div class="flex w-full flex-col gap-8">
-    {#if isMe && data.user?.email_verified && !hasSubscription}
-      <PaymentSection
-        subscriptionStatus={data.subscriptionStatus}
-        stripePriceId={data.stripePriceId} />
-    {/if}
     {#if nodeStatuses[nodeId]?.isRunning && nodeStatuses[nodeId].peers === 0}
       <Alert.Root variant="warning">
         <Alert.Description class="flex items-start gap-1">
