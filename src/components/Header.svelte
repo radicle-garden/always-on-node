@@ -88,13 +88,11 @@
 {#snippet desktopMenu(user: User)}
   <DropdownMenu.Root>
     <DropdownMenu.Trigger>
-      <div class="flex items-center gap-2">
-        <div class="h-8 w-8 border border-border-subtle">
-          <img
-            style:width="2rem"
-            alt="gravatar"
-            src={gravatarURL(user.email, 128)} />
-        </div>
+      <div class="h-8 w-8 cursor-pointer border border-border-subtle">
+        <img
+          style:width="2rem"
+          alt="gravatar"
+          src={gravatarURL(user.email, 128)} />
       </div>
     </DropdownMenu.Trigger>
     <DropdownMenu.Content align="end" class="rounded-sm shadow-4">
