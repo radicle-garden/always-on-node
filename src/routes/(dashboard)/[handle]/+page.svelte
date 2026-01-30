@@ -9,6 +9,7 @@
   import { Button } from "$lib/components/ui/button";
   import type { UserProfile } from "$types/app";
 
+  import { onMount } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
 
   import type { PageData } from "./$types";
@@ -56,6 +57,22 @@
       for (const es of eventSources) {
         es.close();
       }
+    };
+  });
+
+  onMount(() => {
+    if (!isMe || !nodeId || !nodeStatuses[nodeId]?.isBooting) return;
+    const eventSource = new EventSource(
+      `/api/node-status-events?nodeId=${encodeURIComponent(nodeId)}`,
+    );
+    eventSource.addEventListener("statusChange", async () => {
+      await invalidateAll();
+    });
+    eventSource.onerror = () => {
+      eventSource.close();
+    };
+    return () => {
+      eventSource.close();
     };
   });
 </script>

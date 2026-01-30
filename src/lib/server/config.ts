@@ -24,6 +24,8 @@ export interface AppConfig {
   radicleNodeContainer: string;
   radicleHttpdContainer: string;
   nodeBootingTimeoutMs: number;
+  nodeStatusPollIntervalMs: number;
+  nodeStatusMonitorTimeoutMs: number;
   nodePreferredSeeds: string[];
   stripeSecretKey: string;
   stripeWebhookSecret: string;
@@ -66,6 +68,12 @@ export function getConfig(): AppConfig {
     nodeBootingTimeoutMs:
       Number(process.env.NODE_BOOTING_TIMEOUT_MS) ||
       configJson.nodeBootingTimeoutMs,
+    nodeStatusPollIntervalMs:
+      Number(process.env.NODE_STATUS_POLL_INTERVAL_MS) ||
+      configJson.nodeStatusPollIntervalMs,
+    nodeStatusMonitorTimeoutMs:
+      Number(process.env.NODE_STATUS_MONITOR_TIMEOUT_MS) ||
+      configJson.nodeStatusMonitorTimeoutMs,
     nodePreferredSeeds:
       process.env.NODE_PREFERRED_SEEDS?.split(",") ||
       configJson.nodePreferredSeeds,
