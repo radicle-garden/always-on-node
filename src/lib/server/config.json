@@ -15,6 +15,7 @@
   "nodeBootingTimeoutMs": 120000,
   "nodeStatusPollIntervalMs": 5000,
   "nodeStatusMonitorTimeoutMs": 120000,
+  "sseMaxListeners": 100,
   "nodePreferredSeeds": [
     "z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.xyz:8776",
     "z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo@rosa.radicle.xyz:8776"

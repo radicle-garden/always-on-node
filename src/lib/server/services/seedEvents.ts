@@ -1,8 +1,10 @@
 import { EventEmitter } from "events";
 
+import { config } from "../config";
+
 export const seedEventEmitter = new EventEmitter();
 
-seedEventEmitter.setMaxListeners(100);
+seedEventEmitter.setMaxListeners(config.sseMaxListeners);
 
 export interface SeedCompleteEvent {
   rid: string;

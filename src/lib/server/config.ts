@@ -26,6 +26,7 @@ export interface AppConfig {
   nodeBootingTimeoutMs: number;
   nodeStatusPollIntervalMs: number;
   nodeStatusMonitorTimeoutMs: number;
+  sseMaxListeners: number;
   nodePreferredSeeds: string[];
   stripeSecretKey: string;
   stripeWebhookSecret: string;
@@ -74,6 +75,8 @@ export function getConfig(): AppConfig {
     nodeStatusMonitorTimeoutMs:
       Number(process.env.NODE_STATUS_MONITOR_TIMEOUT_MS) ||
       configJson.nodeStatusMonitorTimeoutMs,
+    sseMaxListeners:
+      Number(process.env.SSE_MAX_LISTENERS) || configJson.sseMaxListeners,
     nodePreferredSeeds:
       process.env.NODE_PREFERRED_SEEDS?.split(",") ||
       configJson.nodePreferredSeeds,
