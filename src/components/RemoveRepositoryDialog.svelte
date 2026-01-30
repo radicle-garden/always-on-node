@@ -34,16 +34,17 @@
 </script>
 
 <Dialog.Root bind:open>
-  <Dialog.Trigger>
+  <Dialog.Trigger
+    class="flex min-w-30 cursor-pointer justify-end"
+    onmouseenter={() => {
+      hover = true;
+    }}
+    onmouseleave={() => {
+      hover = false;
+    }}>
     <Button
       tabindex={-1}
       variant={repo.syncing ? "warning" : "default"}
-      onmouseenter={() => {
-        hover = true;
-      }}
-      onmouseleave={() => {
-        hover = false;
-      }}
       onclick={e => {
         e.stopPropagation();
         e.preventDefault();
