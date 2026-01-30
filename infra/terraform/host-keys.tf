@@ -10,68 +10,18 @@ data "scaleway_secret_version" "host_signing_ca" {
   revision  = "latest"
 }
 
-resource "local_sensitive_file" "host_signing_ca_temp" {
-  filename        = "/tmp/host_ca_key"
-  file_permission = "600"
-  content         = base64decode(data.scaleway_secret_version.host_signing_ca.data)
-}
-
-
-resource "tls_private_key" "aon_host_key" {
-  algorithm = "ED25519"
-}
-
 resource "scaleway_secret" "aon_host_private_key" {
   name        = "aon-host-private-key"
   description = "SSH host private key for Always-On Node"
-  path = "/terraform/aon-host-private-key"
-  tags = ["radiclegarden", "always-on-node"]
-}
-
-resource "scaleway_secret_version" "aon_host_private_key" {
-  secret_id = scaleway_secret.aon_host_private_key.id
-  data      = tls_private_key.aon_host_key.private_key_openssh
+  path        = "/terraform/aon-host-private-key"
+  tags        = ["radiclegarden", "always-on-node"]
 }
 
 resource "scaleway_secret" "aon_host_public_key" {
   name        = "aon-host-public-key"
   description = "SSH host public key for Always-On Node"
-  path = "/terraform/aon-host-public-key"
-  tags = ["radiclegarden", "always-on-node"]
-}
-
-resource "scaleway_secret_version" "aon_host_public_key" {
-  secret_id = scaleway_secret.aon_host_public_key.id
-  data      = tls_private_key.aon_host_key.public_key_openssh
-}
-
-# Temporary local file for certificate signing (will be cleaned up)
-resource "local_file" "aon_host_public_key_temp" {
-  filename        = "/tmp/aon_host_key.pub"
-  file_permission = "600"
-  content         = tls_private_key.aon_host_key.public_key_openssh
-}
-
-resource "null_resource" "aon_generate_ssh_cert" {
-  depends_on = [
-    local_file.aon_host_public_key_temp,
-    local_sensitive_file.host_signing_ca_temp
-  ]
-  provisioner "local-exec" {
-    command = <<EOT
-      ssh-keygen \
-        -s ${local_sensitive_file.host_signing_ca_temp.filename} \
-        -I "always-on-node" \
-        -h \
-        -n app.${var.garden_domain},app-staging.${var.garden_domain},nodes.${var.garden_domain},nodes-staging.${var.garden_domain} \
-        ${local_file.aon_host_public_key_temp.filename}
-    EOT
-  }
-}
-
-data "local_file" "aon_host_cert" {
-  depends_on = [null_resource.aon_generate_ssh_cert]
-  filename   = "/tmp/aon_host_key-cert.pub"
+  path        = "/terraform/aon-host-public-key"
+  tags        = ["radiclegarden", "always-on-node"]
 }
 
 resource "scaleway_secret" "aon_host_cert" {
@@ -80,7 +30,17 @@ resource "scaleway_secret" "aon_host_cert" {
   path        = "/terraform/aon-host-certificate"
 }
 
-resource "scaleway_secret_version" "aon_host_cert" {
+data "scaleway_secret_version" "aon_host_private_key" {
+  secret_id = scaleway_secret.aon_host_private_key.id
+  revision  = "latest"
+}
+
+data "scaleway_secret_version" "aon_host_public_key" {
+  secret_id = scaleway_secret.aon_host_public_key.id
+  revision  = "latest"
+}
+
+data "scaleway_secret_version" "aon_host_cert" {
   secret_id = scaleway_secret.aon_host_cert.id
-  data      = data.local_file.aon_host_cert.content
+  revision  = "latest"
 }

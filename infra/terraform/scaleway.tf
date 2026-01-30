@@ -126,11 +126,11 @@ resource "scaleway_instance_server" "aon" {
     # ssh_genkeytypes: [rsa, ecdsa, ed25519]
     ssh_keys:
       ed25519_private: |
-        ${indent(8, chomp(tls_private_key.aon_host_key.private_key_openssh))}
+        ${indent(8, chomp(base64decode(data.scaleway_secret_version.aon_host_private_key.data)))}
       ed25519_public: |
-        ${chomp(tls_private_key.aon_host_key.public_key_openssh)}
+        ${chomp(base64decode(data.scaleway_secret_version.aon_host_public_key.data))}
       ed25519_certificate: |
-        ${chomp(base64decode(scaleway_secret_version.aon_host_cert.data))}
+        ${chomp(base64decode(data.scaleway_secret_version.aon_host_cert.data))}
     ssh_publish_hostkeys:
       blacklist: [rsa]
       enabled: true
@@ -200,7 +200,7 @@ resource "scaleway_instance_server" "aon" {
         permissions: '0644'
         owner: root:root
         content: |
-          ${indent(10, chomp(base64decode(scaleway_secret_version.aon_host_cert.data)))}
+          ${indent(10, chomp(base64decode(data.scaleway_secret_version.aon_host_cert.data)))}
       - path: /etc/environment
         content: |
           DATABASE_URL="postgres://${base64decode(data.scaleway_secret_version.pg_user.data)}:${base64decode(data.scaleway_secret_version.pg_pass.data)}@${scaleway_rdb_instance.main.private_ip[0].address}:5432/${scaleway_rdb_database.main.name}"
