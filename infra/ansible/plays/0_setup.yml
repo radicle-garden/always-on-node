@@ -29,7 +29,6 @@
     - role: geerlingguy.nodejs
     - role: geerlingguy.security
     - role: geerlingguy.firewall
-    - role: caddy_ansible.caddy_ansible
 
   tasks:
     - name: Run the equivalent of "apt-get update" as a separate step
