@@ -4,20 +4,7 @@ import { sveltekit } from "@sveltejs/kit/vite";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  plugins: [
-    // Fix for vitest v4 setting base to '/'. For more details:
-    // https://github.com/sveltejs/kit/issues/13376#issuecomment-3660772123
-    {
-      name: "reset-base",
-      config() {
-        return {
-          base: "",
-        };
-      },
-    },
-    tailwindcss(),
-    sveltekit(),
-  ],
+  plugins: [tailwindcss(), sveltekit()],
   test: {
     expect: { requireAssertions: true },
     projects: [
