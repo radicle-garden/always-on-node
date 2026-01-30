@@ -40,7 +40,7 @@
     for (const repo of syncingRepos) {
       subscribedRids.add(repo.rid);
       const eventSource = new EventSource(
-        `/api/seed-events?rid=${encodeURIComponent(repo.rid)}&nodeId=${encodeURIComponent(nodeId)}`,
+        `/api/events/seed?rid=${encodeURIComponent(repo.rid)}&nodeId=${encodeURIComponent(nodeId)}`,
       );
       eventSource.addEventListener("seedComplete", async () => {
         eventSource.close();
@@ -63,7 +63,7 @@
   onMount(() => {
     if (!isMe || !nodeId || !nodeStatuses[nodeId]?.isBooting) return;
     const eventSource = new EventSource(
-      `/api/node-status-events?nodeId=${encodeURIComponent(nodeId)}`,
+      `/api/events/node-status?nodeId=${encodeURIComponent(nodeId)}`,
     );
     eventSource.addEventListener("statusChange", async () => {
       await invalidateAll();
