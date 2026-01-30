@@ -2,6 +2,8 @@
   hosts: all
   become: true
   gather_facts: yes
+  vars_files:
+    - ../environments/{{ deploy_env | default('production') }}.yml
   pre_tasks:
     - name: Gather the package facts
       ansible.builtin.package_facts:
@@ -26,6 +28,8 @@
   hosts: all
   become_user: "{{ system_username }}"
   become: true
+  vars_files:
+    - ../environments/{{ deploy_env | default('production') }}.yml
   tasks:
     - name: Debug running user
       debug:

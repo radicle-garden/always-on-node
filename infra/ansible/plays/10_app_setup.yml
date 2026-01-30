@@ -6,6 +6,8 @@
   gather_facts: no
   become: true
   become_user: "{{ system_username }}"
+  vars_files:
+    - ../environments/{{ deploy_env | default('production') }}.yml
   tasks:
     # Setup Application Environment
     - name: Create necessary directories
@@ -71,6 +73,8 @@
   gather_facts: no
   become: true
   become_user: "{{ system_username }}"
+  vars_files:
+    - ../environments/{{ deploy_env | default('production') }}.yml
   tasks:
     - name: "install additional packages for dev env"
       become: true
