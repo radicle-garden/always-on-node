@@ -1,3 +1,11 @@
+- name: Setup caddy
+  hosts: all
+  become: true
+  vars_files:
+    - ../environments/{{ deploy_env | default('production') }}.yml
+  roles:
+    - role: caddy_ansible.caddy_ansible
+
 - name: Deploy apps
   hosts: "{{ deploy_env | default('production') }}"
   gather_facts: yes
@@ -10,8 +18,6 @@
     releases_dir: "{{ app_dir }}/releases"
     release_dir: "{{ releases_dir }}/{{ deploy_date }}_{{ git_commit_hash | default('unknown') }}"
     current_link: "{{ app_dir }}/current"
-  roles:
-    - role: caddy_ansible.caddy_ansible
   tasks:
     - name: Create the environment file
       template:
