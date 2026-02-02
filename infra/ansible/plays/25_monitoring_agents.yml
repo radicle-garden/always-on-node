@@ -43,46 +43,12 @@
         - reload systemd
         - restart systemd_exporter
 
-    - name: Create cAdvisor Quadlet
-      containers.podman.podman_container:
-        name: cadvisor
-        image: "gcr.io/cadvisor/cadvisor:v0.49.1"
-        command:
-          - "housekeeping_interval=10s"
-        ports:
-          - "{{ cadvisor_port }}:8080"
-        volumes:
-          - "/run/user/{{ unix_user_id }}/podman/podman.sock:/var/run/docker.sock:ro"
-        state: quadlet
-        restart_policy: on-failure
-        log_driver: journald
-        recreate: true
-        quadlet_options:
-          - "AutoUpdate=local"
-          - |
-            [Unit]
-            After=podman-user-wait-network-online.service
-
-            [Install]
-            WantedBy=default.target
-      notify:
-        - reload systemd
-        - restart cadvisor
-
     - name: Ensure systemd has reloaded services
       meta: flush_handlers
 
     - name: Enable systemd monitoring services
       systemd:
         name: "systemd_exporter.service"
-        enabled: yes
-        state: started
-        scope: user
-        daemon_reload: yes
-
-    - name: Enable container monitoring services
-      systemd:
-        name: "cadvisor.service"
         enabled: yes
         state: started
         scope: user
@@ -98,11 +64,65 @@
         name: "systemd_exporter.service"
         state: restarted
         scope: user
+
+- name: Install cAdvisor
+  hosts: "{{ deploy_env | default('production') }}"
+  become: true
+  vars_files:
+    - ../environments/{{ deploy_env | default('production') }}.yml
+  tasks:
+    - name: Create cAdvisor Quadlet
+      containers.podman.podman_container:
+        name: cadvisor
+        image: "gcr.io/cadvisor/cadvisor:v0.55.1"
+        command:
+          - "--podman=unix:///var/run/podman/podman.sock"
+          - "--housekeeping_interval=10s"
+          - "--store_container_labels=false"
+          - "--whitelisted_container_labels=component,app,garden_user,node_id"
+        ports:
+          - "{{ cadvisor_port }}:8080"
+        volumes:
+          - "/:/rootfs:ro"
+          - "/dev/disk/:/dev/disk:ro"
+          - "/etc/machine-id:/etc/machine-id:ro"
+          - "/var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro"
+          - "/var/run:/var/run:rw"
+          - "/sys:/sys:ro"
+          - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+          - "/var/lib/containers:/var/lib/containers:ro"
+          - "/run/user/{{ unix_user_id }}/podman/podman.sock:/var/run/podman/podman.sock:ro"
+        privileged: true
+        state: quadlet
+        restart_policy: on-failure
+        log_driver: journald
+        recreate: true
+        quadlet_options:
+          - "AutoUpdate=local"
+          - |
+            [Unit]
+            After=podman-user-wait-network-online.service
+
+            [Install]
+            WantedBy=default.target
+      notify:
+        - reload systemd
+        - restart cadvisor
+    - name: Enable container monitoring services
+      systemd:
+        name: "cadvisor.service"
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+  handlers:
+    - name: reload systemd
+      systemd:
+        daemon_reload: yes
     - name: restart cadvisor
       systemd:
         name: "cadvisor.service"
         state: restarted
-        scope: user
 
 - name: Install Alloy
   hosts: "{{ deploy_env | default('production') }}"
