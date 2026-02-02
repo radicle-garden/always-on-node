@@ -517,6 +517,12 @@ html {
   font: var(--txt-heading-xxxl);
 }
 
+@media (min-width: 640px) {
+  .sm\:txt-heading-xxxl {
+    font: var(--txt-heading-xxxl);
+  }
+}
+
 .txt-body-s-regular {
   font: var(--txt-body-s-regular);
 }
