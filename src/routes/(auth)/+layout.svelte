@@ -7,7 +7,7 @@
   <img
     src="/img/bg/auth.png"
     alt="Background"
-    class="absolute top-0 left-0 h-screen w-screen object-cover" />
+    class="pointer-events-none absolute top-0 left-0 h-screen w-screen object-cover select-none" />
   <div class="relative z-10 w-full sm:mx-0 sm:w-auto">
     {@render children()}
   </div>
