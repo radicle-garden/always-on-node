@@ -114,7 +114,9 @@ jobs:
             -i ${{ env.DEPLOY_ENV }}.inventory \
             --vault-password-file .vault-password \
             --extra-vars "deploy_archive=${{ github.workspace }}/deploy.tar.gz git_commit_hash=${{ steps.git.outputs.commit_hash }} deploy_env=${{ env.DEPLOY_ENV }}" \
-            plays/20_app_deploy.yml plays/25_monitoring_agents.yml
+            plays/5_caddy.yml \
+            plays/20_app_deploy.yml \
+            plays/25_monitoring_agents.yml
 
       - name: Clean up
         if: always()

@@ -1,0 +1,7 @@
+- name: Setup caddy
+  hosts: all
+  become: true
+  vars_files:
+    - ../environments/{{ deploy_env | default('production') }}.yml
+  roles:
+    - role: caddy_ansible.caddy_ansible

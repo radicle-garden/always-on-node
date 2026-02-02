@@ -91,13 +91,13 @@ build {
   }
 
   provisioner "ansible-local" {
-    playbook_files    = ["infra/ansible/plays/0_setup.yml"]
+    playbook_files    = source.type == "vagrant" ? ["infra/ansible/plays/0_setup.yml", "infra/ansible/plays/5_caddy.yml"] : ["infra/ansible/plays/0_setup.yml"]
     playbook_dir      = "infra/ansible"
     role_paths        = ["infra/ansible/roles"]
     group_vars        = "infra/ansible/group_vars"
     galaxy_file       = "infra/ansible/roles/requirements.yml"
     inventory_file    = source.type == "vagrant" ? "infra/ansible/dev.inventory" : "infra/ansible/prod.inventory"
-    extra_arguments   = source.type == "vagrant" ? [] : ["--vault-password-file .vault-password"]
+    extra_arguments   = source.type == "vagrant" ? ["--extra-vars", "\"deploy_env=dev\""] : ["--vault-password-file .vault-password"]
 
   }
 
@@ -107,7 +107,7 @@ build {
     role_paths        = ["infra/ansible/roles"]
     group_vars        = "infra/ansible/group_vars"
     inventory_file    = source.type == "vagrant" ? "infra/ansible/dev.inventory" : "infra/ansible/prod.inventory"
-    extra_arguments   = source.type == "vagrant" ? [] : ["--vault-password-file .vault-password"]
+    extra_arguments   = source.type == "vagrant" ? ["--extra-vars", "\"deploy_env=dev\""] : ["--vault-password-file .vault-password"]
   }
 
   post-processors {
