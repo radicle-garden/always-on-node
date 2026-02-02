@@ -31,6 +31,7 @@ export interface AppConfig {
   stripeSecretKey: string;
   stripeWebhookSecret: string;
   stripePriceId: string;
+  metricsPort?: number;
   stripeApiBase?: string;
   public: {
     defaultHttpdApiHostname: string;
@@ -83,6 +84,9 @@ export function getConfig(): AppConfig {
     stripeSecretKey: process.env.STRIPE_SECRET_SERVER_SIDE_KEY || "placeholder",
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
     stripePriceId: process.env.STRIPE_PRICE_ID || "",
+    metricsPort: process.env.METRICS_PORT
+      ? parseInt(process.env.METRICS_PORT)
+      : undefined,
     stripeApiBase: process.env.STRIPE_API_BASE,
     public: {
       defaultHttpdApiHostname:

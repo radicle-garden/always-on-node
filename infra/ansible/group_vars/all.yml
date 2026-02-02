@@ -26,3 +26,4 @@ firewall_allowed_tcp_ports:
   - "8776"
   - "5432"
   - "7000:8000"
+  - "9091"

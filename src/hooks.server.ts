@@ -1,5 +1,6 @@
 import { initializeDatabase } from "$lib/server/db";
 import { createServiceLogger } from "$lib/server/logger";
+import { startMetricsServer, stopMetricsServer } from "$lib/server/metrics";
 import { getUserFromSession } from "$lib/server/services/auth";
 import { ensureNodeActiveForUser } from "$lib/server/services/nodes";
 import { stripeService } from "$lib/server/services/stripe";
@@ -9,6 +10,7 @@ import type { Handle, ServerInit } from "@sveltejs/kit";
 const log = createServiceLogger("Hooks");
 
 export const init: ServerInit = async () => {
+  startMetricsServer();
   await initializeDatabase();
   const usersWithActiveSubscriptions =
     await stripeService.getUsersWithActiveSubscription();
@@ -27,6 +29,15 @@ export const init: ServerInit = async () => {
     }
   }
 };
+
+function shutdown() {
+  log.info("Shutting down");
+  stopMetricsServer();
+  process.exit(0);
+}
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
 export const handle: Handle = async ({ event, resolve }) => {
   const user = await getUserFromSession(event.cookies);
