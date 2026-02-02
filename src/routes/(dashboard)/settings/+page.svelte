@@ -88,7 +88,7 @@
             <Icon name="open-external" />
           </Button>
         {:else}
-          <Button onclick={handleCheckout}>
+          <Button onclick={handleCheckout} variant="primary">
             Start your free trial
             <Icon name="open-external" />
           </Button>
