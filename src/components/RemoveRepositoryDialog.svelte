@@ -35,7 +35,7 @@
 
 <Dialog.Root bind:open>
   <Dialog.Trigger
-    class="flex min-w-30 cursor-pointer justify-end"
+    class="flex w-26 cursor-pointer"
     onmouseenter={() => {
       hover = true;
     }}
@@ -44,18 +44,18 @@
     }}>
     <Button
       tabindex={-1}
-      variant={repo.syncing ? "warning" : "default"}
+      variant={hover ? "destructive" : repo.syncing ? "warning" : "default"}
       onclick={e => {
         e.stopPropagation();
         e.preventDefault();
         open = true;
-      }}>
+      }}
+      class="w-full max-w-26">
       {#if hover}
-        <Icon name="cross" />
         Unseed
       {:else if repo.syncing}
         <Icon name="hourglass" />
-        Fetching…
+        Fetching
       {:else}
         <Icon name="seed-filled" />
         Seeding
