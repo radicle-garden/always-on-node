@@ -7,6 +7,6 @@ import type { Actions } from "./$types";
 export const actions = {
   default: async ({ cookies }) => {
     clearSessionCookie(cookies);
-    redirect(303, "/login");
+    redirect(303, "/");
   },
 } satisfies Actions;

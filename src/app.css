@@ -521,6 +521,9 @@ html {
   .sm\:txt-heading-xxxl {
     font: var(--txt-heading-xxxl);
   }
+  .sm\:txt-heading-xxl {
+    font: var(--txt-heading-xxl);
+  }
 }
 
 .txt-body-s-regular {

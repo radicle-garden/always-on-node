@@ -19,7 +19,7 @@ export const buttonVariants = tv({
       destructiveSecondary:
         "bg-feedback-error-bg hover:bg-feedback-error-bg/90 text-code-error",
       outline:
-        "bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 border",
+        "bg-transparent hover:text-text-primary text-text-tertiary border border-border-subtle hover:border-border-mid",
       secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
       primary:
         "bg-surface-brand-secondary text-text-on-brand hover:bg-brand-hover",
