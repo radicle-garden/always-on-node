@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
 
   import type { RepoInfo } from "../routes/(dashboard)/[handle]/+page.server";
@@ -31,18 +32,38 @@
         )
       : repositories,
   );
+
+  function clearFilter() {
+    filter = "";
+  }
 </script>
 
-<div class="flex flex-col gap-2">
+{#snippet actionRow()}
+  <Input
+    type="text"
+    bind:value={filter}
+    placeholder="Filter repos…"
+    class="pr-8" />
+  {#if filter}
+    <Button
+      type="button"
+      onclick={clearFilter}
+      variant="ghost"
+      size="icon"
+      class="absolute top-1/2 right-0 -translate-y-1/2 cursor-pointer">
+      <Icon name="cross" />
+    </Button>
+  {/if}
+{/snippet}
+
+<div class="flex flex-col gap-3">
   <div class="flex items-center">
     <div class="txt-heading-l line-clamp-1 font-medium">Seeded repos</div>
     {#if showCreateDialog && nodeId}
       <div class="ml-auto flex items-center gap-2">
-        <Input
-          type="text"
-          bind:value={filter}
-          placeholder="Filter repos…"
-          class="hidden md:block" />
+        <div class="relative hidden md:block">
+          {@render actionRow()}
+        </div>
         <div>
           <NewRepositoryDialog
             {nodeId}
@@ -51,8 +72,8 @@
       </div>
     {/if}
   </div>
-  <div class="flex items-center gap-2 md:hidden">
-    <Input type="text" bind:value={filter} placeholder="Filter repos…" />
+  <div class="relative flex items-center gap-2 md:hidden">
+    {@render actionRow()}
   </div>
   <div class="flex flex-col">
     {#if filteredRepositories.length === 0}
@@ -60,10 +81,20 @@
         class="flex w-full flex-col items-center justify-center gap-3 border border-border-subtle bg-surface-canvas py-10 text-center">
         <Icon name="seed" />
         <div class="flex flex-col gap-2">
-          <div class="txt-heading-m">No repos yet</div>
-          <div class="txt-body-m-regular text-text-secondary">
-            There aren't any repos in your Garden yet
-          </div>
+          {#if filter}
+            <div class="txt-heading-m">No repos</div>
+            <div class="txt-body-m-regular text-text-secondary">
+              There aren't any repos to show
+            </div>
+            <div class="mt-1">
+              <Button onclick={clearFilter}>Clear filter</Button>
+            </div>
+          {:else}
+            <div class="txt-heading-m">No repos yet</div>
+            <div class="txt-body-m-regular text-text-secondary">
+              There aren't any repos in your Garden yet
+            </div>
+          {/if}
         </div>
       </div>
     {/if}
@@ -79,4 +110,13 @@
       </div>
     {/each}
   </div>
+  {#if filter && filteredRepositories.length > 0}
+    <div class="txt-body-m-medium flex items-center justify-center gap-2">
+      <!-- prettier-ignore -->
+      <span>
+        Showing repos containing "<span class="txt-body-m-semibold">{filter}</span>"
+      </span>
+      <Button onclick={clearFilter}>Clear filter</Button>
+    </div>
+  {/if}
 </div>
