@@ -44,7 +44,9 @@
           placeholder="Filter repos…"
           class="hidden md:block" />
         <div>
-          <NewRepositoryDialog {nodeId} />
+          <NewRepositoryDialog
+            {nodeId}
+            existingRids={repositories.map(r => r.rid)} />
         </div>
       </div>
     {/if}

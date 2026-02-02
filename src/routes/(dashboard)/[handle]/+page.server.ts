@@ -214,6 +214,16 @@ export const actions = {
 
     const fullRid = `${parsedRid.prefix}${parsedRid.pubkey}`;
 
+    const seededResult = await getSeededReposForNode(nodeId);
+    if (seededResult.success && seededResult.content) {
+      const alreadySeeded = seededResult.content.some(
+        r => r.seeding && r.repository_id === fullRid,
+      );
+      if (alreadySeeded) {
+        return fail(400, { error: "This repository is already seeded" });
+      }
+    }
+
     const result = await seedRepo(nodeId, fullRid, success => {
       import("$lib/server/services/seedEvents").then(({ emitSeedComplete }) => {
         emitSeedComplete({ rid: fullRid, nodeId, success });

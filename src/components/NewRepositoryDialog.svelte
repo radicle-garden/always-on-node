@@ -4,17 +4,26 @@
   import { Button } from "$lib/components/ui/button";
   import * as Dialog from "$lib/components/ui/dialog";
   import { Input } from "$lib/components/ui/input";
-  import { truncateText } from "$lib/utils";
+  import { parseRepositoryId, truncateText } from "$lib/utils";
 
   import { toast } from "svelte-sonner";
 
   import Icon from "./Icon.svelte";
 
-  let { nodeId }: { nodeId: string } = $props();
+  let { nodeId, existingRids }: { nodeId: string; existingRids: string[] } =
+    $props();
 
   let rid = $state("");
   let open = $state(false);
   let isSubmitting = $state(false);
+
+  let isDuplicate = $derived.by(() => {
+    if (!rid) return false;
+    const parsed = parseRepositoryId(rid);
+    if (!parsed) return false;
+    const normalizedRid = `${parsed.prefix}${parsed.pubkey}`;
+    return existingRids.includes(normalizedRid);
+  });
 
   function waitForSeedCompletion(seededRid: string): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -95,11 +104,19 @@
           users on Radicle.
         </div>
         <input type="hidden" name="nodeId" value={nodeId} />
-        <Input
-          type="text"
-          name="rid"
-          placeholder="Enter repository ID (rad:…)"
-          bind:value={rid} />
+        <div class="flex flex-col gap-1">
+          <Input
+            type="text"
+            name="rid"
+            placeholder="Enter repository ID (rad:…)"
+            bind:value={rid}
+            class={isDuplicate ? "border-feedback-error-border" : ""} />
+          {#if isDuplicate}
+            <div class="text-sm text-feedback-error-text">
+              This repository is already seeded
+            </div>
+          {/if}
+        </div>
       </Dialog.Description>
       <Dialog.Footer class="grid grid-cols-2 gap-2">
         <Button
@@ -110,7 +127,10 @@
           }}>
           Cancel
         </Button>
-        <Button variant="primary" type="submit" disabled={!rid || isSubmitting}>
+        <Button
+          variant="primary"
+          type="submit"
+          disabled={!rid || isSubmitting || isDuplicate}>
           {isSubmitting ? "Adding…" : "Add"}
         </Button>
       </Dialog.Footer>
