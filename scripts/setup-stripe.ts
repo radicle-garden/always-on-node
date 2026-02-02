@@ -10,6 +10,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_SERVER_SIDE_KEY || "", {
   apiVersion: "2026-01-28.clover",
 });
 
+const PRODUCT_NAME = "Radicle Garden";
+
 interface SetupResult {
   productId: string;
   priceId: string;
@@ -21,7 +23,7 @@ async function setupStripe(): Promise<SetupResult> {
   console.log("🚀 Setting up Stripe...\n");
 
   const existingProducts = await stripe.products.search({
-    query: 'name:"Always-On Node Subscription"',
+    query: `name:"${PRODUCT_NAME}"`,
   });
 
   let product: Stripe.Product;
@@ -30,8 +32,8 @@ async function setupStripe(): Promise<SetupResult> {
     console.log(`✅ Found existing product: ${product.id}`);
   } else {
     product = await stripe.products.create({
-      name: "Always-On Node Subscription",
-      description: "Monthly subscription for hosted Radicle node",
+      name: PRODUCT_NAME,
+      description: `Monthly subscription for ${PRODUCT_NAME} with 7-day trial`,
       metadata: {
         environment: process.env.NODE_ENV || "development",
       },
@@ -56,12 +58,12 @@ async function setupStripe(): Promise<SetupResult> {
         interval: "month",
         trial_period_days: 7,
       },
-      unit_amount: 1000, // 10 EUR in cents.
+      unit_amount: 499, // 4.99 EUR in cents.
       metadata: {
         environment: process.env.NODE_ENV || "development",
       },
     });
-    console.log(`✅ Created price: ${price.id} (€10/month with 7-day trial)`);
+    console.log(`✅ Created price: ${price.id} (€4.99/month with 7-day trial)`);
   }
 
   const webhookUrl =
