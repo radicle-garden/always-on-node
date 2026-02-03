@@ -90,5 +90,5 @@ export function gravatarURL(email: string, size?: number): string {
   const address = email.trim().toLowerCase();
   const hash = md5(address);
 
-  return `https://www.gravatar.com/avatar/${hash}${size ? `?s=${size}px` : ""}`;
+  return `https://www.gravatar.com/avatar/${hash}?d=404${size ? `&s=${size}px` : ""}`;
 }

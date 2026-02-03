@@ -1,10 +1,10 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
   import { resolve } from "$app/paths";
+  import Avatar from "$components/Avatar.svelte";
   import Logo from "$components/Logo.svelte";
   import * as Drawer from "$lib/components/ui/drawer";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-  import { gravatarURL } from "$lib/utils";
   import type { User } from "$types/app";
 
   import Icon from "./Icon.svelte";
@@ -32,21 +32,24 @@
   <Drawer.Root bind:open={isMobileMenuOpen}>
     <Drawer.Trigger>
       <div class="flex items-center gap-2">
-        <div class="h-8 w-8 border border-border-subtle">
-          <img
-            style:width="2rem"
-            alt="gravatar"
-            src={gravatarURL(user.email, 128)} />
+        <div class="h-7 w-7">
+          <Avatar
+            email={user.email}
+            username={user.handle}
+            gravatarSize={128} />
         </div>
       </div>
     </Drawer.Trigger>
     <Drawer.Content class="p-3 shadow-4">
       <div class="flex flex-col gap-3">
         <div class="flex max-w-73.5 items-center gap-2.5">
-          <img
-            class="h-16 w-16 border border-border-subtle"
-            src={gravatarURL(user.email, 256)}
-            alt="gravatar" />
+          <div class="h-16 w-16 overflow-hidden rounded-md">
+            <Avatar
+              email={user.email}
+              username={user.handle}
+              gravatarSize={256}
+              class="txt-heading-xxxl" />
+          </div>
           <div class="flex flex-col gap-1">
             <div class="txt-heading-m line-clamp-1 break-all text-text-primary">
               {user.handle}.{fqdn}
@@ -88,20 +91,20 @@
 {#snippet desktopMenu(user: User)}
   <DropdownMenu.Root>
     <DropdownMenu.Trigger>
-      <div class="h-8 w-8 cursor-pointer border border-border-subtle">
-        <img
-          style:width="2rem"
-          alt="gravatar"
-          src={gravatarURL(user.email, 128)} />
+      <div class="h-7 w-7 cursor-pointer">
+        <Avatar email={user.email} username={user.handle} gravatarSize={112} />
       </div>
     </DropdownMenu.Trigger>
     <DropdownMenu.Content align="end" class="rounded-sm shadow-4">
       <div class="flex flex-col gap-3">
         <div class="flex max-w-73.5 items-center gap-2.5">
-          <img
-            class="h-16 w-16 border border-border-subtle"
-            src={gravatarURL(user.email, 256)}
-            alt="gravatar" />
+          <div class="h-16 w-16 overflow-hidden rounded-md">
+            <Avatar
+              email={user.email}
+              username={user.handle}
+              gravatarSize={256}
+              class="txt-heading-xxxl" />
+          </div>
           <div class="flex flex-col gap-1">
             <div class="txt-heading-m line-clamp-1 break-all text-text-primary">
               {user.handle}.{fqdn}
@@ -138,7 +141,7 @@
   </DropdownMenu.Root>
 {/snippet}
 
-<div class="flex items-center justify-between">
+<div class="flex items-center">
   <div class="flex items-center gap-1.5 text-text-tertiary">
     <a href={resolve("/")}>
       <Logo />
@@ -154,7 +157,7 @@
   </div>
   <div class="ml-auto">
     {#if isLoggedIn && user}
-      <div class="hidden sm:block">
+      <div class="hidden max-h-7 sm:block">
         {@render desktopMenu(user)}
       </div>
       <div class="block sm:hidden">
