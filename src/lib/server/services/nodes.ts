@@ -2,7 +2,7 @@ import { Buffer } from "buffer";
 import { and, eq } from "drizzle-orm";
 import { execa } from "execa";
 import fs from "fs";
-import { readFile, readdir, rename, writeFile } from "fs/promises";
+import { readFile, writeFile } from "fs/promises";
 import { base58btc } from "multiformats/bases/base58";
 import path from "path";
 
@@ -130,16 +130,20 @@ function parseSeedCommandResult(
 async function createNode(user: User): Promise<Node | null> {
   const nodeAlias = `${user.handle}_seed`;
 
-  const temporaryRadHome = path.resolve(
-    config.profileStoragePath,
-    `radicle_${nodeAlias}`,
-  );
+  const radHome = getRadHome(user.handle);
+  if (!radHome) {
+    log.warn("Failed to get RAD_HOME for user", { handle: user.handle });
+    return null;
+  }
+
+  fs.mkdirSync(radHome, { recursive: true });
+
   const radBinary = config.radBinaryPath;
 
   const env = {
     ...process.env,
     RAD_PASSPHRASE: "",
-    RAD_HOME: temporaryRadHome,
+    RAD_HOME: radHome,
   };
 
   try {
@@ -169,20 +173,6 @@ async function createNode(user: User): Promise<Node | null> {
         .returning();
 
       const radPort = await assignAvailablePort(persistedNode);
-
-      const radHome = getRadHome(user.handle);
-      if (!radHome) {
-        log.warn("Failed to get RAD_HOME for user", { handle: user.handle });
-        return null;
-      }
-
-      fs.mkdirSync(radHome, { recursive: true });
-      const files = await readdir(temporaryRadHome);
-      await Promise.all(
-        files.map(file =>
-          rename(path.join(temporaryRadHome, file), path.join(radHome, file)),
-        ),
-      );
 
       const configResult = await getConfigForNode(persistedNode.node_id);
       if (!configResult.success) {
