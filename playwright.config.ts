@@ -7,6 +7,8 @@ import { defineConfig, devices } from "@playwright/test";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, ".env.test"), quiet: true });
 
+const webserverPort = parseInt(process.env.PLAYWRIGHT_WEBSERVER_PORT || "3000");
+
 export default defineConfig({
   testDir: "tests/e2e",
   fullyParallel: false,
@@ -16,7 +18,7 @@ export default defineConfig({
   reporter: "list",
 
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: `http://localhost:${webserverPort}`,
     trace: "on-first-retry",
   },
 
@@ -29,7 +31,7 @@ export default defineConfig({
 
   webServer: {
     command: "pnpm run build && pnpm run preview",
-    port: 3000,
+    port: webserverPort,
     reuseExistingServer: false,
   },
 });

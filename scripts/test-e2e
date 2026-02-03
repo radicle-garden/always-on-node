@@ -21,10 +21,37 @@ set -a
 source .env.test
 set +a
 
+cleanup_webserver() {
+  if command -v lsof &> /dev/null; then
+    local pids=$(lsof -ti:${PLAYWRIGHT_WEBSERVER_PORT} 2>/dev/null || true)
+    if [ -n "$pids" ]; then
+      echo "Killing processes on port ${PLAYWRIGHT_WEBSERVER_PORT}: $pids"
+      kill $pids 2>/dev/null || true
+      sleep 1
+      kill -9 $pids 2>/dev/null || true
+    fi
+  fi
+}
+
+cleanup_containers() {
+  local containers=$($CONTAINER_CMD ps -a --filter "name=$TEST_DB_CONTAINER_NAME" --filter "name=$STRIPE_MOCK_CONTAINER_NAME" -q 2>/dev/null || true)
+
+  if [ -n "$containers" ]; then
+    echo "Cleaning up lingering test containers..."
+    if ! output=$($CONTAINER_CMD compose --env-file .env.test -f docker-compose.test.yml down -v 2>&1); then
+      echo "$output"
+      return 1
+    fi
+  fi
+}
+
 setup_services() {
+  cleanup_webserver
+  cleanup_containers
+
   local output
 
-  if ! output=$($CONTAINER_CMD compose -f docker-compose.test.yml up -d 2>&1); then
+  if ! output=$($CONTAINER_CMD compose --env-file .env.test -f docker-compose.test.yml up -d 2>&1); then
     echo "$output"
     exit 1
   fi
@@ -54,12 +81,10 @@ setup_services() {
 }
 
 teardown_services() {
-  if ! output=$($CONTAINER_CMD compose -f docker-compose.test.yml down -v 2>&1); then
-    echo "$output"
-    exit 1
-  fi
+  cleanup_webserver
+  cleanup_containers
 }
 
+trap teardown_services EXIT INT TERM
 setup_services
 pnpm exec playwright test "$@"
-trap teardown_services EXIT # Trap to ensure teardown runs even if tests fail
