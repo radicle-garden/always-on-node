@@ -219,6 +219,10 @@ prometheus.exporter.unix "integrations_node_exporter" {
   disable_collectors = ["ipvs", "btrfs", "infiniband", "xfs", "zfs"]
   enable_collectors = ["meminfo"]
 
+  textfile {
+    directory = "/var/lib/alloy/textfile_collector"
+  }
+
   filesystem {
     fs_types_exclude     = "^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|tmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$"
     mount_points_exclude = "^/(dev|proc|run/credentials/.+|sys|var/lib/docker/.+)($|/)"
@@ -236,7 +240,7 @@ prometheus.exporter.unix "integrations_node_exporter" {
 
 prometheus.scrape "integrations_node_exporter" {
   targets    = discovery.relabel.integrations_node_exporter.output
-  forward_to = [prometheus.relabel.integrations_node_exporter.receiver]
+  forward_to = [prometheus.relabel.folder_metrics.receiver, prometheus.relabel.integrations_node_exporter.receiver]
 }
 
 prometheus.relabel "integrations_node_exporter" {
@@ -273,6 +277,24 @@ prometheus.relabel "cadvisor_metrics" {
   }
 }
 
+prometheus.relabel "folder_metrics" {
+  forward_to = [prometheus.remote_write.metrics_service.receiver]
+
+  rule {
+    source_labels = ["__name__"]
+    regex         = "folder_size_.*"
+    action        = "keep"
+  }
+
+  rule {
+    target_label = "job"
+    replacement  = "folder_size_monitor"
+  }
+  rule {
+      target_label = "instance"
+      replacement = "{{ inventory_hostname }}"
+  }
+}
 
 // ############################################################################
 // ######################### Grafana Cloud Configuration ######################

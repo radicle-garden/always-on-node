@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# Prometheus Textfile Collector Script - Subfolder Size Metrics
+#
+
+set -euo pipefail
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") -d DIRECTORY -o OUTPUT_FILE
+
+Export subfolder sizes as Prometheus metrics.
+
+Options:
+  -d, --directory DIR    Base directory to monitor (required)
+  -o, --output FILE      Output file path (required)
+  -h, --help             Show this help message
+
+Example:
+  $(basename "$0") -d /opt/radicle -o /var/lib/alloy/textfile_collector/folder_sizes.prom
+EOF
+    exit "${1:-0}"
+}
+
+BASE_DIR=""
+OUTPUT_FILE=""
+
+
+# while remaining arguments > 0
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -d|--directory) BASE_DIR="$2"; shift 2 ;;
+        -o|--output) OUTPUT_FILE="$2"; shift 2 ;;
+        -h|--help) usage 0 ;;
+        *) echo "Unknown option: $1" >&2; usage 1 ;;
+    esac
+done
+
+[[ -z "$BASE_DIR" ]] && { echo "Error: -d/--directory is required" >&2; usage 1; }
+[[ -z "$OUTPUT_FILE" ]] && { echo "Error: -o/--output is required" >&2; usage 1; }
+
+mkdir -p "$(dirname "$OUTPUT_FILE")"
+
+TEMP_FILE=$(mktemp)
+trap 'rm -f "$TEMP_FILE"' EXIT
+
+{
+    echo "# HELP folder_size_bytes Size of folder in bytes"
+    echo "# TYPE folder_size_bytes gauge"
+    echo "# HELP folder_size_subfolder_count Number of subfolders in monitored directory"
+    echo "# TYPE folder_size_subfolder_count gauge"
+    echo "# HELP folder_size_collection_timestamp_seconds Unix timestamp of last successful collection"
+    echo "# TYPE folder_size_collection_timestamp_seconds gauge"
+
+    count=0
+    if [[ -d "$BASE_DIR" ]]; then
+        while IFS= read -r -d '' dir; do
+            folder=$(basename "$dir")
+            size=$(du --summarize --block-size=1 "$dir" 2>/dev/null | cut -f1) || size=0
+            echo "folder_size_bytes{base_dir=\"${BASE_DIR}\",folder=\"${folder}\"} ${size}"
+            ((++count))
+        done < <(find "$BASE_DIR" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
+    fi
+
+    echo "folder_size_subfolder_count{base_dir=\"${BASE_DIR}\"} ${count}"
+    echo "folder_size_collection_timestamp_seconds{base_dir=\"${BASE_DIR}\"} $(date +%s)"
+} > "$TEMP_FILE"
+
+mv "$TEMP_FILE" "$OUTPUT_FILE"
+chmod 644 "$OUTPUT_FILE"

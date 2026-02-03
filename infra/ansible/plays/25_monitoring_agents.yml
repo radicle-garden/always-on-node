@@ -4,6 +4,20 @@
   vars_files:
     - ../environments/{{ deploy_env | default('production') }}.yml
   tasks:
+    - name: Install radicle-node storage monitoring script
+      template:
+        src: ../templates/folder_size_exporter.sh.j2
+        dest: "{{ bin_dir }}/folder_size_exporter.sh"
+        owner: "{{ system_username }}"
+        group: "{{ system_group }}"
+        mode: "0775"
+
+    - name: Enable radicle-node storage monitoring
+      ansible.builtin.cron:
+        name: "check node storage"
+        minute: "*/10"
+        job: "{{ bin_dir }}/folder_size_exporter.sh --directory {{ profile_storage_path }} --output /var/lib/alloy/textfile_collector/folder_sizes.prom"
+
     - name: Create Systemd-Exporter Quadlet
       containers.podman.podman_container:
         name: systemd_exporter
@@ -131,6 +145,19 @@
     - ../environments/{{ deploy_env | default('production') }}.yml
 
   tasks:
+    - name: Allow other users to read subdirectories in Alloy working dir
+      ansible.builtin.file:
+        path: "/var/lib/alloy"
+        state: directory
+        mode: "0755"
+
+    - name: Create output directory for textfile collector
+      ansible.builtin.file:
+        path: "/var/lib/alloy/textfile_collector"
+        owner: "{{ system_group }}"
+        group: "alloy"
+        state: directory
+
     - name: Ensure alloy can read journald
       ansible.builtin.file:
         path: /var/log/journal
