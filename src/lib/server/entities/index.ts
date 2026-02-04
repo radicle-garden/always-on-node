@@ -1,8 +1,8 @@
 import bcrypt from "bcrypt";
 
-import type { Node, SeededRadicleRepository, User } from "../db/schema";
+import type { Node, User } from "../db/schema";
 
-export type { Node, SeededRadicleRepository, User };
+export type { Node, User };
 
 export interface INode {
   node_id: string;

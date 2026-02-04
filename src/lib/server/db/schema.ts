@@ -37,17 +37,6 @@ export const nodes = pgTable("node", {
   connect_address: text("connect_address"),
 });
 
-export const seededRadicleRepositories = pgTable("seeded_radicle_repository", {
-  id: serial("id").primaryKey(),
-  repository_id: text("repository_id").notNull(),
-  node_id: integer("node_id")
-    .notNull()
-    .references(() => nodes.id),
-  seeding: boolean("seeding").notNull(),
-  seeding_start: timestamp("seeding_start", { withTimezone: true }).notNull(),
-  seeding_end: timestamp("seeding_end", { withTimezone: true }),
-});
-
 export const stripeCustomers = pgTable("stripe_customer", {
   id: serial("id").primaryKey(),
   user_id: integer("user_id")
@@ -101,23 +90,12 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
 }));
 
-export const nodesRelations = relations(nodes, ({ one, many }) => ({
+export const nodesRelations = relations(nodes, ({ one }) => ({
   user: one(users, {
     fields: [nodes.user_id],
     references: [users.id],
   }),
-  seededRepositories: many(seededRadicleRepositories),
 }));
-
-export const seededRadicleRepositoriesRelations = relations(
-  seededRadicleRepositories,
-  ({ one }) => ({
-    node: one(nodes, {
-      fields: [seededRadicleRepositories.node_id],
-      references: [nodes.id],
-    }),
-  }),
-);
 
 export const stripeCustomersRelations = relations(
   stripeCustomers,
@@ -142,7 +120,5 @@ export const stripeSubscriptionsRelations = relations(
 
 export type User = typeof users.$inferSelect;
 export type Node = typeof nodes.$inferSelect;
-export type SeededRadicleRepository =
-  typeof seededRadicleRepositories.$inferSelect;
 export type StripeCustomer = typeof stripeCustomers.$inferSelect;
 export type StripeSubscription = typeof stripeSubscriptions.$inferSelect;

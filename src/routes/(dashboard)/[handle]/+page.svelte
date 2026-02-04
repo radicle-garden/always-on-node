@@ -7,10 +7,10 @@
   import * as Alert from "$lib/components/ui/alert";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
+  import * as nodeEvents from "$lib/nodeEvents";
   import type { UserProfile } from "$types/app";
 
   import { onMount } from "svelte";
-  import { SvelteSet } from "svelte/reactivity";
 
   import type { PageData } from "./$types";
 
@@ -29,37 +29,6 @@
   );
   let userMaxDiskUsageBytes = $derived(data.userMaxDiskUsageBytes);
 
-  const subscribedRids = new SvelteSet<string>();
-  $effect(() => {
-    if (!nodeId) return;
-    const syncingRepos = repositories.filter(
-      r => r.syncing && !subscribedRids.has(r.rid),
-    );
-    if (syncingRepos.length === 0) return;
-    const eventSources: EventSource[] = [];
-    for (const repo of syncingRepos) {
-      subscribedRids.add(repo.rid);
-      const eventSource = new EventSource(
-        `/api/events/seed?rid=${encodeURIComponent(repo.rid)}&nodeId=${encodeURIComponent(nodeId)}`,
-      );
-      eventSource.addEventListener("seedComplete", async () => {
-        eventSource.close();
-        subscribedRids.delete(repo.rid);
-        await invalidateAll();
-      });
-      eventSource.onerror = () => {
-        eventSource.close();
-        subscribedRids.delete(repo.rid);
-      };
-      eventSources.push(eventSource);
-    }
-    return () => {
-      for (const es of eventSources) {
-        es.close();
-      }
-    };
-  });
-
   onMount(() => {
     if (!isMe || !nodeId || !nodeStatuses[nodeId]?.isBooting) return;
     const eventSource = new EventSource(
@@ -74,6 +43,21 @@
     return () => {
       eventSource.close();
     };
+  });
+  // Auto-refresh when syncing repos complete.
+  onMount(() => {
+    return nodeEvents.subscribe(
+      event => {
+        const syncingRepo = repositories.find(
+          r => r.syncing && r.rid === event.rid,
+        );
+
+        if (syncingRepo) {
+          invalidateAll();
+        }
+      },
+      event => event.type === "canonicalRefUpdated",
+    );
   });
 </script>
 

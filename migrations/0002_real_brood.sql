@@ -1,0 +1,1 @@
+DROP TABLE "seeded_radicle_repository" CASCADE;

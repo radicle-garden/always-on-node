@@ -10,7 +10,7 @@ import { DockerClient } from "@docker/node-sdk";
 
 import { config } from "../config";
 import { getDb, schema } from "../db";
-import type { Node, SeededRadicleRepository, User } from "../entities";
+import type { Node, User } from "../entities";
 import { createServiceLogger } from "../logger";
 
 type NodeStatus =
@@ -593,9 +593,14 @@ function parseNodeStatus(status: string): NodeStatus {
   }
 }
 
+export type Repo = {
+  rid: string;
+  fetching: boolean;
+};
+
 export async function getSeededReposForNode(
   nodeId: string,
-): Promise<ServiceResult<SeededRadicleRepository[]>> {
+): Promise<ServiceResult<Repo[]>> {
   try {
     const db = await getDb();
     const node = await db.query.nodes.findFirst({
@@ -603,13 +608,7 @@ export async function getSeededReposForNode(
         eq(schema.nodes.node_id, nodeId),
         eq(schema.nodes.deleted, false),
       ),
-      with: {
-        seededRepositories: {
-          where: eq(schema.seededRadicleRepositories.seeding, true),
-        },
-      },
     });
-
     if (!node) {
       log.warn("No node found", { nodeId });
       return {
@@ -619,15 +618,43 @@ export async function getSeededReposForNode(
       };
     }
 
-    const seededRepos = node.seededRepositories || [];
+    const lsResult = await execNodeCommand(node, "ls", ["--all"]);
+
+    if (!lsResult) {
+      log.warn("Failed to get repo list for node", { nodeId });
+    }
+
+    const lsRids: string[] =
+      lsResult?.stdout.match(/\brad:[a-zA-Z0-9]+\b/g) ?? [];
 
     log.debug("Retrieved seeded repositories", {
       nodeId,
-      count: seededRepos.length,
+      count: lsRids.length,
     });
+
+    const seedResult = await execNodeCommand(node, "seed");
+
+    if (!seedResult) {
+      log.warn("Failed to get seed policy table for node", { nodeId });
+    }
+
+    const seedRids: string[] =
+      seedResult?.stdout.match(/\brad:[a-zA-Z0-9]+\b/g) ?? [];
+
+    const setLsRids = new Set(lsRids);
+    const fetchingRids = seedRids.filter(item => !setLsRids.has(item));
+    const repos = [
+      ...lsRids.map(r => {
+        return { rid: r, fetching: false };
+      }),
+      ...fetchingRids.map(r => {
+        return { rid: r, fetching: true };
+      }),
+    ];
+
     return {
       success: true,
-      content: seededRepos,
+      content: repos,
       statusCode: 200,
     };
   } catch (dbError) {
@@ -643,15 +670,9 @@ export async function getSeededReposForNode(
   }
 }
 
-// FIXME: We wait for the seed sync to finish in the request process even after
-// returning the response early, which will probably terminate within 120s
-// (or whatever the prod api response timeout is set to), so if the sync takes
-// longer, we don't notify the front-end and the db goes out of sync with what
-// we have on disk.
 export async function seedRepo(
   nodeId: string,
   repositoryId: string,
-  onSeedComplete?: (success: boolean) => void,
 ): Promise<ServiceResult<void>> {
   const db = await getDb();
   const node = await db.query.nodes.findFirst({
@@ -670,15 +691,15 @@ export async function seedRepo(
     };
   }
 
-  const seededRepo = await db.query.seededRadicleRepositories.findFirst({
-    where: and(
-      eq(schema.seededRadicleRepositories.repository_id, repositoryId),
-      eq(schema.seededRadicleRepositories.node_id, node.id),
-      eq(schema.seededRadicleRepositories.seeding, true),
-    ),
-  });
+  const seededRepos = await getSeededReposForNode(nodeId);
 
-  if (seededRepo) {
+  if (
+    seededRepos.success &&
+    seededRepos.content !== undefined &&
+    seededRepos.content.find(r => {
+      return r.rid === repositoryId;
+    })
+  ) {
     return {
       success: true,
       message: `Repository ${repositoryId} already seeded by node ${nodeId}`,
@@ -686,71 +707,26 @@ export async function seedRepo(
     };
   }
 
-  execNodeCommand(node, "seed", [repositoryId])
-    .then(async seedResult => {
+  // Execute the seeding command asynchronously without blocking the API response.
+  // The `rad seed` command is synchronous and will attempt to fetch the repository
+  // until completion. However, it first updates the seeding policy table, so if
+  // the command is interrupted or aborted, the radicle-node daemon will retry
+  // fetching based on the updated policy. We return immediately with 202 (Accepted)
+  // since seeding may take considerable time.
+  //
+  // The spawned process (podman exec) and the promise continue running on the
+  // Node.js event loop after the HTTP response is sent, as long as the SvelteKit
+  // server process remains alive.
+  void execNodeCommand(node, "seed", [repositoryId])
+    .then(seedResult => {
       const success = parseSeedCommandResult(seedResult);
 
       if (!success) {
         log.error("Seeding failed", { repositoryId, nodeId });
-        onSeedComplete?.(false);
         return;
       }
 
       log.info("Seed command completed successfully", { repositoryId, nodeId });
-
-      const pinResult = await execNodeCommand(node, "config", [
-        "push",
-        "web.pinned.repositories",
-        repositoryId,
-      ]);
-
-      if (!pinResult) {
-        log.error("Failed to pin repository after successful seed", {
-          repositoryId,
-          nodeId,
-        });
-        onSeedComplete?.(false);
-        return;
-      }
-
-      try {
-        const docker = await DockerClient.fromDockerHost(config.dockerHost);
-        const httpdContainerName = `${node.alias}-httpd`;
-        await docker.containerKill(httpdContainerName, { signal: "SIGHUP" });
-        log.info("Restarted httpd container after pinning repository", {
-          httpdContainerName,
-          repositoryId,
-        });
-      } catch (restartError) {
-        log.warn("Failed to restart httpd container", {
-          nodeId,
-          repositoryId,
-          error: restartError,
-        });
-      }
-
-      try {
-        await db.insert(schema.seededRadicleRepositories).values({
-          repository_id: repositoryId,
-          node_id: node.id,
-          seeding: true,
-          seeding_start: new Date(),
-        });
-
-        log.info("Repository marked as seeded in database", {
-          repositoryId,
-          nodeId,
-        });
-      } catch (dbError) {
-        log.error("Failed to insert seeded repository record", {
-          repositoryId,
-          nodeId,
-          error: dbError,
-        });
-        // Repo is seeded and pinned but not tracked in DB if this fails.
-      }
-
-      onSeedComplete?.(true);
     })
     .catch(error => {
       log.error("Seed operation failed with exception", {
@@ -758,12 +734,11 @@ export async function seedRepo(
         repositoryId,
         nodeId,
       });
-      onSeedComplete?.(false);
     });
 
   return {
     success: true,
-    message: `Seeding repository ${repositoryId} started`,
+    message: `Enqueued repository ${repositoryId} for seeding`,
     statusCode: 202,
   };
 }
@@ -789,15 +764,15 @@ export async function unseedRepo(
     };
   }
 
-  const seededRepo = await db.query.seededRadicleRepositories.findFirst({
-    where: and(
-      eq(schema.seededRadicleRepositories.repository_id, repositoryId),
-      eq(schema.seededRadicleRepositories.node_id, node.id),
-      eq(schema.seededRadicleRepositories.seeding, true),
-    ),
-  });
+  const seededRepos = await getSeededReposForNode(nodeId);
 
-  if (!seededRepo) {
+  if (
+    seededRepos.success &&
+    seededRepos.content !== undefined &&
+    !seededRepos.content.find(r => {
+      return r.rid === repositoryId;
+    })
+  ) {
     return {
       success: false,
       error: `No seeded repository found with repository_id: ${repositoryId} by node ${nodeId}`,
@@ -844,14 +819,6 @@ export async function unseedRepo(
       statusCode: 500,
     };
   }
-
-  await db
-    .update(schema.seededRadicleRepositories)
-    .set({
-      seeding: false,
-      seeding_end: new Date(),
-    })
-    .where(eq(schema.seededRadicleRepositories.id, seededRepo.id));
 
   const cleanResult = await execNodeCommand(node, "clean", [
     repositoryId,

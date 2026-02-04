@@ -1,10 +1,10 @@
 import type { WeeklyActivity } from "$lib/commit";
 import { groupCommitsByWeek } from "$lib/commit";
-import { ResponseError } from "$lib/http-client/lib/fetcher";
 import { config } from "$lib/server/config";
 import { createHttpdClient } from "$lib/server/httpdClient";
 import { createServiceLogger } from "$lib/server/logger";
 import {
+  type Repo,
   getNodeStatus,
   getSeededReposForNode,
   seedRepo,
@@ -62,14 +62,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     profile = result.content as UserProfile;
   }
 
-  const seededRepositoryIds: string[] = [];
+  let repos: Repo[] = [];
   const nodeStatuses: Record<string, NodeStatus> = {};
 
   for (const node of profile.nodes || []) {
     const seededResult = await getSeededReposForNode(node.node_id);
-    if (seededResult.success && seededResult.content) {
-      const seeding = seededResult.content.filter(r => r.seeding);
-      seededRepositoryIds.push(...seeding.map(r => r.repository_id));
+    if (seededResult.success && seededResult.content !== undefined) {
+      repos = [...repos, ...seededResult.content];
     }
 
     if (isMe && currentUser) {
@@ -117,50 +116,49 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const repositories: RepoInfo[] = [];
   const httpdClient = createHttpdClient(handle);
 
-  for (const rid of seededRepositoryIds) {
-    try {
-      const repo = await httpdClient.getByRid(rid);
-      const projectData = repo.payloads["xyz.radicle.project"];
-
-      let lastCommitTime: number | undefined;
-      try {
-        const commitInfo = await httpdClient.getCommitBySha(
-          rid,
-          projectData.meta.head,
-        );
-        lastCommitTime = commitInfo.commit.committer.time;
-      } catch {
-        // Ignore commit fetch errors
-      }
-
-      const commits = await httpdClient.getActivity(rid);
-
+  for (const repo of repos) {
+    if (repo.fetching) {
       repositories.push({
         rid: repo.rid,
-        name: projectData.data.name,
-        description: projectData.data.description,
-        seeding: repo.seeding,
-        issues: projectData.meta.issues,
-        patches: projectData.meta.patches,
-        lastCommit: lastCommitTime ? { time: lastCommitTime } : undefined,
-        activity: groupCommitsByWeek(commits.activity),
+        name: "",
+        description: "",
+        seeding: 0,
+        issues: { open: 0, closed: 0 },
+        patches: { open: 0, merged: 0, draft: 0, archived: 0 },
+        syncing: true,
       });
-    } catch (e) {
-      if (e instanceof ResponseError && e.status === 404) {
-        log.info("Repo not synced yet", { rid });
+    } else {
+      try {
+        const repoData = await httpdClient.getByRid(repo.rid);
+        const projectData = repoData.payloads["xyz.radicle.project"];
+
+        let lastCommitTime: number | undefined;
+        try {
+          const commitInfo = await httpdClient.getCommitBySha(
+            repo.rid,
+            projectData.meta.head,
+          );
+          lastCommitTime = commitInfo.commit.committer.time;
+        } catch {
+          // Ignore commit fetch errors
+        }
+
+        const commits = await httpdClient.getActivity(repo.rid);
+
         repositories.push({
-          rid,
-          name: "",
-          description: "",
-          seeding: 0,
-          issues: { open: 0, closed: 0 },
-          patches: { open: 0, merged: 0, draft: 0, archived: 0 },
-          syncing: true,
+          rid: repo.rid,
+          name: projectData.data.name,
+          description: projectData.data.description,
+          seeding: repoData.seeding,
+          issues: projectData.meta.issues,
+          patches: projectData.meta.patches,
+          lastCommit: lastCommitTime ? { time: lastCommitTime } : undefined,
+          activity: groupCommitsByWeek(commits.activity),
         });
-      } else {
-        log.warn("Failed to fetch repo", { rid, error: e });
+      } catch (e) {
+        log.warn("Failed to fetch repo", { rid: repo.rid, error: e });
         repositories.push({
-          rid,
+          rid: repo.rid,
           name: "",
           description: "",
           seeding: 0,
@@ -215,20 +213,14 @@ export const actions = {
     const fullRid = `${parsedRid.prefix}${parsedRid.pubkey}`;
 
     const seededResult = await getSeededReposForNode(nodeId);
-    if (seededResult.success && seededResult.content) {
-      const alreadySeeded = seededResult.content.some(
-        r => r.seeding && r.repository_id === fullRid,
-      );
+    if (seededResult.success && seededResult.content !== undefined) {
+      const alreadySeeded = seededResult.content.find(r => r.rid === fullRid);
       if (alreadySeeded) {
         return fail(400, { error: "This repository is already seeded" });
       }
     }
 
-    const result = await seedRepo(nodeId, fullRid, success => {
-      import("$lib/server/services/seedEvents").then(({ emitSeedComplete }) => {
-        emitSeedComplete({ rid: fullRid, nodeId, success });
-      });
-    });
+    const result = await seedRepo(nodeId, fullRid);
 
     if (!result.success) {
       return fail(result.statusCode, { error: result.error });

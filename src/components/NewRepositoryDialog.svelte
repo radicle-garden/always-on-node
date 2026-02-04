@@ -1,6 +1,5 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
-  import { invalidateAll } from "$app/navigation";
   import { Button } from "$lib/components/ui/button";
   import * as Dialog from "$lib/components/ui/dialog";
   import { Input } from "$lib/components/ui/input";
@@ -24,38 +23,6 @@
     const normalizedRid = `${parsed.prefix}${parsed.pubkey}`;
     return existingRids.includes(normalizedRid);
   });
-
-  function waitForSeedCompletion(seededRid: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const eventSource = new EventSource(
-        `/api/seed-events?rid=${encodeURIComponent(seededRid)}&nodeId=${encodeURIComponent(nodeId)}`,
-      );
-
-      const cleanup = () => eventSource.close();
-
-      eventSource.addEventListener("seedComplete", async event => {
-        console.log("seedComplete", event);
-        const data = JSON.parse(event.data);
-        cleanup();
-        await invalidateAll();
-        if (data.success) {
-          resolve();
-        } else {
-          reject(new Error("Sync failed"));
-        }
-      });
-
-      eventSource.onerror = () => {
-        cleanup();
-        reject(new Error("Connection lost"));
-      };
-
-      setTimeout(() => {
-        cleanup();
-        reject(new Error("Sync timed out"));
-      }, 120000);
-    });
-  }
 </script>
 
 <Dialog.Root bind:open>
@@ -80,12 +47,9 @@
             open = false;
             await update();
             if (seededRid) {
-              toast.promise(waitForSeedCompletion(seededRid), {
-                loading: "Syncing repository…",
-                success: () =>
-                  `Repository ${truncateText(seededRid)} synced successfully`,
-                error: "Failed to sync repository",
-              });
+              toast.success(
+                `Repository ${truncateText(seededRid)} added successfully`,
+              );
             }
           } else if (result.type === "failure") {
             toast.error(
