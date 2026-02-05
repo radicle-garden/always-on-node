@@ -20,6 +20,58 @@ class EmailService {
     return this.resend;
   }
 
+  private emailLayout(content: string, footerText: string): string {
+    const fontUrl = config.frontendUrl;
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @font-face {
+      font-family: 'Booton';
+      font-style: normal;
+      font-weight: 400;
+      src: url('${fontUrl}/fonts/Booton-Regular.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Booton';
+      font-style: normal;
+      font-weight: 500;
+      src: url('${fontUrl}/fonts/Booton-Medium.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Booton';
+      font-style: normal;
+      font-weight: 600;
+      src: url('${fontUrl}/fonts/Booton-SemiBold.woff2') format('woff2');
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 24px; background-color: #ffffff; font-family: Booton, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+    <tr>
+      <td align="center">
+        <table width="700" cellpadding="0" cellspacing="0" role="presentation">
+          <tr>
+            <td style="padding: 48px 0 0 0;">
+              <div style="margin-bottom: 16px;">
+                <img src="${config.frontendUrl}/img/logo-text-on-white.png" alt="Radicle Garden" style="width: 157px; height: 28px;" />
+              </div>
+              <div style="padding-left: 8px;">
+                ${content}
+              </div>
+            </td>
+          </tr>
+        </table>
+        <div style="width: 700px; font-size: 12px; color: #7a8190; line-height: 1.5; text-align: left; margin-top: 24px;">${footerText}</div>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+  }
+
   public async sendEmail(
     emailRecipient: string,
     emailSubject: string,
@@ -75,23 +127,19 @@ class EmailService {
     const url = this.buildVerificationLink(token);
     log.debug("Verification link generated", { url });
 
-    const VERIFICATION_EMAIL_SUBJECT = `[Radicle Garden] Please verify your email address.`;
-    const VERIFICATION_EMAIL_BODY = `
-      <html lang="en">
-        <body style="font-family: Arial, sans-serif; padding: 20px;">
-          <h2>Email Verification</h2>
-          <p>Hello ${recipientName} and welcome to the Radicle Garden! </p>
-          <p>Please click the link below to verify your email address and start your very own Radicle Seed Node:</p>
-          <p>
-            <a href="${url}"
-              style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-              Verify Email Address
-            </a>
-          </p>
-          <p>If you did not request an account to be created, please ignore this email.</p>
-        </body>
-      </html>
+    const subject = "Verify your email address";
+    const content = `
+      <h1 style="margin: 0 0 16px; font-size: 32px; font-weight: 700; color: #000;">Verify your email address</h1>
+      <p style="margin: 0 0 16px; font-size: 16px; color: #000;">Hey <strong>${recipientName}</strong>, welcome to Radicle Garden.</p>
+      <div style="border: 1px solid #e9ebef; padding: 24px; margin-bottom: 16px;">
+        <p style="margin: 0 0 16px; font-size: 16px; color: #000;">Please click below to verify your email address:</p>
+        <a href="${url}" style="display: inline-block; background-color: #1c77ff; padding: 8px 16px; text-decoration: none; border-radius: 2px; font-weight: 500; font-size: 16px;"><span style="color: #ffffff;">Verify email address</span></a>
+      </div>
+      <p style="margin: 0; font-size: 16px; color: #000;">If you didn't create an account with Radicle Garden, you can ignore this email.</p>
     `;
+    const footer = `You received this email because someone signed up for Radicle Garden (<a href="${config.frontendUrl}"><span style="color: #7a8190;">${config.frontendUrl.replace(/^https?:\/\//, "")}</span></a>) with the email address ${recipientEmail}.`;
+
+    const emailBody = this.emailLayout(content, footer);
 
     const senderAddress = config.emailSenderAddress;
     if (!senderAddress) {
@@ -110,8 +158,8 @@ class EmailService {
     const { error } = await resend.emails.send({
       from: senderAddress,
       to: [recipientEmail],
-      subject: VERIFICATION_EMAIL_SUBJECT,
-      html: VERIFICATION_EMAIL_BODY,
+      subject,
+      html: emailBody,
     });
 
     if (error) {
@@ -141,22 +189,19 @@ class EmailService {
     const url = this.buildPasswordResetLink(token);
     log.debug("Password reset link generated", { url });
 
-    const PASSWORD_RESET_EMAIL_SUBJECT = `[Radicle Garden] Password reset request.`;
-    const PASSWORD_RESET_EMAIL_BODY = `
-      <html lang="en">
-        <body style="font-family: Arial, sans-serif; padding: 20px;">
-          <h2>Password Reset</h2>
-          <p>We have received a request to reset your password. Please click the link below to reset your password:</p>
-          <p>
-            <a href="${url}"
-              style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-              Reset Password
-          </a>
-          </p>
-          <p>If you did not request a password reset, please ignore this email.</p>
-        </body>
-      </html>
+    const subject = "Reset your password";
+    const content = `
+      <h1 style="margin: 0 0 16px; font-size: 32px; font-weight: 700; color: #000;">Reset your password</h1>
+      <p style="margin: 0 0 16px; font-size: 16px; color: #000;">You recently requested to reset your password for Radicle Garden.</p>
+      <div style="border: 1px solid #e5e5e5; border-radius: 6px; padding: 24px; margin-bottom: 24px;">
+        <p style="margin: 0 0 16px; font-size: 16px; color: #000;">Please click below to reset your password:</p>
+        <a href="${url}" style="display: inline-block; background-color: #1c77ff; color: #ffffff; padding: 8px 16px; text-decoration: none; border-radius: 2px; font-weight: 500; font-size: 16px;">Reset password</a>
+      </div>
+      <p style="margin: 0; font-size: 16px; color: #000;">If you didn't request this password reset, you can ignore this email.</p>
     `;
+    const footer = `You received this email because someone requested a password reset link with the email address <a href="mailto:${recipientEmail}"><span style="color: #7a8190;">${recipientEmail}</span></a>. If you didn't request this password reset, you can ignore this email.`;
+
+    const emailBody = this.emailLayout(content, footer);
 
     const senderAddress = config.emailSenderAddress;
     if (!senderAddress) {
@@ -175,8 +220,8 @@ class EmailService {
     const { error } = await resend.emails.send({
       from: senderAddress,
       to: [recipientEmail],
-      subject: PASSWORD_RESET_EMAIL_SUBJECT,
-      html: PASSWORD_RESET_EMAIL_BODY,
+      subject,
+      html: emailBody,
     });
 
     if (error) {
