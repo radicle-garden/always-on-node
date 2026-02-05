@@ -10,7 +10,7 @@ describe("/login page", () => {
 
     await expect(page).toHaveURL("/start-trial");
 
-    await page.getByAltText("gravatar").first().click();
+    await page.getByRole("button", { name: "T", exact: true }).click();
     await expect(page.getByText(verifiedUser.email)).toBeVisible();
   });
 
@@ -82,7 +82,9 @@ describe("auth", () => {
   });
 
   it("redirects to landing page on logout", async ({ authenticatedPage }) => {
-    await authenticatedPage.getByAltText("gravatar").first().click();
+    await authenticatedPage
+      .getByRole("button", { name: "T", exact: true })
+      .click();
     await authenticatedPage.getByRole("button", { name: "Logout" }).click();
 
     await expect(authenticatedPage).toHaveURL("/");
@@ -98,7 +100,9 @@ describe("auth", () => {
     await authenticatedPage.reload();
 
     await expect(authenticatedPage).toHaveURL("/start-trial");
-    await authenticatedPage.getByAltText("gravatar").first().click();
+    await authenticatedPage
+      .getByRole("button", { name: "T", exact: true })
+      .click();
     await expect(authenticatedPage.getByText(verifiedUser.email)).toBeVisible();
   });
 
@@ -111,7 +115,9 @@ describe("auth", () => {
     await authenticatedPage.goto("/help");
     await expect(authenticatedPage).toHaveURL("/help");
 
-    await authenticatedPage.getByAltText("gravatar").first().click();
+    await authenticatedPage
+      .getByRole("button", { name: "T", exact: true })
+      .click();
     await expect(
       authenticatedPage.getByRole("button", { name: "Logout" }),
     ).toBeVisible();
@@ -123,7 +129,9 @@ describe("auth", () => {
   }) => {
     await expect(authenticatedPage).toHaveURL("/start-trial");
 
-    await authenticatedPage.getByAltText("gravatar").first().click();
+    await authenticatedPage
+      .getByRole("button", { name: "T", exact: true })
+      .click();
     await expect(authenticatedPage.getByText(verifiedUser.email)).toBeVisible();
   });
 
