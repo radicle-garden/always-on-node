@@ -34,7 +34,7 @@
 </script>
 
 <div
-  class="flex min-h-[calc(100vh-10rem)] items-center justify-center bg-surface-base">
+  class="flex min-h-[calc(100vh-15.5rem)] items-center justify-center bg-surface-base">
   <div class="flex w-full bg-surface-canvas p-3 sm:w-175">
     <div class="flex flex-col">
       <div>
