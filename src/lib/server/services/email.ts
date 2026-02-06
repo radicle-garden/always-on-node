@@ -193,9 +193,9 @@ class EmailService {
     const content = `
       <h1 style="margin: 0 0 16px; font-size: 32px; font-weight: 700; color: #000;">Reset your password</h1>
       <p style="margin: 0 0 16px; font-size: 16px; color: #000;">You recently requested to reset your password for Radicle Garden.</p>
-      <div style="border: 1px solid #e5e5e5; border-radius: 6px; padding: 24px; margin-bottom: 24px;">
+      <div style="border: 1px solid #e5e5e5; padding: 24px; margin-bottom: 24px;">
         <p style="margin: 0 0 16px; font-size: 16px; color: #000;">Please click below to reset your password:</p>
-        <a href="${url}" style="display: inline-block; background-color: #1c77ff; color: #ffffff; padding: 8px 16px; text-decoration: none; border-radius: 2px; font-weight: 500; font-size: 16px;">Reset password</a>
+        <a href="${url}" style="display: inline-block; background-color: #1c77ff; padding: 8px 16px; text-decoration: none; border-radius: 2px; font-weight: 500; font-size: 16px;"><span style="color: #ffffff;">Reset password</span></a>
       </div>
       <p style="margin: 0; font-size: 16px; color: #000;">If you didn't request this password reset, you can ignore this email.</p>
     `;
