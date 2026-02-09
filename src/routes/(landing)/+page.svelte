@@ -67,7 +67,7 @@
     </div>
   </div>
   <div
-    class="relative mt-32 h-102 w-full rounded-md bg-[url('/img/landing/container-xs.png')] bg-cover bg-center p-6 sm:mt-24 sm:bg-[url('/img/landing/container.png')]">
+    class="relative mt-32 h-102 w-full rounded-md bg-[url('/img/landing/container-xs.png')] bg-cover bg-center p-6 sm:mt-24 sm:bg-[url('/img/landing/container.png')] sm:bg-position-[center_right_-10rem]">
     <div class="flex h-full flex-col">
       <div class="txt-heading-l sm:txt-heading-xxl text-[black] sm:max-w-128">
         Radicle is an open source, peer-to-peer code collaboration stack built
