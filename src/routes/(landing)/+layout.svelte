@@ -99,7 +99,7 @@
           class="txt-body-m-medium hover:underline"
           href="https://community.radworks.org"
           target="_blank">
-          Events
+          Forum
         </a>
       </div>
     </div>
