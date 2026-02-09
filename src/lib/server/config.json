@@ -25,6 +25,6 @@
     "defaultHttpdApiPort": 9999,
     "defaultHttpdApiScheme": "http",
     "publicServiceHostPort": "localhost:3080",
-    "userMaxDiskUsageBytes": 10737418240
+    "userMaxDiskUsageBytes": 5368709120
   }
 }
