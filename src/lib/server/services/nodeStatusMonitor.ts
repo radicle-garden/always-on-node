@@ -24,7 +24,7 @@ const monitoredNodes = new Map<string, MonitoredNode>();
 
 export function startMonitoring(nodeId: string, user: User): () => void {
   if (monitoredNodes.has(nodeId)) {
-    log.info("Node already being monitored", { nodeId });
+    log.info("Node already being monitored", { nodeId, userId: user.id });
     return () => stopMonitoring(nodeId);
   }
 
@@ -43,7 +43,7 @@ export function startMonitoring(nodeId: string, user: User): () => void {
   }, config.nodeStatusPollIntervalMs);
 
   monitored.timeoutId = setTimeout(() => {
-    log.info("Monitor timeout reached", { nodeId });
+    log.info("Monitor timeout reached", { nodeId, userId: user.id });
     stopMonitoring(nodeId);
   }, config.nodeStatusMonitorTimeoutMs);
 
@@ -51,6 +51,7 @@ export function startMonitoring(nodeId: string, user: User): () => void {
 
   log.info("Started monitoring node", {
     nodeId,
+    userId: user.id,
     timeoutMs: config.nodeStatusMonitorTimeoutMs,
   });
 
@@ -68,7 +69,7 @@ function stopMonitoring(nodeId: string): void {
     clearTimeout(monitored.timeoutId);
   }
   monitoredNodes.delete(nodeId);
-  log.info("Stopped monitoring node", { nodeId });
+  log.info("Stopped monitoring node", { nodeId, userId: monitored.user.id });
 }
 
 async function pollNodeStatus(nodeId: string): Promise<void> {
@@ -81,6 +82,7 @@ async function pollNodeStatus(nodeId: string): Promise<void> {
     if (!result.success || !result.content) {
       log.warn("Failed to get node status during monitoring", {
         nodeId,
+        userId: monitored.user.id,
         error: result.error,
       });
       return;
@@ -121,21 +123,30 @@ async function pollNodeStatus(nodeId: string): Promise<void> {
 
     if (statusChanged) {
       log.info("Node status changed", {
+        userId: monitored.user.id,
         nodeId,
         previousPeers: lastStatus?.peers,
         currentPeers: currentStatus.peers,
         isBooting: currentStatus.isBooting,
+        isRunning: currentStatus.isRunning,
       });
 
       monitored.lastStatus = currentStatus;
       emitNodeStatusChange({ nodeId, status: currentStatus });
 
       if (currentStatus.isRunning && currentStatus.peers > 0) {
-        log.info("Node is now online, stopping monitor", { nodeId });
+        log.info("Node is now online, stopping monitor", {
+          nodeId,
+          userId: monitored.user.id,
+        });
         stopMonitoring(nodeId);
       }
     }
   } catch (error) {
-    log.error("Error polling node status", { nodeId, error });
+    log.error("Error polling node status", {
+      nodeId,
+      error,
+      userId: monitored.user.id,
+    });
   }
 }
