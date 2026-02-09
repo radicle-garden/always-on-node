@@ -98,7 +98,7 @@
     <DropdownMenu.Content align="end" class="rounded-sm shadow-4">
       <div class="flex flex-col gap-3">
         <div class="flex max-w-73.5 items-center gap-2.5">
-          <div class="h-16 w-16 overflow-hidden rounded-md">
+          <div class="h-16 min-w-16 overflow-hidden rounded-md">
             <Avatar
               email={user.email}
               username={user.handle}
