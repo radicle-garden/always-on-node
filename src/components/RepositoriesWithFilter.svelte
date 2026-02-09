@@ -12,11 +12,13 @@
     repositories,
     showCreateDialog,
     nodeId,
+    showActions,
     nodeHttpdHostPort,
   }: {
     nodeHttpdHostPort: string;
     repositories: RepoInfo[];
     showCreateDialog: boolean;
+    showActions: boolean;
     nodeId?: string;
   } = $props();
 
@@ -59,7 +61,7 @@
 <div class="flex flex-col gap-3">
   <div class="flex items-center">
     <div class="txt-heading-l line-clamp-1 font-medium">Seeded repos</div>
-    {#if showCreateDialog && nodeId}
+    {#if showCreateDialog && nodeId && showActions}
       <div class="ml-auto flex items-center gap-2">
         <div class="relative hidden md:block">
           {@render actionRow()}

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { invalidateAll } from "$app/navigation";
+  import { page } from "$app/state";
   import Icon from "$components/Icon.svelte";
   import NodeStorage from "$components/NodeStorage.svelte";
   import RepositoriesWithFilter from "$components/RepositoriesWithFilter.svelte";
@@ -9,8 +10,6 @@
   import { Button } from "$lib/components/ui/button";
   import * as nodeEvents from "$lib/nodeEvents";
   import type { UserProfile } from "$types/app";
-
-  import { onMount } from "svelte";
 
   import type { PageData } from "./$types";
 
@@ -23,14 +22,29 @@
   let node = $derived(profile?.nodes[0]);
   let nodeId = $derived(node?.node_id);
   let hasSubscription = $derived(data.subscriptionStatus?.hasSubscription);
+  let isCheckoutSuccess = $derived(
+    page.url.searchParams.get("checkout") === "success",
+  );
+
+  let isWaitingForNode = $derived(isCheckoutSuccess && !nodeId);
 
   let nodeHttpdHostPort = $derived(
     `${data.user?.handle}.${data.publicServiceHostPort}`,
   );
   let userMaxDiskUsageBytes = $derived(data.userMaxDiskUsageBytes);
 
-  onMount(() => {
-    if (!isMe || !nodeId || !nodeStatuses[nodeId]?.isBooting) return;
+  $effect(() => {
+    if (!isMe || !isWaitingForNode) return;
+
+    const interval = setInterval(() => {
+      invalidateAll();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  });
+
+  $effect(() => {
+    if (!isMe || !nodeId) return;
     const eventSource = new EventSource(
       `/api/events/node-status?nodeId=${encodeURIComponent(nodeId)}`,
     );
@@ -40,6 +54,7 @@
     eventSource.onerror = () => {
       eventSource.close();
     };
+
     return () => {
       eventSource.close();
     };
@@ -80,7 +95,7 @@
       <Throbber />
       <span class="txt-body-s-semibold">Online</span>
     </Badge>
-  {:else if nodeStatuses[nodeId]?.isBooting}
+  {:else if nodeStatuses[nodeId]?.isBooting || isCheckoutSuccess}
     <Badge variant="warning">
       <Throbber color="var(--color-badge-warning-base)" />
       <span class="txt-body-s-semibold">Booting</span>
@@ -100,7 +115,7 @@
 
 {#if profile}
   <div class="flex w-full flex-col gap-8">
-    {#if nodeStatuses[nodeId]?.isRunning && nodeStatuses[nodeId].peers === 0}
+    {#if !nodeStatuses[nodeId]?.isBooting && nodeStatuses[nodeId]?.isRunning && nodeStatuses[nodeId].peers === 0}
       <Alert.Root variant="warning">
         <Alert.Description class="flex items-start gap-1">
           <div class="mt-0.5">
@@ -118,12 +133,12 @@
         </Alert.Description>
       </Alert.Root>
     {/if}
-    {#if hasSubscription}
+    {#if hasSubscription || isCheckoutSuccess}
       <div class="flex w-full items-start gap-4 sm:items-end">
         <div
           class="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
           <div class="txt-heading-xl sm:txt-heading-xxxl">Garden</div>
-          {#if isMe && nodeId && nodeStatuses[nodeId]}
+          {#if (isMe && nodeId && nodeStatuses[nodeId]) || isCheckoutSuccess}
             {@render nodeStatus()}
           {/if}
         </div>
@@ -137,17 +152,17 @@
         </div>
       </div>
       <NodeStorage
-        {node}
         {repositories}
         nodeStatus={nodeStatuses[nodeId]}
         {userMaxDiskUsageBytes} />
     {/if}
   </div>
   <div class="col-span-12 flex w-full flex-col gap-8">
-    {#if data.subscriptionStatus?.hasSubscription}
+    {#if data.subscriptionStatus?.hasSubscription || isCheckoutSuccess}
       <RepositoriesWithFilter
         {nodeHttpdHostPort}
         {repositories}
+        showActions={!nodeStatuses[nodeId]?.isBooting && !isWaitingForNode}
         showCreateDialog={isMe}
         {nodeId} />
     {/if}
