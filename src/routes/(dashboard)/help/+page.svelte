@@ -49,14 +49,14 @@
       <div class="txt-heading-m">Seeding private repositories</div>
       <div class="txt-body-m-regular">
         To seed a private repository, you need to add your Always On Node to the
-        repository's allowlist.
+        repository’s allowlist.
       </div>
-      <div class="txt-body-m-regular">1. Copy your Always On Node's ID:</div>
+      <div class="txt-body-m-regular">1. Copy your Always On Node’s ID:</div>
       <div class="w-fit">
         <Command cmd={user?.nodes[0].node_id ?? ""} />
       </div>
       <div class="txt-body-m-regular">
-        2. Add it to the repository's allowlist:
+        2. Add it to the repository’s allowlist:
       </div>
       <div class="w-fit">
         <Command cmd={`rad id --allow ${user?.nodes[0].node_id ?? ""}`} />
