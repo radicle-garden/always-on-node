@@ -55,7 +55,7 @@ pnpm setup:stripe
 
 The script will:
 - Create/find the "Always-On Node Subscription" product
-- Create/find the €10/month price with 7-day trial
+- Create/find the €4.99/month price with 7-day trial
 - Configure the Stripe Customer Portal settings
 - Print `STRIPE_PRICE_ID` which you have to add to your .env file
 

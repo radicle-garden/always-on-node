@@ -94,9 +94,6 @@
           <div class="grid gap-2">
             <Label for="handle" class="flex w-full flex-col items-start">
               <div>Username</div>
-              <div class="text-sm text-text-tertiary">
-                This can’t be changed
-              </div>
             </Label>
             <Input
               id="handle"
@@ -107,6 +104,9 @@
               bind:value={handle}
               aria-invalid={!!form?.errors?.handle}
               required />
+            <div class="text-sm text-text-quarternary">
+              This can’t be changed
+            </div>
             {#if form?.errors?.handle}
               <p class="text-sm text-feedback-error-text">
                 {form.errors.handle}

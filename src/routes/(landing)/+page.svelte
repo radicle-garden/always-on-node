@@ -21,10 +21,10 @@
     </span>
   </div>
   <div class="mt-8 sm:mt-16">
-    Start free for 7 days, then $5/month. Cancel anytime.
+    Start free for 7 days, then €4.99/month. Cancel anytime.
   </div>
   <Button class="mt-8 sm:mt-16" variant="primary" href={resolve("/register")}>
-    Get one for $5/month
+    Get one for €4.99/month
   </Button>
   <div class="mt-32 grid grid-cols-1 gap-6 sm:mt-16 sm:grid-cols-3">
     <div class="col-span-1 flex flex-col gap-5">
@@ -71,7 +71,7 @@
     <div class="flex h-full flex-col">
       <div class="txt-heading-l sm:txt-heading-xxl text-[black] sm:max-w-128">
         Radicle is an open source, peer-to-peer code collaboration stack built
-        on Git unlike centralized code hosting platforms.
+        on Git.
       </div>
       <div
         class="mt-auto flex w-full flex-col gap-4 sm:flex-row sm:items-end sm:gap-0">
@@ -107,7 +107,7 @@
             </div>
           </Accordion.Trigger>
           <Accordion.Content>
-            <div class="txt-body-m-regular">
+            <div class="txt-body-m-regular max-w-176">
               Your identity and personal node remain fully sovereign. Garden
               provides an additional node that replicates the repos you care
               about, so even if other public nodes stop replicating them, your
@@ -124,7 +124,7 @@
           </Accordion.Trigger>
           <Accordion.Content>
             <!-- prettier-ignore -->
-            <div class="txt-body-m-regular">
+            <div class="txt-body-m-regular max-w-176">
               Garden is built by many long-time Radicle contributors. The
               service and its operating entity are fully owned by
               <a href="https://betterinternet.foundation/" target="_blank" class="underline">The Better Internet Foundation</a>,
@@ -137,7 +137,7 @@
             <div class="txt-heading-m">Who runs a Garden node?</div>
           </Accordion.Trigger>
           <Accordion.Content>
-            <div class="txt-body-m-regular">
+            <div class="txt-body-m-regular max-w-176">
               We operate a managed Radicle node on your behalf, hosted on
               Scaleway infrastructure. The repos you choose to replicate are
               stored there.
@@ -149,7 +149,7 @@
             <div class="txt-heading-m">What about private repos?</div>
           </Accordion.Trigger>
           <Accordion.Content>
-            <div class="txt-body-m-regular">
+            <div class="txt-body-m-regular max-w-176">
               The Radicle protocol already lets you collaborate in a private,
               peer-to-peer way. If you add a Garden node to your repo's
               allowlist, we'll replicate that repo too. However, since Radicle
@@ -166,7 +166,7 @@
             </div>
           </Accordion.Trigger>
           <Accordion.Content>
-            <div class="txt-body-m-regular">
+            <div class="txt-body-m-regular max-w-176">
               Yes. Each account comes with 5 GB of storage. If you need more, <a
                 href="https://radicle.zulipchat.com/"
                 class="underline"
@@ -182,7 +182,7 @@
             <div class="txt-heading-m">What about CI?</div>
           </Accordion.Trigger>
           <Accordion.Content>
-            <div class="txt-body-m-regular">
+            <div class="txt-body-m-regular max-w-176">
               Radicle CI is actively in development, and we plan to add support
               for it, including a hosted version.
             </div>
@@ -193,10 +193,10 @@
             <div class="txt-heading-m">Can I pay anonymously?</div>
           </Accordion.Trigger>
           <Accordion.Content>
-            <div class="txt-body-m-regular">
+            <div class="txt-body-m-regular max-w-176">
               Not yet, but we get it and we plan on working on adding anonymous
               payment options in the future, so you can use Garden without tying
-              your identity to a payment method. Stay tuned.
+              your identity to a payment method.
             </div>
           </Accordion.Content>
         </Accordion.Item>

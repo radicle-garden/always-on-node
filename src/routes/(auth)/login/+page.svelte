@@ -98,7 +98,7 @@
         {/if}
         <a
           href={resolve("/forgot-password")}
-          class="text-sm underline-offset-4 hover:underline">
+          class="text-sm text-text-tertiary underline-offset-4 hover:text-text-brand hover:underline">
           Forgot password?
         </a>
         {#if form?.errors?.general}

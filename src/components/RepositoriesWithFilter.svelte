@@ -96,6 +96,15 @@
             <div class="txt-body-m-regular text-text-secondary">
               There aren’t any repos in your Garden yet
             </div>
+            <div>
+              <Button
+                variant="outline"
+                href="https://search.radicle.xyz/"
+                target="_blank">
+                Search for repos
+                <Icon name="open-external" />
+              </Button>
+            </div>
           {/if}
         </div>
       </div>
