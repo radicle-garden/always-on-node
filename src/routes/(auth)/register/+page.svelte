@@ -27,12 +27,12 @@
     {#if form?.success}
       <div class="txt-heading-xxl">Check your email</div>
       <div>
-        We've sent a verification link to <span class="font-bold">
+        We’ve sent a verification link to <span class="font-bold">
           {form?.email}
         </span>
       </div>
       <div>
-        Click the link in the email to verify your account. If you don't see it,
+        Click the link in the email to verify your account. If you don’t see it,
         check your spam folder.
       </div>
       <form
@@ -53,7 +53,7 @@
         }}
         class="flex items-center gap-4">
         <input type="hidden" name="email" value={form?.email} />
-        Didn't receive it?
+        Didn’t receive it?
         <Button
           variant="primary"
           type="submit"
@@ -95,7 +95,7 @@
             <Label for="handle" class="flex w-full flex-col items-start">
               <div>Username</div>
               <div class="text-sm text-text-tertiary">
-                This can't be changed
+                This can’t be changed
               </div>
             </Label>
             <Input

@@ -86,7 +86,7 @@
           {#if filter}
             <div class="txt-heading-m">No repos</div>
             <div class="txt-body-m-regular text-text-secondary">
-              There aren't any repos to show
+              There aren’t any repos to show
             </div>
             <div class="mt-1">
               <Button onclick={clearFilter}>Clear filter</Button>
@@ -94,7 +94,7 @@
           {:else}
             <div class="txt-heading-m">No repos yet</div>
             <div class="txt-body-m-regular text-text-secondary">
-              There aren't any repos in your Garden yet
+              There aren’t any repos in your Garden yet
             </div>
           {/if}
         </div>
@@ -116,7 +116,7 @@
     <div class="txt-body-m-medium flex items-center justify-center gap-2">
       <!-- prettier-ignore -->
       <span>
-        Showing repos containing "<span class="txt-body-m-semibold">{filter}</span>"
+        Showing repos containing “<span class="txt-body-m-semibold">{filter}</span>”
       </span>
       <Button onclick={clearFilter}>Clear filter</Button>
     </div>

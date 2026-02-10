@@ -36,7 +36,7 @@
         <div class="txt-body-l-semibold">Always reachable</div>
         <div class="txt-body-l-medium pr-10 text-text-tertiary">
           Your repos stay available on a publicly accessible IP, online 24/7.
-          Reachable even when your machine isn't.
+          Reachable even when your machine isn’t.
         </div>
       </div>
     </div>

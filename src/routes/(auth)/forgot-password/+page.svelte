@@ -25,12 +25,12 @@
     <div class="txt-heading-xxl">Reset password</div>
     {#if form?.success}
       <div>
-        We've sent a reset link to <span class="font-bold">
+        We’ve sent a reset link to <span class="font-bold">
           {form?.email}
         </span>
       </div>
       <div>
-        Click the link in the email to reset your password. If you don't see it,
+        Click the link in the email to reset your password. If you don’t see it,
         check your spam folder.
       </div>
       <form
@@ -52,7 +52,7 @@
         class="flex w-full flex-col gap-4">
         <input type="hidden" name="email" value={form?.email} />
         <div class="flex items-center gap-4">
-          Didn't receive it?
+          Didn’t receive it?
           <Button
             variant="primary"
             type="submit"
