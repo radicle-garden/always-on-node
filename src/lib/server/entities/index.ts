@@ -6,9 +6,7 @@ export type { Node, User };
 
 export interface INode {
   node_id: string;
-  did: string;
   alias: string;
-  ssh_public_key: string;
   connect_address: string | null;
 }
 
@@ -42,9 +40,7 @@ export function profileFromUser(user: User, nodes: Node[] = []): IUser {
 export function publicNodeInfo(node: Node): INode {
   return {
     node_id: node.node_id,
-    did: node.did,
     alias: node.alias,
-    ssh_public_key: node.ssh_public_key,
     connect_address: node.connect_address,
   };
 }

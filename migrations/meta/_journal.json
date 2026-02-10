@@ -29,6 +29,13 @@
       "when": 1770634711327,
       "tag": "0003_old_union_jack",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1770758293557,
+      "tag": "0004_sour_legion",
+      "breakpoints": true
     }
   ]
 }

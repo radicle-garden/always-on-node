@@ -35,9 +35,7 @@ export const users = pgTable(
 
 export const nodes = pgTable("node", {
   id: serial("id").primaryKey(),
-  did: text("did").notNull(),
   alias: text("alias").notNull(),
-  ssh_public_key: text("ssh_public_key").notNull(),
   node_id: text("node_id").notNull().unique(),
   user_id: integer("user_id")
     .notNull()

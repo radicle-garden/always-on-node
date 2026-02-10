@@ -47,9 +47,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       nodes: currentUser.nodes.map(
         (n): PublicNodeInfo => ({
           node_id: n.node_id,
-          did: n.did,
           alias: n.alias,
-          ssh_public_key: n.ssh_public_key,
           connect_address: n.connect_address ?? "",
         }),
       ),

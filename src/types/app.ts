@@ -7,9 +7,7 @@ export type UserProfile = {
 
 export type PublicNodeInfo = {
   node_id: string;
-  did: string;
   alias: string;
-  ssh_public_key: string;
   connect_address: string;
 };
 
@@ -26,9 +24,7 @@ export type User = {
 
 export type Node = {
   id: number;
-  did: string;
   alias: string;
-  ssh_public_key: string;
   node_id: string;
   user_id: number;
   created_at: Date;
