@@ -949,6 +949,7 @@ async function startContainers(user: User): Promise<ServiceResult<void>> {
     } catch {
       log.warn(`Node container ${nodeContainerName} not found`, {
         userId: user.id,
+        category: "nodeCreation",
       });
       return {
         success: false,
@@ -968,6 +969,7 @@ async function startContainers(user: User): Promise<ServiceResult<void>> {
     } catch {
       log.warn(`HTTPD container ${httpdContainerName} not found`, {
         userId: user.id,
+        category: "nodeCreation",
       });
       return {
         success: false,
@@ -978,7 +980,11 @@ async function startContainers(user: User): Promise<ServiceResult<void>> {
 
     return { success: true, message: "Containers started", statusCode: 200 };
   } catch (error) {
-    log.error("Failed to start containers", { error, userId: user.id });
+    log.error("Failed to start containers", {
+      error,
+      userId: user.id,
+      category: "nodeCreation",
+    });
     return {
       success: false,
       error: "Failed to start containers",
@@ -1003,6 +1009,7 @@ export async function ensureNodeActiveForUser(
     });
 
     if (!user) {
+      log.warn("User not found", { userId, category: "nodeCreation" });
       return {
         success: false,
         error: "User not found",
@@ -1026,6 +1033,10 @@ export async function ensureNodeActiveForUser(
 
         const node = await createNode(user);
         if (!node) {
+          log.warn(`Failed to create replacement node for ${user.handle}`, {
+            userId,
+            category: "nodeCreation",
+          });
           return {
             success: false,
             error: "Failed to create replacement node",
@@ -1062,6 +1073,10 @@ export async function ensureNodeActiveForUser(
         return await startContainers(refreshedUser);
       }
 
+      log.warn(`Failed to create node for ${user.handle}`, {
+        userId,
+        category: "nodeCreation",
+      });
       return {
         success: false,
         error: "Failed to create node",
@@ -1072,7 +1087,11 @@ export async function ensureNodeActiveForUser(
     log.info("Node created, starting containers", { userId });
     return await startContainers(user);
   } catch (error) {
-    log.error("Failed to ensure node active for user", { userId, error });
+    log.warn("Failed to ensure node active for user", {
+      userId,
+      error,
+      category: "nodeCreation",
+    });
     return {
       success: false,
       error: "Failed to activate node",
