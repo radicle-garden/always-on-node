@@ -18,7 +18,6 @@ export interface AppConfig {
   fqdn: string;
   httpdScheme: string;
   httpdPort: number;
-  nodesConnectFQDN: string;
   nodeEnv: string;
   dockerHost: string;
   radicleNodeContainer: string;
@@ -33,6 +32,8 @@ export interface AppConfig {
   stripePriceId: string;
   metricsPort?: number;
   stripeApiBase?: string;
+  nodePortRangeStart: number;
+  nodePortRangeEnd: number;
   public: {
     defaultHttpdApiHostname: string;
     defaultHttpdApiPort: number;
@@ -59,8 +60,6 @@ export function getConfig(): AppConfig {
     fqdn: process.env.FQDN || configJson.fqdn,
     httpdScheme: process.env.HTTPD_SCHEME || configJson.httpdScheme,
     httpdPort: Number(process.env.HTTPD_PORT) || configJson.httpdPort,
-    nodesConnectFQDN:
-      process.env.NODES_CONNECT_FQDN || configJson.nodesConnectFQDN,
     nodeEnv: process.env.NODE_ENV || configJson.nodeEnv,
     dockerHost: process.env.DOCKER_HOST || configJson.dockerHost,
     radicleNodeContainer:
@@ -88,6 +87,11 @@ export function getConfig(): AppConfig {
       ? parseInt(process.env.METRICS_PORT)
       : undefined,
     stripeApiBase: process.env.STRIPE_API_BASE,
+    nodePortRangeStart:
+      Number(process.env.NODE_PORT_RANGE_START) ||
+      configJson.nodePortRangeStart,
+    nodePortRangeEnd:
+      Number(process.env.NODE_PORT_RANGE_END) || configJson.nodePortRangeEnd,
     public: {
       defaultHttpdApiHostname:
         process.env.DEFAULT_HTTPD_API_HOSTNAME ||

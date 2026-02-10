@@ -8,7 +8,6 @@ export type UserProfile = {
 export type PublicNodeInfo = {
   node_id: string;
   alias: string;
-  connect_address: string;
 };
 
 export type User = {
@@ -29,7 +28,6 @@ export type Node = {
   user_id: number;
   created_at: Date;
   deleted: boolean;
-  connect_address: string | null;
 };
 
 export type NodeStatus = {

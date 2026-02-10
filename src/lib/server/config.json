@@ -7,7 +7,6 @@
   "fqdn": "localhost",
   "httpdScheme": "http",
   "httpdPort": 80,
-  "nodesConnectFQDN": "localhost",
   "nodeEnv": "development",
   "dockerHost": "unix:///run/user/1000/podman/podman.sock",
   "radicleNodeContainer": "quay.io/radicle_garden/radicle-node:1.6.1",
@@ -20,6 +19,8 @@
     "z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.xyz:8776",
     "z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo@rosa.radicle.xyz:8776"
   ],
+  "nodePortRangeStart": 7000,
+  "nodePortRangeEnd": 7999,
   "public": {
     "defaultHttpdApiHostname": "localhost",
     "defaultHttpdApiPort": 9999,

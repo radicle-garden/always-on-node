@@ -44,7 +44,6 @@ export const nodes = pgTable("node", {
     .notNull()
     .defaultNow(),
   deleted: boolean("deleted").notNull().default(false),
-  connect_address: text("connect_address"),
 });
 
 export const stripeCustomers = pgTable("stripe_customer", {
