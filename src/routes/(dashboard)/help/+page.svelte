@@ -5,9 +5,6 @@
   import type { PageData } from "./$types";
 
   let { data }: { data: PageData } = $props();
-
-  let user = $derived(data.user);
-  let nodeId = $derived(user?.nodes[0]?.node_id);
 </script>
 
 <div class="flex flex-col gap-8">
@@ -44,7 +41,7 @@
       </a>
     </div>
   </div>
-  {#if nodeId}
+  {#if data.nodeId}
     <div class="flex flex-col gap-4">
       <div class="txt-heading-m">Seeding private repositories</div>
       <div class="txt-body-m-regular">
@@ -53,13 +50,13 @@
       </div>
       <div class="txt-body-m-regular">1. Copy your Always On Node’s ID:</div>
       <div class="w-fit">
-        <Command cmd={user?.nodes[0].node_id ?? ""} />
+        <Command cmd={data.nodeId} />
       </div>
       <div class="txt-body-m-regular">
         2. Add it to the repository’s allowlist:
       </div>
       <div class="w-fit">
-        <Command cmd={`rad id --allow ${user?.nodes[0].node_id ?? ""}`} />
+        <Command cmd={`rad id --allow ${data.nodeId}`} />
       </div>
       <div class="txt-body-m-regular">3. Sync changes</div>
       <div class="w-fit">
@@ -72,10 +69,12 @@
         Add your Always On Node as a preferred seed for faster access to your
         repositories.
       </div>
-      <div class="w-fit">
-        <Command
-          cmd={`rad config push preferredSeeds ${user?.nodes[0].node_id ?? ""}@${user?.nodes[0].connect_address ?? ""}`} />
-      </div>
+      {#if data.connectAddress}
+        <div class="w-fit">
+          <Command
+            cmd={`rad config push preferredSeeds ${data.connectAddress}`} />
+        </div>
+      {/if}
     </div>
   {/if}
 </div>

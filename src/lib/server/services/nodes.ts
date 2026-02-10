@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { execa } from "execa";
 import fs from "fs";
-import { readFile, writeFile } from "fs/promises";
+import getPort, { portNumbers } from "get-port";
 import path from "path";
 
 import { DockerClient } from "@docker/node-sdk";
@@ -25,6 +25,12 @@ type NodeStatus =
       since?: undefined;
     };
 
+type RadEnv = {
+  RAD_PASSPHRASE: string;
+  RAD_HOME: string;
+  TZ?: string;
+};
+
 const log = createServiceLogger("Nodes");
 
 interface ServiceResult<T> {
@@ -35,7 +41,7 @@ interface ServiceResult<T> {
   statusCode: number;
 }
 
-function getRadHome(username: string): string | undefined {
+export function getRadHome(username: string): string | undefined {
   return path.resolve(config.profileStoragePath, username);
 }
 
@@ -119,6 +125,14 @@ async function createNode(user: User): Promise<Node | null> {
       userId: user.id,
     });
 
+    const nodePort = await getPort({
+      host: "0.0.0.0",
+      port: portNumbers(7000, 65535),
+    });
+
+    const nodeFqdn = `${user.handle}.${config.fqdn}`;
+    await updateConfig(nodePort, env, nodeFqdn);
+
     try {
       const db = await getDb();
       log.info("Creating new node", { nodeId, userId: user.id });
@@ -128,46 +142,6 @@ async function createNode(user: User): Promise<Node | null> {
         .insert(schema.nodes)
         .values(nodeData)
         .returning();
-
-      const radPort = await assignAvailablePort(persistedNode);
-
-      const configResult = await getConfigForNode(persistedNode.node_id);
-      if (!configResult.success) {
-        log.warn("Failed to retrieve default node config", {
-          nodeId: persistedNode.node_id,
-          userId: user.id,
-        });
-        return null;
-      }
-      const currentConfig = configResult.content as {
-        node: { externalAddresses: string[] };
-        preferredSeeds: string[];
-      };
-      currentConfig.preferredSeeds = config.nodePreferredSeeds;
-
-      log.info("Updating node config", {
-        nodeId: persistedNode.node_id,
-        config: currentConfig,
-        userId: user.id,
-      });
-      if (persistedNode.connect_address) {
-        currentConfig.node.externalAddresses.push(
-          persistedNode.connect_address,
-        );
-      }
-
-      const nodeConfigResult = await updateNodeConfig(
-        user,
-        persistedNode.node_id,
-        currentConfig,
-      );
-      if (!nodeConfigResult.success) {
-        log.warn("Failed to update node config", {
-          nodeId: persistedNode.node_id,
-          userId: user.id,
-        });
-        return null;
-      }
 
       const docker = await DockerClient.fromDockerHost(config.dockerHost);
 
@@ -211,9 +185,9 @@ async function createNode(user: User): Promise<Node | null> {
             "RAD_HOME=/radicle",
             "RAD_PASSPHRASE=",
           ],
-          Cmd: ["--log", "debug", "--listen", "0.0.0.0:8776"],
+          Cmd: ["--log", "debug"],
           ExposedPorts: {
-            "8776/tcp": {},
+            [`${nodePort}/tcp`]: {},
           },
           Healthcheck: {
             Test: ["CMD-SHELL", "/usr/local/bin/radicle-healthcheck"],
@@ -224,7 +198,7 @@ async function createNode(user: User): Promise<Node | null> {
           HostConfig: {
             Binds: [`${radHome}:/radicle`],
             PortBindings: {
-              "8776/tcp": [{ HostPort: String(radPort) }],
+              [`${nodePort}/tcp`]: [{ HostPort: String(nodePort) }],
             },
             RestartPolicy: {
               Name: "always",
@@ -294,101 +268,6 @@ async function createNode(user: User): Promise<Node | null> {
       cliError instanceof Error ? cliError.message : String(cliError);
     log.error(`Error during CLI steps: ${message}`, { userId: user.id });
     return null;
-  }
-}
-
-async function updateNodeConfig(
-  user: User,
-  nodeId: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  nodeConfig: any,
-): Promise<ServiceResult<void>> {
-  const db = await getDb();
-  log.info("Updating node config", { userId: user.id, nodeId, nodeConfig });
-
-  const node = await db.query.nodes.findFirst({
-    where: and(
-      eq(schema.nodes.node_id, nodeId),
-      eq(schema.nodes.deleted, false),
-    ),
-    with: { user: true },
-  });
-
-  if (!node || node.user?.id !== user.id) {
-    log.warn("No active node found for user", { nodeId, userId: user.id });
-    return {
-      success: false,
-      error: `No active node found with node_id: ${nodeId}`,
-      statusCode: 404,
-    };
-  }
-
-  try {
-    const radHome = getRadHome(node.user?.handle ?? "");
-    await writeFile(
-      `${radHome}/config.json`,
-      JSON.stringify(nodeConfig, null, 2),
-      "utf8",
-    );
-
-    return {
-      success: true,
-      message: `Node config updated for ${nodeId}`,
-      statusCode: 202,
-    };
-  } catch (error) {
-    log.error("Failed to validate/write node config", {
-      nodeId,
-      error,
-      userId: user?.id,
-    });
-    return {
-      success: false,
-      error: `Failed to validate/write node config for ${nodeId}:`,
-      statusCode: 500,
-    };
-  }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getConfigForNode(nodeId: string): Promise<ServiceResult<any>> {
-  try {
-    const db = await getDb();
-    const node = await db.query.nodes.findFirst({
-      where: and(
-        eq(schema.nodes.node_id, nodeId),
-        eq(schema.nodes.deleted, false),
-      ),
-    });
-    const user = await db.query.users.findFirst({
-      where: and(
-        eq(schema.users.id, node?.user_id ?? 0),
-        eq(schema.users.deleted, false),
-      ),
-    });
-
-    if (!node) {
-      log.warn("No active node found", { nodeId, userId: user?.id });
-      return {
-        success: false,
-        error: `No active node found with node_id: ${nodeId}`,
-        statusCode: 404,
-      };
-    }
-
-    const radHome = getRadHome(user?.handle ?? "");
-    const nodeConfig = JSON.parse(
-      await readFile(`${radHome}/config.json`, "utf8"),
-    );
-
-    return { success: true, content: nodeConfig, statusCode: 200 };
-  } catch (error) {
-    log.error("Error retrieving node config", { nodeId, error });
-    return {
-      success: false,
-      error: `Error retrieving node config: ${error} for ${nodeId}`,
-      statusCode: 500,
-    };
   }
 }
 
@@ -812,20 +691,6 @@ export async function unseedRepo(
   };
 }
 
-async function assignAvailablePort(node: Node): Promise<number> {
-  const db = await getDb();
-  const nodeEntryId = node.id;
-  const externalPort = 7000 + Number(nodeEntryId);
-  const connectAddress = `${config.nodesConnectFQDN}:${externalPort}`;
-
-  await db
-    .update(schema.nodes)
-    .set({ connect_address: connectAddress })
-    .where(eq(schema.nodes.id, node.id));
-
-  return externalPort;
-}
-
 export async function stopContainers(user: User): Promise<ServiceResult<void>> {
   try {
     const nodeAlias = `${user.handle}_seed`;
@@ -1047,6 +912,82 @@ export async function ensureNodeActiveForUser(
       statusCode: 500,
     };
   }
+}
+
+async function updateConfig(
+  port: number,
+  env: RadEnv,
+  nodeFqdn: string,
+): Promise<void> {
+  // Set listen address with port. We want the node to be reachable from the
+  // public internet.
+  await execa(
+    config.radBinaryPath,
+    ["config", "push", "node.listen", `0.0.0.0:${port}`],
+    {
+      env,
+    },
+  );
+  // Add node fqdn to externalAddresses so other nodes know which host to
+  // connect to.
+  await execa(
+    config.radBinaryPath,
+    ["config", "push", "node.externalAddresses", `${nodeFqdn}:${port}`],
+    {
+      env,
+    },
+  );
+  const { stdout: stockPreferredSeeds } = await execa(
+    config.radBinaryPath,
+    ["config", "get", "preferredSeeds"],
+    {
+      env,
+    },
+  );
+  // Remove onion preferred seeds. There's a bug that prevents nodes with stock
+  // config to properly connect to the network. Should be fixed when
+  // Radicle 1.6.2 comes out and this code can then be removed.
+  const onionSeeds = stockPreferredSeeds
+    .trim()
+    .split("\n")
+    .filter(s => s.endsWith(".onion:8776"));
+  for (const seed of onionSeeds) {
+    await execa(
+      config.radBinaryPath,
+      ["config", "remove", "preferredSeeds", seed],
+      {
+        env,
+      },
+    );
+  }
+}
+
+export async function getPortFromConfig(env: RadEnv): Promise<number> {
+  const { stdout: configGetStdout } = await execa(
+    config.radBinaryPath,
+    ["config", "get", "node.listen"],
+    {
+      env,
+    },
+  );
+  const listenAddress = configGetStdout.trim();
+  const parts = listenAddress.split(":");
+  if (parts.length < 2) {
+    throw new Error(
+      `Invalid listen address format in config: "${listenAddress}". Expected format: "host:port"`,
+    );
+  }
+  const portString = parts[parts.length - 1];
+  const port = Number(portString);
+  if (isNaN(port)) {
+    throw new Error(
+      `Invalid port number in listen address: "${listenAddress}". Port "${portString}" is not a number.`,
+    );
+  }
+  if (port < 1 || port > 65535) {
+    throw new Error(`Port number out of valid range (1-65535): ${port}`);
+  }
+  return port;
 }
 
 export const testExports = { parseNodeStatus };

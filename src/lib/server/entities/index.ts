@@ -7,7 +7,6 @@ export type { Node, User };
 export interface INode {
   node_id: string;
   alias: string;
-  connect_address: string | null;
 }
 
 export interface IUser {
@@ -41,6 +40,5 @@ export function publicNodeInfo(node: Node): INode {
   return {
     node_id: node.node_id,
     alias: node.alias,
-    connect_address: node.connect_address,
   };
 }

@@ -71,6 +71,7 @@
     "drizzle-orm": "^0.45.1",
     "execa": "^9.6.1",
     "formsnap": "^2.0.1",
+    "get-port": "^7.1.0",
     "jsonwebtoken": "^9.0.3",
     "lru-cache": "^11.2.5",
     "md5": "^2.3.0",

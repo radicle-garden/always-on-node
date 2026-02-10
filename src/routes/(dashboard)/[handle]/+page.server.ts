@@ -48,7 +48,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         (n): PublicNodeInfo => ({
           node_id: n.node_id,
           alias: n.alias,
-          connect_address: n.connect_address ?? "",
         }),
       ),
     };
