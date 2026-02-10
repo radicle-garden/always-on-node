@@ -14,6 +14,9 @@ importers:
       '@internationalized/date':
         specifier: ^3.10.1
         version: 3.10.1
+      '@plausible-analytics/tracker':
+        specifier: ^0.4.4
+        version: 0.4.4
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -803,6 +806,9 @@ packages:
   '@opentelemetry/api@1.9.0':
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
     engines: {node: '>=8.0.0'}
+
+  '@plausible-analytics/tracker@0.4.4':
+    resolution: {integrity: sha512-fz0NOYUEYXtg1TBaPEEvtcBq3FfmLFuTe1VZw4M8sTWX129br5dguu3M15+plOQnc181ShYe67RfwhKgK89VnA==}
 
   '@playwright/test@1.58.0':
     resolution: {integrity: sha512-fWza+Lpbj6SkQKCrU6si4iu+fD2dD3gxNHFhUPxsfXBPhnv3rRSQVd0NtBUT9Z/RhF/boCBcuUaMUSTRTopjZg==}
@@ -3427,6 +3433,8 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   '@opentelemetry/api@1.9.0': {}
+
+  '@plausible-analytics/tracker@0.4.4': {}
 
   '@playwright/test@1.58.0':
     dependencies:
