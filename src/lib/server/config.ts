@@ -42,6 +42,7 @@ export interface AppConfig {
     // radicle.garden or whatever domain we'll use.
     publicServiceHostPort: string;
     userMaxDiskUsageBytes: number;
+    fqdn: string;
   };
 }
 
@@ -108,6 +109,7 @@ export function getConfig(): AppConfig {
       userMaxDiskUsageBytes:
         Number(process.env.NODE_MAX_STORAGE_BYTES) ||
         configJson.public.userMaxDiskUsageBytes,
+      fqdn: process.env.FQDN || configJson.fqdn,
     },
   };
 }

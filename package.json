@@ -62,6 +62,7 @@
   "dependencies": {
     "@docker/node-sdk": "^0.0.17",
     "@internationalized/date": "^3.10.1",
+    "@plausible-analytics/tracker": "^0.4.4",
     "bcrypt": "^6.0.0",
     "bits-ui": "^2.15.4",
     "bs58": "^6.0.0",
