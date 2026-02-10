@@ -27,7 +27,7 @@
   {@render section("2. Data Controller", [
     `Monadic GmbH acts as a controller within the meaning of the GDPR in relation to your personal data processed in connection with the use of our Websites or a contact made to or by Monadic GmbH.`,
     `If you have any questions about this privacy policy or the processing of your personal data, you can contact us at the following contact details:`,
-    `Monadic GmbH<br/>Gneisenaustrasse 48 <br/>10961 Berlin, Germany<br/>E-mail: company@monadic.xyz`,
+    `Monadic GmbH<br/>Gneisenaustrasse 48 <br/>10961 Berlin, Germany<br/>E-mail: company@monadic.works`,
   ])}
   {@render section(
     "3. Categories, purposes and legal bases of the personal data processed",
