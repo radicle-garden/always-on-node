@@ -190,6 +190,7 @@
             <div class="ml-auto">
               <Button
                 type="submit"
+                variant="primary"
                 disabled={isSubmitting ||
                   !handle ||
                   !email ||

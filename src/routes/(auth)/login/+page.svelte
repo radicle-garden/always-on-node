@@ -109,7 +109,10 @@
       </div>
       <div class="flex w-full items-center">
         <div class="ml-auto">
-          <Button type="submit" disabled={isSubmitting || !email || !password}>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={isSubmitting || !email || !password}>
             {isSubmitting ? "Logging in…" : "Log in"}
           </Button>
         </div>
