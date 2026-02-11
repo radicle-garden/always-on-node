@@ -2,8 +2,6 @@
   import { copyToClipboard } from "$lib/utils";
   import { truncateText } from "$lib/utils";
 
-  import { toast } from "svelte-sonner";
-
   import Icon from "./Icon.svelte";
 
   let { rid }: { rid: string } = $props();
@@ -26,7 +24,6 @@
       e.preventDefault();
       copyToClipboard(rid);
       copied = true;
-      toast.success("Copied to clipboard");
       setTimeout(() => {
         copied = false;
       }, 2000);
