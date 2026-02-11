@@ -1,0 +1,13 @@
+*.{{ garden_domain }} {
+  tls {
+      dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+  }
+  reverse_proxy unix//opt/radicle/{labels.3}/httpd.sock
+}
+
+{{ garden_domain }} {
+ basicauth * {
+   {{ caddy_basic_auth_user }} {{ caddy_basic_auth_password }}
+ }
+ reverse_proxy http://localhost:3000
+}
