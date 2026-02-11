@@ -203,15 +203,15 @@ async function createNode(user: User): Promise<Node | null> {
       const nodeContainer = await docker.containerCreate(
         {
           Image: nodeImage,
-          Env: [
-            "RUST_LOG=debug",
-            "RUST_BACKTRACE=1",
-            "GIT_TRACE=1",
-            "GIT_TRACE_PACKET=1",
-            "RAD_HOME=/radicle",
-            "RAD_PASSPHRASE=",
+          Env: ["RUST_BACKTRACE=1", "RAD_HOME=/radicle", "RAD_PASSPHRASE="],
+          Cmd: [
+            "--log-logger",
+            "structured",
+            "--log-format",
+            "json",
+            "--listen",
+            "0.0.0.0:8776",
           ],
-          Cmd: ["--log", "debug", "--listen", "0.0.0.0:8776"],
           ExposedPorts: {
             "8776/tcp": {},
           },
