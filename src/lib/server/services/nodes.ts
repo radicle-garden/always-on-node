@@ -67,6 +67,30 @@ function createNodeData(
   };
 }
 
+async function allocateNodePort(userId: number): Promise<number> {
+  const nodePort = await getPort({
+    host: "0.0.0.0",
+    port: portNumbers(config.nodePortRangeStart, config.nodePortRangeEnd),
+  });
+
+  if (
+    nodePort < config.nodePortRangeStart ||
+    nodePort > config.nodePortRangeEnd
+  ) {
+    log.error("No available ports in configured range", {
+      nodePort,
+      rangeStart: config.nodePortRangeStart,
+      rangeEnd: config.nodePortRangeEnd,
+      userId,
+    });
+    throw new Error(
+      `No available ports in configured range ${config.nodePortRangeStart}-${config.nodePortRangeEnd}`,
+    );
+  }
+
+  return nodePort;
+}
+
 /**
  * Example seed command result:
  * ```
@@ -125,10 +149,7 @@ async function createNode(user: User): Promise<Node | null> {
       userId: user.id,
     });
 
-    const nodePort = await getPort({
-      host: "0.0.0.0",
-      port: portNumbers(config.nodePortRangeStart, config.nodePortRangeEnd),
-    });
+    const nodePort = await allocateNodePort(user.id);
 
     const nodeFqdn = `${user.handle}.${config.fqdn}`;
     await updateConfig(nodePort, env, nodeFqdn, config.nodePreferredSeeds);
@@ -143,19 +164,27 @@ async function createNode(user: User): Promise<Node | null> {
         .values(nodeData)
         .returning();
 
-      await createContainers(
-        nodeAlias,
-        user.id,
-        nodePort,
-        radHome,
-        nodeId,
-        user.handle,
-      );
+      try {
+        await createContainers(
+          nodeAlias,
+          user.id,
+          nodePort,
+          radHome,
+          nodeId,
+          user.handle,
+        );
+      } catch (error) {
+        log.error("[Nodes] Couldn't create containers", {
+          userId: user.id,
+          error: String(error),
+        });
+        return null;
+      }
 
       return persistedNode;
     } catch (nodeInsertErr) {
       log.error("Failed to insert node into database", {
-        error: nodeInsertErr,
+        error: String(nodeInsertErr),
         userId: user.id,
       });
       return null;
@@ -377,7 +406,7 @@ export async function getNodeStatus(
       } catch (duError) {
         log.warn("Failed to get storage size", {
           nodeId,
-          error: duError,
+          error: String(duError),
           userId: user.id,
         });
       }
@@ -391,7 +420,7 @@ export async function getNodeStatus(
   } catch (dbError) {
     log.error("Failed to retrieve node", {
       nodeId,
-      error: dbError,
+      error: String(dbError),
       userId: user.id,
     });
     return {
@@ -546,7 +575,7 @@ export async function getSeededReposForNode(
   } catch (dbError) {
     log.error("Failed to retrieve seeded repositories", {
       nodeId,
-      error: dbError,
+      error: String(dbError),
     });
     return {
       success: false,
@@ -624,7 +653,7 @@ export async function seedRepo(
     })
     .catch(error => {
       log.error("Seed operation failed with exception", {
-        error,
+        error: String(error),
         repositoryId,
         nodeId,
         userId: node.user_id,
@@ -752,7 +781,10 @@ export async function stopContainers(user: User): Promise<ServiceResult<void>> {
 
     return { success: true, message: "Containers stopped", statusCode: 200 };
   } catch (error) {
-    log.error("Failed to stop containers", { error, userId: user.id });
+    log.error("Failed to stop containers", {
+      error: String(error),
+      userId: user.id,
+    });
     return {
       success: false,
       error: "Failed to stop containers",
@@ -812,7 +844,7 @@ async function startContainers(user: User): Promise<ServiceResult<void>> {
     return { success: true, message: "Containers started", statusCode: 200 };
   } catch (error) {
     log.error("Failed to start containers", {
-      error,
+      error: String(error),
       userId: user.id,
       category: "nodeCreation",
     });
@@ -853,29 +885,74 @@ export async function ensureNodeActiveForUser(
       const startResult = await startContainers(user);
 
       // If containers don't exist (404), the node DB entry exists but
-      // containers were destroyed - create a new node.
+      // containers were destroyed - recreate containers.
       if (!startResult.success && startResult.statusCode === 404) {
-        log.info("Containers not found, creating new node", { userId });
-        // Mark existing node as deleted since its containers are gone.
-        await db
-          .update(schema.nodes)
-          .set({ deleted: true })
-          .where(eq(schema.nodes.user_id, userId));
+        log.info("Containers not found, recreating containers", { userId });
+        const existingNode = user.nodes[0];
+        const radHome = getRadHome(user.handle);
+        if (!radHome) {
+          return {
+            success: false,
+            error: "Failed to get RAD_HOME",
+            statusCode: 500,
+          };
+        }
+        const env = {
+          ...process.env,
+          RAD_PASSPHRASE: "",
+          RAD_HOME: radHome,
+        };
+        let nodePort: number;
 
-        const node = await createNode(user);
-        if (!node) {
-          log.warn(`Failed to create replacement node for ${user.handle}`, {
+        // If it's a newer container the node will have the port in its config.
+        //
+        // Otherwise default to getting a new port and resetting the node
+        // config.
+        //
+        // Once we've migrated prod/staging all nodes should have set
+        // listenAddress:port in their configs and it should be safe to
+        // remove this fallback.
+        try {
+          nodePort = await getPortFromConfig(env);
+        } catch {
+          nodePort = await allocateNodePort(userId);
+
+          const nodeFqdn = `${user.handle}.${config.fqdn}`;
+          await updateConfig(
+            nodePort,
+            env,
+            nodeFqdn,
+            config.nodePreferredSeeds,
+          );
+          log.info("Migrated old db based profile to config based profile", {
             userId,
-            category: "nodeCreation",
+            nodePort,
+            nodeFqdn,
+          });
+        }
+
+        try {
+          await createContainers(
+            existingNode.alias,
+            user.id,
+            nodePort,
+            radHome,
+            existingNode.node_id,
+            user.handle,
+          );
+        } catch (error) {
+          log.error("[Nodes] Couldn't create containers", {
+            userId,
+            error: String(error),
           });
           return {
             success: false,
-            error: "Failed to create replacement node",
+            error: `Failed to recreate containers: ${String(error)}`,
             statusCode: 500,
           };
         }
 
-        log.info("New node created, starting containers", { userId });
+        log.info("Containers recreated, starting containers", { userId });
         return await startContainers(user);
       }
 
@@ -920,7 +997,7 @@ export async function ensureNodeActiveForUser(
   } catch (error) {
     log.warn("Failed to ensure node active for user", {
       userId,
-      error,
+      error: String(error),
       category: "nodeCreation",
     });
     return {
