@@ -41,11 +41,7 @@
 </script>
 
 {#snippet actionRow()}
-  <Input
-    type="text"
-    bind:value={filter}
-    placeholder="Filter repositories…"
-    class="pr-8" />
+  <Input type="text" bind:value={filter} placeholder="Filter" class="pr-8" />
   {#if filter}
     <Button
       type="button"
@@ -60,9 +56,7 @@
 
 <div class="flex flex-col gap-3">
   <div class="flex items-center gap-2">
-    <div class="txt-heading-l line-clamp-1 font-medium">
-      Seeded repositories
-    </div>
+    <div class="txt-heading-l line-clamp-1 font-medium">Repositories</div>
     {#if showCreateDialog && nodeId && showActions}
       <div class="ml-auto flex items-center gap-2">
         <div class="relative hidden md:block">
@@ -94,16 +88,15 @@
               <Button onclick={clearFilter}>Clear filter</Button>
             </div>
           {:else}
-            <div class="txt-heading-m">No repositories yet</div>
             <div class="txt-body-m-regular text-text-secondary">
-              There aren’t any repositories in your Garden yet
+              You haven’t seeded any repositories.
             </div>
             <div>
               <Button
                 variant="outline"
                 href="https://search.radicle.xyz/"
                 target="_blank">
-                Search for repositories
+                Explore to find some
                 <Icon name="open-external" />
               </Button>
             </div>

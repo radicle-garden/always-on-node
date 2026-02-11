@@ -29,7 +29,7 @@
   <Dialog.Trigger>
     <Button class="w-max">
       <Icon name="seed" />
-      Seed repository
+      Seed
     </Button>
   </Dialog.Trigger>
   <Dialog.Content>
