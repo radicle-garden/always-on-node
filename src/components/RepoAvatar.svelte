@@ -23,7 +23,7 @@
 </script>
 
 {#if dataUri}
-  <img style:width={styleWidth} src={dataUri} alt="Repo Avatar" />
+  <img style:width={styleWidth} src={dataUri} alt="Repository Avatar" />
 {:else}
   <div
     style:width={styleWidth}

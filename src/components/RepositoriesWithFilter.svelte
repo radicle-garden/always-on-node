@@ -44,7 +44,7 @@
   <Input
     type="text"
     bind:value={filter}
-    placeholder="Filter repos…"
+    placeholder="Filter repositories…"
     class="pr-8" />
   {#if filter}
     <Button
@@ -59,8 +59,10 @@
 {/snippet}
 
 <div class="flex flex-col gap-3">
-  <div class="flex items-center">
-    <div class="txt-heading-l line-clamp-1 font-medium">Seeded repos</div>
+  <div class="flex items-center gap-2">
+    <div class="txt-heading-l line-clamp-1 font-medium">
+      Seeded repositories
+    </div>
     {#if showCreateDialog && nodeId && showActions}
       <div class="ml-auto flex items-center gap-2">
         <div class="relative hidden md:block">
@@ -80,28 +82,28 @@
   <div class="flex flex-col">
     {#if filteredRepositories.length === 0}
       <div
-        class="flex w-full flex-col items-center justify-center gap-3 border border-border-subtle bg-surface-canvas py-10 text-center">
+        class="flex w-full flex-col items-center justify-center gap-3 border border-border-subtle bg-surface-canvas px-4 py-10 text-center">
         <Icon name="seed" />
         <div class="flex flex-col gap-2">
           {#if filter}
-            <div class="txt-heading-m">No repos</div>
+            <div class="txt-heading-m">No repositories</div>
             <div class="txt-body-m-regular text-text-secondary">
-              There aren’t any repos to show
+              There aren’t any repositories to show
             </div>
             <div class="mt-1">
               <Button onclick={clearFilter}>Clear filter</Button>
             </div>
           {:else}
-            <div class="txt-heading-m">No repos yet</div>
+            <div class="txt-heading-m">No repositories yet</div>
             <div class="txt-body-m-regular text-text-secondary">
-              There aren’t any repos in your Garden yet
+              There aren’t any repositories in your Garden yet
             </div>
             <div>
               <Button
                 variant="outline"
                 href="https://search.radicle.xyz/"
                 target="_blank">
-                Search for repos
+                Search for repositories
                 <Icon name="open-external" />
               </Button>
             </div>
@@ -125,7 +127,7 @@
     <div class="txt-body-m-medium flex items-center justify-center gap-2">
       <!-- prettier-ignore -->
       <span>
-        Showing repos containing “<span class="txt-body-m-semibold">{filter}</span>”
+        Showing repositories containing “<span class="txt-body-m-semibold">{filter}</span>”
       </span>
       <Button onclick={clearFilter}>Clear filter</Button>
     </div>

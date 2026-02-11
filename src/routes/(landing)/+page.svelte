@@ -7,7 +7,8 @@
 
 <div class="flex w-full flex-col items-start">
   <div class="txt-heading-xxl sm:txt-heading-xxxl max-w-200 text-left">
-    An always-on node for your Radicle repos. <span class="text-text-tertiary">
+    An always-on node for your Radicle repositories. <span
+      class="text-text-tertiary">
       The sovereignty of Radicle, with additional availability.
     </span>
   </div>
@@ -35,8 +36,8 @@
       <div>
         <div class="txt-body-l-semibold">Always reachable</div>
         <div class="txt-body-l-medium pr-10 text-text-tertiary">
-          Your repos stay available on a publicly accessible IP, online 24/7.
-          Reachable even when your machine isn’t.
+          Your repositories stay available on a publicly accessible IP, online
+          24/7. Reachable even when your machine isn’t.
         </div>
       </div>
     </div>
@@ -48,7 +49,8 @@
       <div>
         <div class="txt-body-l-semibold">Simple to set up</div>
         <div class="txt-body-l-medium pr-10 text-text-tertiary">
-          Connect your repos in minutes. No infrastructure to manage.
+          Get your hosted node up and seeding repositories in minutes. No
+          infrastructure to manage.
         </div>
       </div>
     </div>
@@ -61,7 +63,7 @@
         <div class="txt-body-l-semibold">Works alongside your local node</div>
         <div class="txt-body-l-medium pr-10 text-text-tertiary">
           Your hosted node syncs with your local setup, so you keep your
-          workflow and sovereignty and gain availability.
+          workflow and sovereignty while gaining availability.
         </div>
       </div>
     </div>
@@ -109,9 +111,9 @@
           <Accordion.Content>
             <div class="txt-body-m-regular max-w-176">
               Your identity and personal node remain fully sovereign. Garden
-              provides an additional node that replicates the repos you care
-              about, so even if other public nodes stop replicating them, your
-              projects stay available. Think of it as an extra layer of
+              provides an additional node that replicates the repositories you
+              care about, so even if other public nodes stop replicating them,
+              your projects stay available. Think of it as an extra layer of
               availability — not a replacement for your node.
             </div>
           </Accordion.Content>
@@ -139,30 +141,30 @@
           <Accordion.Content>
             <div class="txt-body-m-regular max-w-176">
               We operate a managed Radicle node on your behalf, hosted on
-              Scaleway infrastructure. The repos you choose to replicate are
-              stored there.
+              Scaleway infrastructure. The repositories you choose to replicate
+              are stored there.
             </div>
           </Accordion.Content>
         </Accordion.Item>
         <Accordion.Item value="item-4">
           <Accordion.Trigger>
-            <div class="txt-heading-m">What about private repos?</div>
+            <div class="txt-heading-m">What about private repositories?</div>
           </Accordion.Trigger>
           <Accordion.Content>
             <div class="txt-body-m-regular max-w-176">
               The Radicle protocol already lets you collaborate in a private,
-              peer-to-peer way. If you add a Garden node to your repo's
-              allowlist, we'll replicate that repo too. However, since Radicle
-              repositories are not currently encrypted at rest, the operators of
-              the Garden service may be able to access your content. We plan on
-              working on encryption at rest.
+              peer-to-peer way. If you add a Garden node to your repository's
+              allowlist, we'll replicate that repository too. However, since
+              Radicle repositories are not currently encrypted at rest, the
+              operators of the Garden service may be able to access your
+              content. We plan on working on encryption at rest.
             </div>
           </Accordion.Content>
         </Accordion.Item>
         <Accordion.Item value="item-5">
           <Accordion.Trigger>
             <div class="txt-heading-m">
-              Are there limits on repos or storage?
+              Are there limits on repositories or storage?
             </div>
           </Accordion.Trigger>
           <Accordion.Content>

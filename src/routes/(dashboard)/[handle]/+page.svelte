@@ -139,7 +139,7 @@
           class="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
           <div class="txt-heading-xl sm:txt-heading-xxxl">Garden</div>
           {#if (isMe && nodeId && nodeStatuses[nodeId]) || isCheckoutSuccess}
-            <div class="mt-2">
+            <div class="sm:mt-2">
               {@render nodeStatus()}
             </div>
           {/if}

@@ -90,7 +90,7 @@
           <div class="text-muted-foreground ml-auto flex items-center gap-2">
             {#if showRemoveButton && nodeId}
               <RemoveRepositoryDialog
-                title="Unseed repo"
+                title="Unseed repository"
                 description="Are you sure you want to unseed this repository? This will remove it from your Garden."
                 {repo}
                 {nodeHttpdHostPort}
@@ -147,7 +147,7 @@
         <div class="ml-auto flex items-center gap-2">
           {#if showRemoveButton && nodeId}
             <RemoveRepositoryDialog
-              title="Unseed repo"
+              title="Unseed repository"
               description="Are you sure you want to unseed this repository? This will remove it from your Garden."
               {repo}
               {nodeHttpdHostPort}
