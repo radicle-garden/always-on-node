@@ -44,7 +44,12 @@
   });
 
   $effect(() => {
-    if (!isMe || !nodeId) return;
+    if (
+      !isMe ||
+      !nodeId ||
+      (nodeStatuses[nodeId]?.isRunning && nodeStatuses[nodeId]?.peers > 0)
+    )
+      return;
     const eventSource = new EventSource(
       `/api/events/node-status?nodeId=${encodeURIComponent(nodeId)}`,
     );
@@ -54,7 +59,6 @@
     eventSource.onerror = () => {
       eventSource.close();
     };
-
     return () => {
       eventSource.close();
     };
@@ -71,7 +75,6 @@
         const syncingRepo = repositories.find(
           r => r.syncing && r.rid === event.rid,
         );
-
         if (syncingRepo) {
           if (debounceTimer) clearTimeout(debounceTimer);
           debounceTimer = setTimeout(() => {
