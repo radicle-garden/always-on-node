@@ -35,7 +35,8 @@
 
 <div
   class="flex min-h-[calc(100vh-15.5rem)] items-center justify-center bg-surface-base">
-  <div class="flex w-full bg-surface-canvas p-3 sm:w-175">
+  <div
+    class="flex w-full flex-col gap-4 bg-surface-canvas p-3 sm:w-175 sm:flex-row">
     <div class="flex flex-col">
       <div>
         <div class="txt-heading-m">Get started with Garden</div>
@@ -43,7 +44,7 @@
           You need to start a free trial to begin
         </div>
       </div>
-      <div class="mt-auto">
+      <div class="mt-4 sm:mt-auto">
         <Button variant="primary" onclick={handleCheckout} disabled={loading}>
           {#if loading}
             Loading…
@@ -55,7 +56,7 @@
     </div>
     <img
       src="/img/bg/trial.png"
-      class="ml-auto h-75 w-75 object-cover"
+      class="h-75 w-full object-cover sm:ml-auto sm:w-75"
       alt="Trial" />
   </div>
 </div>
