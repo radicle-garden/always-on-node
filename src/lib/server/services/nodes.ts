@@ -143,116 +143,13 @@ async function createNode(user: User): Promise<Node | null> {
         .values(nodeData)
         .returning();
 
-      const docker = await DockerClient.fromDockerHost(config.dockerHost);
-
-      log.debug(`Pulling container images for ${nodeAlias}`, {
-        userId: user.id,
-      });
-
-      const nodeImage = config.radicleNodeContainer;
-      const httpdImage = config.radicleHttpdContainer;
-      const [nodeImageName, nodeImageTag] =
-        config.radicleNodeContainer.split(":");
-      const [httpdImageName, httpdImageTag] =
-        config.radicleHttpdContainer.split(":");
-
-      const nodeImagePull = docker.imageCreate({
-        fromImage: nodeImageName,
-        tag: nodeImageTag,
-        platform: "linux/arm64",
-      });
-      const httpdImagePull = docker.imageCreate({
-        fromImage: httpdImageName,
-        tag: httpdImageTag,
-        platform: "linux/arm64",
-      });
-
-      await nodeImagePull.wait();
-      await httpdImagePull.wait();
-      log.debug(`Images pulled successfully for ${nodeAlias}`, {
-        userId: user.id,
-      });
-
-      const nodeContainerName = `${nodeAlias}-node`;
-      const nodeContainer = await docker.containerCreate(
-        {
-          Image: nodeImage,
-          Env: ["RUST_BACKTRACE=1", "RAD_HOME=/radicle", "RAD_PASSPHRASE="],
-          Cmd: [
-            "--log-logger",
-            "structured",
-            "--log-format",
-            "json",
-            "--listen",
-            "0.0.0.0:8776",
-          ],
-          ExposedPorts: {
-            [`${nodePort}/tcp`]: {},
-          },
-          Healthcheck: {
-            Test: ["CMD-SHELL", "/usr/local/bin/radicle-healthcheck"],
-            Interval: 10_000_000_000, // ns
-            Timeout: 5_000_000_000, // ns
-            Retries: 10,
-          },
-          HostConfig: {
-            Binds: [`${radHome}:/radicle`],
-            PortBindings: {
-              [`${nodePort}/tcp`]: [{ HostPort: String(nodePort) }],
-            },
-            RestartPolicy: {
-              Name: "always",
-            },
-            UsernsMode: "keep-id:uid=11011,gid=11011",
-          },
-          Labels: {
-            app: "garden",
-            component: "radicle-node",
-            garden_user: user.handle,
-            node_id: persistedNode.node_id,
-          },
-        },
-        { name: nodeContainerName, platform: "linux/arm64" },
-      );
-
-      log.info(`Created node container ${nodeContainerName}`, {
-        containerId: nodeContainer.Id,
-        userId: user.id,
-      });
-
-      const httpdContainerName = `${nodeAlias}-httpd`;
-      const httpdContainer = await docker.containerCreate(
-        {
-          Image: httpdImage,
-          Env: ["RUST_LOG=debug", "RUST_BACKTRACE=1", "RAD_HOME=/radicle"],
-          Cmd: ["--listen", `/radicle/httpd.sock`],
-          HostConfig: {
-            Binds: [`${radHome}:/radicle`],
-            RestartPolicy: {
-              Name: "always",
-            },
-            UsernsMode: "keep-id:uid=11011,gid=11011",
-          },
-          Labels: {
-            app: "garden",
-            component: "radicle-httpd",
-            garden_user: user.handle,
-            node_id: persistedNode.node_id,
-          },
-        },
-        { name: httpdContainerName, platform: "linux/arm64" },
-      );
-
-      log.info(`Created httpd container ${httpdContainerName}`, {
-        containerId: httpdContainer.Id,
-        userId: user.id,
-      });
-
-      log.info(
-        "Containers created but not started. Will be started after subscription is active.",
-        {
-          userId: user.id,
-        },
+      await createContainers(
+        nodeAlias,
+        user.id,
+        nodePort,
+        radHome,
+        nodeId,
+        user.handle,
       );
 
       return persistedNode;
@@ -269,6 +166,126 @@ async function createNode(user: User): Promise<Node | null> {
     log.error(`Error during CLI steps: ${message}`, { userId: user.id });
     return null;
   }
+}
+
+async function createContainers(
+  nodeAlias: string,
+  userId: number,
+  nodePort: number,
+  radHome: string,
+  nodeId: string,
+  userHandle: string,
+) {
+  const docker = await DockerClient.fromDockerHost(config.dockerHost);
+
+  log.debug(`Pulling container images for ${nodeAlias}`, {
+    userId,
+  });
+
+  const nodeImage = config.radicleNodeContainer;
+  const httpdImage = config.radicleHttpdContainer;
+  const [nodeImageName, nodeImageTag] = config.radicleNodeContainer.split(":");
+  const [httpdImageName, httpdImageTag] =
+    config.radicleHttpdContainer.split(":");
+
+  const nodeImagePull = docker.imageCreate({
+    fromImage: nodeImageName,
+    tag: nodeImageTag,
+    platform: "linux/arm64",
+  });
+  const httpdImagePull = docker.imageCreate({
+    fromImage: httpdImageName,
+    tag: httpdImageTag,
+    platform: "linux/arm64",
+  });
+
+  await nodeImagePull.wait();
+  await httpdImagePull.wait();
+  log.debug(`Images pulled successfully for ${nodeAlias}`, {
+    userId,
+  });
+
+  const nodeContainerName = `${nodeAlias}-node`;
+  const nodeContainer = await docker.containerCreate(
+    {
+      Image: nodeImage,
+      Env: ["RUST_BACKTRACE=1", "RAD_HOME=/radicle", "RAD_PASSPHRASE="],
+      Cmd: [
+        "--log-logger",
+        "structured",
+        "--log-format",
+        "json",
+        "--listen",
+        "0.0.0.0:8776",
+      ],
+      ExposedPorts: {
+        [`${nodePort}/tcp`]: {},
+      },
+      Healthcheck: {
+        Test: ["CMD-SHELL", "/usr/local/bin/radicle-healthcheck"],
+        Interval: 10_000_000_000, // ns
+        Timeout: 5_000_000_000, // ns
+        Retries: 10,
+      },
+      HostConfig: {
+        Binds: [`${radHome}:/radicle`],
+        PortBindings: {
+          [`${nodePort}/tcp`]: [{ HostPort: String(nodePort) }],
+        },
+        RestartPolicy: {
+          Name: "always",
+        },
+        UsernsMode: "keep-id:uid=11011,gid=11011",
+      },
+      Labels: {
+        app: "garden",
+        component: "radicle-node",
+        garden_user: userHandle,
+        node_id: nodeId,
+      },
+    },
+    { name: nodeContainerName, platform: "linux/arm64" },
+  );
+
+  log.info(`Created node container ${nodeContainerName}`, {
+    containerId: nodeContainer.Id,
+    userId,
+  });
+
+  const httpdContainerName = `${nodeAlias}-httpd`;
+  const httpdContainer = await docker.containerCreate(
+    {
+      Image: httpdImage,
+      Env: ["RUST_LOG=debug", "RUST_BACKTRACE=1", "RAD_HOME=/radicle"],
+      Cmd: ["--listen", `/radicle/httpd.sock`],
+      HostConfig: {
+        Binds: [`${radHome}:/radicle`],
+        RestartPolicy: {
+          Name: "always",
+        },
+        UsernsMode: "keep-id:uid=11011,gid=11011",
+      },
+      Labels: {
+        app: "garden",
+        component: "radicle-httpd",
+        garden_user: userHandle,
+        node_id: nodeId,
+      },
+    },
+    { name: httpdContainerName, platform: "linux/arm64" },
+  );
+
+  log.info(`Created httpd container ${httpdContainerName}`, {
+    containerId: httpdContainer.Id,
+    userId,
+  });
+
+  log.info(
+    "Containers created but not started. Will be started after subscription is active.",
+    {
+      userId,
+    },
+  );
 }
 
 async function execNodeCommand(
