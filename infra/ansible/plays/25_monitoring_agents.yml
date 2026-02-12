@@ -151,13 +151,6 @@
         state: directory
         mode: "0755"
 
-    - name: Create output directory for textfile collector
-      ansible.builtin.file:
-        path: "/var/lib/alloy/textfile_collector"
-        owner: "{{ system_group }}"
-        group: "alloy"
-        state: directory
-
     - name: Ensure alloy can read journald
       ansible.builtin.file:
         path: /var/log/journal
@@ -171,6 +164,13 @@
         alloy_user_groups:
           - systemd-journal
         alloy_config: "{{ lookup('ansible.builtin.template', '../templates/alloy_config.j2') }}"
+
+    - name: Create output directory for textfile collector
+      ansible.builtin.file:
+        path: "/var/lib/alloy/textfile_collector"
+        owner: "{{ system_group }}"
+        group: "alloy"
+        state: directory
 
     - name: Restart Alloy to pick up group membership
       ansible.builtin.systemd:
