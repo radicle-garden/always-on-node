@@ -3,12 +3,8 @@
 </script>
 
 <div
-  class="mx-2 flex min-h-screen flex-col items-center justify-center text-text-primary sm:mx-0">
-  <img
-    src="/img/bg/auth.png"
-    alt="Background"
-    class="pointer-events-none absolute top-0 left-0 h-screen w-screen object-cover select-none" />
-  <div class="relative z-10 w-full sm:mx-0 sm:w-auto">
+  class="flex min-h-screen flex-col items-center justify-center bg-[url('/img/bg/auth.png')] bg-cover bg-center p-2 text-text-primary">
+  <div class="w-full sm:w-auto">
     {@render children()}
   </div>
 </div>
