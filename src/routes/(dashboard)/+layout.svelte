@@ -2,6 +2,7 @@
   import { page } from "$app/state";
   import Header from "$components/Header.svelte";
   import Icon from "$components/Icon.svelte";
+  import LoadingBar from "$components/LoadingBar.svelte";
   import Throbber from "$components/Throbber.svelte";
   import { Toaster } from "$lib/components/ui/sonner";
 
@@ -46,6 +47,8 @@
   loadingIcon={toasterLoadingIcon}
   successIcon={toasterSuccessIcon}
   errorIcon={toasterErrorIcon} />
+
+<LoadingBar />
 
 <div class="flex min-h-screen flex-col items-center bg-surface-base pb-8">
   <header
