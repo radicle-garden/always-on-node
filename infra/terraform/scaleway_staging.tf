@@ -161,7 +161,7 @@ resource "cloudflare_dns_record" "nodes_record_staging" {
   zone_id = var.cloudflare_zone_id
   comment = "always-on-node staging"
   content = scaleway_instance_ip.aon_public_ip_staging.address
-  name = "nodes-staging.${var.garden_domain}"
+  name = "staging.${var.garden_domain}"
   proxied = false
   ttl = 3600
   type = "A"
@@ -171,7 +171,7 @@ resource "cloudflare_dns_record" "wildcard_record_staging" {
   zone_id = var.cloudflare_zone_id
   comment = "always-on-node staging"
   content = scaleway_instance_ip.aon_public_ip_staging.address
-  name = "*.nodes-staging.${var.garden_domain}"
+  name = "*.staging.${var.garden_domain}"
   proxied = false
   ttl = 3600
   type = "A"

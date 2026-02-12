@@ -4,7 +4,7 @@ resource "cloudflare_dns_record" "nodes_record" {
   zone_id = var.cloudflare_zone_id
   comment = "always-on-node"
   content = scaleway_instance_ip.aon_public_ip.address
-  name = "nodes.${var.garden_domain}"
+  name = var.garden_domain
   proxied = false
   ttl = 3600
   type = "A"
@@ -14,7 +14,7 @@ resource "cloudflare_dns_record" "wildcard_record" {
   zone_id = var.cloudflare_zone_id
   comment = "always-on-node"
   content = scaleway_instance_ip.aon_public_ip.address
-  name = "*.nodes.${var.garden_domain}"
+  name = "*.${var.garden_domain}"
   proxied = false
   ttl = 3600
   type = "A"
