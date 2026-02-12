@@ -25,7 +25,9 @@
   let isCheckoutSuccess = $derived(
     page.url.searchParams.get("checkout") === "success",
   );
-
+  let isNodeOnline = $derived(
+    nodeStatuses[nodeId]?.isRunning && nodeStatuses[nodeId]?.peers > 0,
+  );
   let isWaitingForNode = $derived(isCheckoutSuccess && !nodeId);
 
   let nodeHttpdHostPort = $derived(
@@ -44,12 +46,7 @@
   });
 
   $effect(() => {
-    if (
-      !isMe ||
-      !nodeId ||
-      (nodeStatuses[nodeId]?.isRunning && nodeStatuses[nodeId]?.peers > 0)
-    )
-      return;
+    if (!isMe || !nodeId || isNodeOnline) return;
     const eventSource = new EventSource(
       `/api/events/node-status?nodeId=${encodeURIComponent(nodeId)}`,
     );
@@ -93,7 +90,7 @@
 </script>
 
 {#snippet nodeStatus()}
-  {#if nodeStatuses[nodeId]?.isRunning && nodeStatuses[nodeId].peers > 0}
+  {#if isNodeOnline}
     <Badge variant="success">
       <Throbber />
       <span class="txt-body-s-semibold">Online</span>
@@ -147,10 +144,13 @@
             </div>
           {/if}
         </div>
-        <div class="ml-auto">
+        <div
+          class="ml-auto"
+          title={!isNodeOnline ? "Your node is not online yet" : undefined}>
           <Button
             href={`https://app.radicle.xyz/nodes/${nodeHttpdHostPort}`}
-            target="_blank">
+            target="_blank"
+            disabled={!isNodeOnline}>
             View node
             <Icon name="open-external" />
           </Button>
