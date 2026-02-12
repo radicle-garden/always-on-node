@@ -20,7 +20,7 @@
       <a
         href="https://radicle.zulipchat.com/"
         target="_blank"
-        class="flex items-center gap-2 font-bold text-brand-hover">
+        class="flex items-center gap-2 font-bold text-brand-hover hover:underline">
         Open Zulip
         <Icon name="open-external" />
       </a>
@@ -35,7 +35,7 @@
       <a
         href="mailto:support@radicle.garden"
         target="_blank"
-        class="flex items-center gap-2 font-bold text-brand-hover">
+        class="flex items-center gap-2 font-bold text-brand-hover hover:underline">
         Get in touch
         <Icon name="open-external" />
       </a>
