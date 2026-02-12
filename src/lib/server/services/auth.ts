@@ -39,7 +39,7 @@ export async function authenticateUser(
     });
 
     if (!user) {
-      return { user: null, error: "User not found." };
+      return { user: null, error: "That's the wrong username or password" };
     }
 
     if (!user.email_verified) {
