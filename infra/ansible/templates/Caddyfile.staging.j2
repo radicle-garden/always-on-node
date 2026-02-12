@@ -10,7 +10,7 @@
   handle @webhook {
     reverse_proxy http://localhost:3000
   }
-  handle{
+  handle {
     basicauth * {
       {{ caddy_basic_auth_user }} {{ caddy_basic_auth_password }}
     }
