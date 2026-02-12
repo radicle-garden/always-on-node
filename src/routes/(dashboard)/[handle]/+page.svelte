@@ -16,7 +16,6 @@
   let { data }: { data: PageData } = $props();
 
   let profile = $derived(data.profile as UserProfile);
-  let isMe = $derived(data.isMe);
   let repositories = $derived(data.repositories);
   let nodeStatuses = $derived(data.nodeStatuses);
   let node = $derived(profile?.nodes[0]);
@@ -36,7 +35,7 @@
   let userMaxDiskUsageBytes = $derived(data.userMaxDiskUsageBytes);
 
   $effect(() => {
-    if (!isMe || !isWaitingForNode) return;
+    if (!isWaitingForNode) return;
 
     const interval = setInterval(() => {
       invalidateAll();
@@ -46,7 +45,7 @@
   });
 
   $effect(() => {
-    if (!isMe || !nodeId || isNodeOnline) return;
+    if (!nodeId || isNodeOnline) return;
     const eventSource = new EventSource(
       `/api/events/node-status?nodeId=${encodeURIComponent(nodeId)}`,
     );
@@ -138,7 +137,7 @@
         <div
           class="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
           <div class="txt-heading-xl sm:txt-heading-xxxl">Garden</div>
-          {#if (isMe && nodeId && nodeStatuses[nodeId]) || isCheckoutSuccess}
+          {#if (nodeId && nodeStatuses[nodeId]) || isCheckoutSuccess}
             <div class="sm:mt-2">
               {@render nodeStatus()}
             </div>
@@ -168,7 +167,7 @@
         {nodeHttpdHostPort}
         {repositories}
         showActions={!nodeStatuses[nodeId]?.isBooting && !isWaitingForNode}
-        showCreateDialog={isMe}
+        showCreateDialog
         {nodeId} />
     {/if}
   </div>

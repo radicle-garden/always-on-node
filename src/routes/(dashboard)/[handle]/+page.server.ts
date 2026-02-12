@@ -11,7 +11,6 @@ import {
   unseedRepo,
 } from "$lib/server/services/nodes";
 import { stripeService } from "$lib/server/services/stripe";
-import { usersService } from "$lib/server/services/users";
 import { parseRepositoryId } from "$lib/utils";
 import type { NodeStatus, PublicNodeInfo, UserProfile } from "$types/app";
 
@@ -36,28 +35,22 @@ export interface RepoInfo {
 export const load: PageServerLoad = async ({ params, locals }) => {
   const { handle } = params;
   const currentUser = locals.user;
-  const isMe = currentUser?.handle === handle;
 
-  let profile: UserProfile;
-  if (isMe && currentUser) {
-    profile = {
-      handle: currentUser.handle,
-      description: currentUser.description ?? "",
-      created_at: currentUser.created_at,
-      nodes: currentUser.nodes.map(
-        (n): PublicNodeInfo => ({
-          node_id: n.node_id,
-          alias: n.alias,
-        }),
-      ),
-    };
-  } else {
-    const result = await usersService.retrieveUserByHandle(handle, true);
-    if (!result.success || !result.content) {
-      throw error(result.statusCode, result.error || "User not found");
-    }
-    profile = result.content as UserProfile;
+  if (!currentUser || currentUser.handle !== handle) {
+    throw error(404, "Not found");
   }
+
+  const profile: UserProfile = {
+    handle: currentUser.handle,
+    description: currentUser.description ?? "",
+    created_at: currentUser.created_at,
+    nodes: currentUser.nodes.map(
+      (n): PublicNodeInfo => ({
+        node_id: n.node_id,
+        alias: n.alias,
+      }),
+    ),
+  };
 
   let repos: Repo[] = [];
   const nodeStatuses: Record<string, NodeStatus> = {};
@@ -68,37 +61,27 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       repos = [...repos, ...seededResult.content];
     }
 
-    if (isMe && currentUser) {
-      const fullNode = currentUser.nodes.find(n => n.node_id === node.node_id);
-      const nodeAgeMs = fullNode?.created_at
-        ? Date.now() - new Date(fullNode.created_at).getTime()
-        : Infinity;
+    const fullNode = currentUser.nodes.find(n => n.node_id === node.node_id);
+    const nodeAgeMs = fullNode?.created_at
+      ? Date.now() - new Date(fullNode.created_at).getTime()
+      : Infinity;
 
-      try {
-        const statusResult = await getNodeStatus(node.node_id, currentUser);
-        if (statusResult.success && statusResult.content) {
-          const nodeStatus = statusResult.content.nodeStatus;
-          const isBooting =
-            nodeStatus.isRunning &&
-            nodeStatus.peers === 0 &&
-            nodeAgeMs < config.nodeBootingTimeoutMs;
-          nodeStatuses[node.node_id] = {
-            isRunning: nodeStatus.isRunning,
-            peers: nodeStatus.peers,
-            sinceSeconds: nodeStatus.sinceSeconds ?? 0,
-            size: statusResult.content.size,
-            isBooting,
-          };
-        } else {
-          nodeStatuses[node.node_id] = {
-            isRunning: false,
-            peers: 0,
-            sinceSeconds: 0,
-            size: 0,
-            isBooting: nodeAgeMs < config.nodeBootingTimeoutMs,
-          };
-        }
-      } catch {
+    try {
+      const statusResult = await getNodeStatus(node.node_id, currentUser);
+      if (statusResult.success && statusResult.content) {
+        const nodeStatus = statusResult.content.nodeStatus;
+        const isBooting =
+          nodeStatus.isRunning &&
+          nodeStatus.peers === 0 &&
+          nodeAgeMs < config.nodeBootingTimeoutMs;
+        nodeStatuses[node.node_id] = {
+          isRunning: nodeStatus.isRunning,
+          peers: nodeStatus.peers,
+          sinceSeconds: nodeStatus.sinceSeconds ?? 0,
+          size: statusResult.content.size,
+          isBooting,
+        };
+      } else {
         nodeStatuses[node.node_id] = {
           isRunning: false,
           peers: 0,
@@ -107,6 +90,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
           isBooting: nodeAgeMs < config.nodeBootingTimeoutMs,
         };
       }
+    } catch {
+      nodeStatuses[node.node_id] = {
+        isRunning: false,
+        peers: 0,
+        sinceSeconds: 0,
+        size: 0,
+        isBooting: nodeAgeMs < config.nodeBootingTimeoutMs,
+      };
     }
   }
 
@@ -167,20 +158,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   }
 
   let subscriptionStatus = null;
-  if (isMe && currentUser) {
-    const statusResult = await stripeService.getSubscriptionStatus(
-      currentUser.id,
-    );
-    if (statusResult.success && statusResult.content) {
-      subscriptionStatus = statusResult.content;
-    }
+  const statusResult = await stripeService.getSubscriptionStatus(
+    currentUser.id,
+  );
+  if (statusResult.success && statusResult.content) {
+    subscriptionStatus = statusResult.content;
   }
 
   return {
     profile,
     repositories,
     nodeStatuses,
-    isMe,
     subscriptionStatus,
     stripePriceId: config.stripePriceId,
     publicServiceHostPort: config.public.publicServiceHostPort,
