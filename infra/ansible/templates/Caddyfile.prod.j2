@@ -6,8 +6,14 @@
 }
 
 {{ garden_domain }} {
-  basicauth * {
-    {{ caddy_basic_auth_user }} {{ caddy_basic_auth_password }}
+  @webhook path /api/stripe/webhook
+  handle @webhook {
+    reverse_proxy http://localhost:3000
   }
-reverse_proxy http://localhost:3000
+  handle{
+    basicauth * {
+      {{ caddy_basic_auth_user }} {{ caddy_basic_auth_password }}
+    }
+    reverse_proxy http://localhost:3000
+  }
 }
