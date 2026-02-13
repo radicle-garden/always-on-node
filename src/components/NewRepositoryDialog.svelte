@@ -16,12 +16,15 @@
   let open = $state(false);
   let isSubmitting = $state(false);
 
-  let isDuplicate = $derived.by(() => {
-    if (!rid) return false;
+  let validationError = $derived.by(() => {
+    if (!rid) return null;
     const parsed = parseRepositoryId(rid);
-    if (!parsed) return false;
+    if (!parsed) return "That's not a valid repository ID";
     const normalizedRid = `${parsed.prefix}${parsed.pubkey}`;
-    return existingRids.includes(normalizedRid);
+    if (existingRids.includes(normalizedRid)) {
+      return "This repository is already seeded";
+    }
+    return null;
   });
 </script>
 
@@ -78,13 +81,14 @@
             autocapitalize="off"
             spellcheck="false"
             bind:value={rid}
+            aria-invalid={!!validationError}
             class={cn(
               "font-mono placeholder:font-sans",
-              isDuplicate ? "border-feedback-error-border" : "",
+              validationError ? "border-feedback-error-border" : "",
             )} />
-          {#if isDuplicate}
+          {#if validationError}
             <div class="text-sm text-feedback-error-text">
-              This repository is already seeded
+              {validationError}
             </div>
           {/if}
         </div>
@@ -101,7 +105,7 @@
         <Button
           variant="primary"
           type="submit"
-          disabled={!rid || isSubmitting || isDuplicate}>
+          disabled={!rid || isSubmitting || !!validationError}>
           {isSubmitting ? "Adding…" : "Add"}
         </Button>
       </Dialog.Footer>
