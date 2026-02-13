@@ -3,7 +3,7 @@
   import { Button } from "$lib/components/ui/button";
   import * as Dialog from "$lib/components/ui/dialog";
   import { Input } from "$lib/components/ui/input";
-  import { parseRepositoryId, truncateText } from "$lib/utils";
+  import { cn, parseRepositoryId, truncateText } from "$lib/utils";
 
   import { toast } from "svelte-sonner";
 
@@ -73,8 +73,15 @@
             type="text"
             name="rid"
             placeholder="Enter repository ID (rad:…)"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
             bind:value={rid}
-            class={isDuplicate ? "border-feedback-error-border" : ""} />
+            class={cn(
+              "font-mono placeholder:font-sans",
+              isDuplicate ? "border-feedback-error-border" : "",
+            )} />
           {#if isDuplicate}
             <div class="text-sm text-feedback-error-text">
               This repository is already seeded
