@@ -15,16 +15,16 @@
   <img
     src="/img/landing/hero.png"
     alt="Radicle Garden"
-    class="mt-10 h-120 w-full object-cover object-top-left sm:mt-16 sm:h-128" />
+    class="mt-10 h-120 w-full rounded-md object-cover object-top-left sm:mt-16 sm:h-128" />
   <div class="txt-heading-xl mt-32 max-w-135 sm:mt-24">
     Why run an always‑on node? <span class="text-text-tertiary">
       Stay online, stay replicated, stay in control.
     </span>
   </div>
-  <div class="mt-8 sm:mt-16">
+  <div class="mt-4 sm:mt-4">
     Start free for 7 days, then €4.99/month. Cancel anytime.
   </div>
-  <Button class="mt-8 sm:mt-16" variant="primary" href={resolve("/register")}>
+  <Button class="mt-4 sm:mt-4" variant="primary" href={resolve("/register")}>
     Get one for €4.99/month
   </Button>
   <div class="mt-32 grid grid-cols-1 gap-6 sm:mt-16 sm:grid-cols-3">

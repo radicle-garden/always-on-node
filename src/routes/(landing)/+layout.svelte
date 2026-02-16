@@ -7,9 +7,9 @@
   let { children } = $props();
 </script>
 
-<div class="flex w-full flex-col items-center justify-center pb-12 pl-4">
+<div class="flex w-full flex-col items-center justify-center px-4 pb-12 sm:px-16">
   <div class="flex w-full max-w-285 flex-col items-center">
-    <div class="mb-24 flex w-full items-center py-4 pr-4">
+    <div class="mb-24 flex w-full items-center py-4">
       <a href={resolve("/")}>
         <LogoText />
       </a>
@@ -20,10 +20,10 @@
         </Button>
       </div>
     </div>
-    <div class="w-full pr-4">
+    <div class="w-full">
       {@render children()}
     </div>
-    <div class="mt-24 grid w-full grid-cols-2 gap-8 pr-4 sm:grid-cols-4">
+    <div class="mt-24 grid w-full grid-cols-2 gap-8 sm:grid-cols-4">
       <div class="col-span-1 flex flex-col gap-3">
         <div class="txt-heading-xs text-text-tertiary">Guides</div>
         <a
