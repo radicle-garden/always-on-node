@@ -27,7 +27,7 @@
   <Button class="mt-4 sm:mt-4" variant="primary" href={resolve("/register")}>
     Get one for €4.99/month
   </Button>
-  <div class="mt-32 grid grid-cols-1 gap-6 sm:mt-16 sm:grid-cols-3">
+  <div class="mt-32 grid grid-cols-1 gap-6 sm:mt-16 md:grid-cols-3">
     <div class="col-span-1 flex flex-col gap-5">
       <img
         src="/img/landing/always-reachable.png"
@@ -69,20 +69,20 @@
     </div>
   </div>
   <div
-    class="relative mt-32 h-102 w-full rounded-md bg-[url('/img/landing/container-xs.png')] bg-cover bg-center p-6 sm:mt-24 sm:bg-[url('/img/landing/container.png')] sm:bg-position-[center_right_-10rem]">
+    class="relative mt-32 h-102 w-full rounded-md bg-[url('/img/landing/container-xs.png')] bg-cover bg-center p-6 md:mt-24 md:bg-[url('/img/landing/container.png')] md:bg-position-[center_right_-10rem]">
     <div class="flex h-full flex-col">
-      <div class="txt-heading-l sm:txt-heading-xxl text-[black] sm:max-w-128">
+      <div class="txt-heading-l md:txt-heading-xxl text-[black] md:max-w-128">
         Radicle is an open source, peer-to-peer code collaboration stack built
         on Git.
       </div>
       <div
-        class="mt-auto flex w-full flex-col gap-4 sm:flex-row sm:items-end sm:gap-0">
+        class="mt-auto flex w-full flex-col gap-4 md:flex-row md:items-end md:gap-0">
         <div
-          class="txt-body-l-medium sm:txt-body-m-medium max-w-100 text-[black]">
+          class="txt-body-l-medium md:txt-body-m-medium max-w-100 text-[black]">
           Get started in minutes—no servers required. Instantly share code and
           discover new projects.
         </div>
-        <div class="sm:ml-auto">
+        <div class="md:ml-auto">
           <Button
             class="bg-[white] font-bold text-[black]"
             target="_blank"
