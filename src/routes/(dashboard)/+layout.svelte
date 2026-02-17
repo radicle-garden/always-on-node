@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from "$app/paths";
   import { page } from "$app/state";
   import Header from "$components/Header.svelte";
   import Icon from "$components/Icon.svelte";
@@ -61,4 +62,10 @@
       {@render children()}
     </div>
   </main>
+  <a
+    href={resolve("/help")}
+    class="txt-body-s-medium hover:bg-surface-raised fixed bottom-4 left-4 z-30 inline-flex items-center gap-1 rounded-sm border border-border-subtle bg-surface-canvas px-3 py-2 text-text-primary">
+    <Icon name="help" />
+    Help
+  </a>
 </div>
