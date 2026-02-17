@@ -57,7 +57,8 @@
         2. Add it to the repository’s allowlist:
       </div>
       <div class="w-fit">
-        <Command cmd={`rad id update --title "Add radicle.garden seed node to allow list" --allow did:key:${data.nodeId}`} />
+        <Command
+          cmd={`rad id update --title "Add radicle.garden seed node to allow list" --allow did:key:${data.nodeId}`} />
       </div>
       <div class="txt-body-m-regular">3. Sync changes</div>
       <div class="w-fit">
