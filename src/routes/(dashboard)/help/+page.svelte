@@ -1,5 +1,6 @@
 <script lang="ts">
   import Command from "$components/Command.svelte";
+  import FAQ from "$components/FAQ.svelte";
   import Icon from "$components/Icon.svelte";
 
   import type { PageData } from "./$types";
@@ -77,4 +78,7 @@
       {/if}
     </div>
   {/if}
+  <div class="mt-48 w-full">
+    <FAQ />
+  </div>
 </div>
