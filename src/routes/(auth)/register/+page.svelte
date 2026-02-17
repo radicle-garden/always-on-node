@@ -6,7 +6,7 @@
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
 
-  let { form } = $props();
+  let { form, data } = $props();
 
   let isSubmitting = $state(false);
   let isResending = $state(false);
@@ -93,17 +93,24 @@
         <div class="flex flex-col gap-4">
           <div class="grid gap-2">
             <Label for="handle" class="flex w-full flex-col items-start">
-              <div>Username</div>
+              <div>Name your node</div>
             </Label>
-            <Input
-              id="handle"
-              name="handle"
-              type="text"
-              placeholder="username"
-              class="border"
-              bind:value={handle}
-              aria-invalid={!!form?.errors?.handle}
-              required />
+            <div
+              class="flex items-center overflow-hidden border border-border-mid">
+              <Input
+                id="handle"
+                name="handle"
+                type="text"
+                class="border-0"
+                placeholder="hostname"
+                bind:value={handle}
+                aria-invalid={!!form?.errors?.handle}
+                required />
+              <span
+                class="bg-muted text-muted-foreground px-3 py-2 text-sm whitespace-nowrap">
+                .{data.fqdn}
+              </span>
+            </div>
             <div class="text-sm text-text-quarternary">
               This can’t be changed
             </div>
