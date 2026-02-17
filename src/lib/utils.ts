@@ -92,3 +92,7 @@ export function gravatarURL(email: string, size?: number): string {
 
   return `https://www.gravatar.com/avatar/${hash}?d=404${size ? `&s=${size}px` : ""}`;
 }
+
+export function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}

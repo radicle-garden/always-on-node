@@ -5,6 +5,7 @@
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
+  import { isValidEmail } from "$lib/utils";
 
   let { form, data } = $props();
 
@@ -16,6 +17,7 @@
   let password = $state("");
   let confirmPassword = $state("");
   let termsAccepted = $state(false);
+  let emailError = $state("");
 </script>
 
 <div
@@ -83,6 +85,11 @@
         method="POST"
         action="?/register"
         use:enhance={() => {
+          emailError = "";
+          if (!isValidEmail(email)) {
+            emailError = "Please enter a valid email address";
+            return ({ update }) => update();
+          }
           isSubmitting = true;
           return async ({ update }) => {
             await update();
@@ -129,9 +136,13 @@
               class="border"
               placeholder="email@example.com"
               bind:value={email}
-              aria-invalid={!!form?.errors?.email}
+              aria-invalid={!!emailError || !!form?.errors?.email}
               required />
-            {#if form?.errors?.email}
+            {#if emailError}
+              <p class="text-sm text-feedback-error-text">
+                {emailError}
+              </p>
+            {:else if form?.errors?.email}
               <p class="text-sm text-feedback-error-text">
                 {form.errors.email}
               </p>

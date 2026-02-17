@@ -1,5 +1,6 @@
 import { getUserFromSession } from "$lib/server/services/auth";
 import { usersService } from "$lib/server/services/users";
+import { isValidEmail } from "$lib/utils";
 
 import { fail, redirect } from "@sveltejs/kit";
 
@@ -39,7 +40,7 @@ export const actions = {
 
     if (!email) {
       errors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    } else if (!isValidEmail(email)) {
       errors.email = "Invalid email address";
     }
 
