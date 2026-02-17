@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     if (subscriptionResult.success && subscriptionResult.content) {
       const { hasSubscription } = subscriptionResult.content;
       if (hasSubscription) {
-        redirect(303, `/${user.handle}`);
+        redirect(303, `/dashboard`);
       }
     }
     redirect(303, "/start-trial");

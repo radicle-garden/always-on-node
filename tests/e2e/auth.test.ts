@@ -143,7 +143,7 @@ describe("auth", () => {
 
   describe("when logged out", () => {
     it("redirects to login when accessing dashboard", async ({ page }) => {
-      await page.goto("/testuser");
+      await page.goto("/dashboard");
 
       await expect(page).toHaveURL("/login");
     });

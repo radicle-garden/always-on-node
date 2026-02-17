@@ -19,7 +19,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
   const isCheckoutSuccess = url.searchParams.get("checkout") === "success";
 
   if (isStartTrialPage && hasSubscription) {
-    redirect(303, `/${user.handle}`);
+    redirect(303, `/dashboard`);
   }
 
   const allowedWithoutSubscription = ["/start-trial", "/help", "/settings"];

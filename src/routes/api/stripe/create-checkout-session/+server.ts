@@ -23,8 +23,8 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
     const result = await stripeService.createCheckoutSession(
       locals.user.id,
       priceId,
-      `${origin}/${locals.user.handle}?checkout=success`,
-      `${origin}/${locals.user.handle}?checkout=canceled`,
+      `${origin}/dashboard?checkout=success`,
+      `${origin}/dashboard?checkout=canceled`,
     );
 
     if (!result.success) {

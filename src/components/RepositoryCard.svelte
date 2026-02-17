@@ -5,7 +5,7 @@
 
   import { toast } from "svelte-sonner";
 
-  import type { RepoInfo } from "../routes/(dashboard)/[handle]/+page.server";
+  import type { RepoInfo } from "../routes/(dashboard)/dashboard/+page.server";
 
   import ActivityDiagram from "./ActivityDiagram.svelte";
   import Icon from "./Icon.svelte";
