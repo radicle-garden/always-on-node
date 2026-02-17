@@ -31,7 +31,7 @@ export const it = base.extend<AuthFixtures>({
   verifiedUser: async ({ page, testUser }, use) => {
     await page.goto("/register");
 
-    await page.getByLabel("Username").fill(testUser.handle);
+    await page.getByLabel("Name your node").fill(testUser.handle);
     await page.getByLabel("Email address").fill(testUser.email);
     await page.getByLabel("Password", { exact: true }).fill(testUser.password);
     await page.getByLabel("Confirm password").fill(testUser.password);

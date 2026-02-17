@@ -50,7 +50,7 @@ describe("/register page", () => {
 
     try {
       await page.goto("/register");
-      await page.getByLabel("Username").fill("unverified");
+      await page.getByLabel("Name your node").fill("unverified");
       await page.getByLabel("Email address").fill(unverifiedEmail);
       await page
         .getByLabel("Password", { exact: true })
