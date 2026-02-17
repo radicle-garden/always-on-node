@@ -18,12 +18,12 @@ interface LoginFormErrors {
   general?: string;
 }
 
-async function getRedirectUrl(userId: number, handle: string): Promise<string> {
+async function getRedirectUrl(userId: number): Promise<string> {
   const subscriptionResult = await stripeService.getSubscriptionStatus(userId);
   if (subscriptionResult.success && subscriptionResult.content) {
     const { hasSubscription } = subscriptionResult.content;
     if (hasSubscription) {
-      return `/${handle}`;
+      return `/dashboard`;
     }
   }
   return "/start-trial";
@@ -32,7 +32,7 @@ async function getRedirectUrl(userId: number, handle: string): Promise<string> {
 export const load: PageServerLoad = async ({ cookies }) => {
   const user = await getUserFromSession(cookies);
   if (user) {
-    const redirectUrl = await getRedirectUrl(user.id, user.handle);
+    const redirectUrl = await getRedirectUrl(user.id);
     redirect(303, redirectUrl);
   }
   return {};
@@ -74,7 +74,7 @@ export const actions = {
 
       setSessionCookie(cookies, user.id, user.created_at);
 
-      const redirectUrl = await getRedirectUrl(user.id, user.handle);
+      const redirectUrl = await getRedirectUrl(user.id);
       redirect(303, redirectUrl);
     } catch (err) {
       if (isRedirect(err)) {
