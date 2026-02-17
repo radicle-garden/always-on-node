@@ -17,7 +17,7 @@
   let password = $state("");
   let confirmPassword = $state("");
   let termsAccepted = $state(false);
-  let emailError = $state("");
+  let emailError = $state<string | null>(null);
 </script>
 
 <div
@@ -137,7 +137,14 @@
               placeholder="email@example.com"
               bind:value={email}
               aria-invalid={!!emailError || !!form?.errors?.email}
-              required />
+              required
+              onblur={() => {
+                if (email && !isValidEmail(email)) {
+                  emailError = "Please enter a valid email address";
+                } else {
+                  emailError = null;
+                }
+              }} />
             {#if emailError}
               <p class="text-sm text-feedback-error-text">
                 {emailError}
@@ -214,7 +221,8 @@
                   !email ||
                   !password ||
                   !confirmPassword ||
-                  !termsAccepted}>
+                  !termsAccepted ||
+                  !!emailError}>
                 {isSubmitting ? "Signing up…" : "Sign up"}
               </Button>
             </div>
