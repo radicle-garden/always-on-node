@@ -1,6 +1,7 @@
 <script lang="ts">
   import Command from "$components/Command.svelte";
   import FAQ from "$components/FAQ.svelte";
+  import Footer from "$components/Footer.svelte";
   import Icon from "$components/Icon.svelte";
 
   import type { PageData } from "./$types";
@@ -8,7 +9,7 @@
   let { data }: { data: PageData } = $props();
 </script>
 
-<div class="flex flex-col gap-8 pb-24">
+<div class="flex flex-col gap-8">
   <div class="txt-heading-xxl">Help</div>
   <div class="grid grid-cols-1 grid-rows-2 gap-8 sm:grid-cols-2 sm:grid-rows-1">
     <div class="flex flex-col gap-8 rounded-sm bg-surface-subtle p-6">
@@ -82,4 +83,5 @@
   <div class="mt-24 w-full">
     <FAQ />
   </div>
+  <Footer />
 </div>
