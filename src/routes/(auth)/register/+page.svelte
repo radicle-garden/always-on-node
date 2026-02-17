@@ -182,7 +182,7 @@
                 required />
               <Label for="terms" class="flex items-center gap-1">
                 <div>I accept the</div>
-                <a href={resolve("/terms")} class="underline">
+                <a href={resolve("/terms")} class="underline" target="_blank">
                   Terms of Service
                 </a>
               </Label>
