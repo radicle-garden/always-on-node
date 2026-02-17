@@ -10,6 +10,10 @@
   handle @webhook {
     reverse_proxy http://localhost:3000
   }
+  @img path /img/*
+  handle @img {
+    reverse_proxy http://localhost:3000
+  }
   handle {
     basicauth * {
       {{ caddy_basic_auth_user }} {{ caddy_basic_auth_password }}
