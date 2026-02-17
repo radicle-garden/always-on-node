@@ -94,7 +94,7 @@
             <div>
               <Button
                 variant="outline"
-                href="https://search.radicle.xyz/"
+                href="https://app.radicle.xyz/nodes/iris.radicle.xyz"
                 target="_blank">
                 Explore to find some
                 <Icon name="open-external" />

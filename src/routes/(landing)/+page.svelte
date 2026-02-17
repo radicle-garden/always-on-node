@@ -7,8 +7,14 @@
 
 <div class="flex w-full flex-col items-start">
   <div class="txt-heading-xxl sm:txt-heading-xxxl max-w-200 text-left">
-    An always-on node for your Radicle repositories. <span
-      class="text-text-tertiary">
+    An always-on node for your <a
+      href="https://radicle.dev"
+      target="_blank"
+      class="hover:underline">
+      Radicle
+    </a>
+    repositories.
+    <span class="text-text-tertiary">
       The sovereignty of Radicle, with additional availability.
     </span>
   </div>
@@ -86,8 +92,8 @@
           <Button
             class="bg-[white] font-bold text-[black]"
             target="_blank"
-            href="https://radicle.xyz">
-            Visit radicle.xyz<Icon name="open-external" />
+            href="https://radicle.dev">
+            Visit radicle.dev<Icon name="open-external" />
           </Button>
         </div>
       </div>
