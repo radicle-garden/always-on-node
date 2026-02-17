@@ -30,9 +30,9 @@
 
 <Dialog.Root bind:open>
   <Dialog.Trigger>
-    <Button class="w-max">
+    <Button class="w-max" variant="primary">
       <Icon name="seed" />
-      Seed
+      Add a repo
     </Button>
   </Dialog.Trigger>
   <Dialog.Content>
