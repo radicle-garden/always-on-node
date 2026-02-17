@@ -32,11 +32,10 @@ export interface RepoInfo {
   activity?: WeeklyActivity[];
 }
 
-export const load: PageServerLoad = async ({ params, locals }) => {
-  const { handle } = params;
+export const load: PageServerLoad = async ({ locals }) => {
   const currentUser = locals.user;
 
-  if (!currentUser || currentUser.handle !== handle) {
+  if (!currentUser) {
     throw error(404, "Not found");
   }
 
@@ -102,7 +101,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   }
 
   const repositories: RepoInfo[] = [];
-  const httpdClient = createHttpdClient(handle);
+  const httpdClient = createHttpdClient(currentUser.handle);
 
   for (const repo of repos) {
     if (repo.fetching) {

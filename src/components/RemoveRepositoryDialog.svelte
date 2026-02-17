@@ -3,7 +3,7 @@
   import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
   import * as Dialog from "$lib/components/ui/dialog";
 
-  import type { RepoInfo } from "../routes/(dashboard)/[handle]/+page.server";
+  import type { RepoInfo } from "../routes/(dashboard)/dashboard/+page.server";
 
   import RepositoryCard from "./RepositoryCard.svelte";
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { NodeStatus } from "$types/app";
 
-  import type { RepoInfo } from "../routes/(dashboard)/[handle]/+page.server";
+  import type { RepoInfo } from "../routes/(dashboard)/dashboard/+page.server";
 
   let {
     repositories,

@@ -2,7 +2,7 @@
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
 
-  import type { RepoInfo } from "../routes/(dashboard)/[handle]/+page.server";
+  import type { RepoInfo } from "../routes/(dashboard)/dashboard/+page.server";
 
   import Icon from "./Icon.svelte";
   import NewRepositoryDialog from "./NewRepositoryDialog.svelte";

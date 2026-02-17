@@ -13,7 +13,7 @@ interface ForgotPasswordFormErrors {
 export const load: PageServerLoad = async ({ cookies }) => {
   const user = await getUserFromSession(cookies);
   if (user) {
-    redirect(303, `/${user.handle}`);
+    redirect(303, `/dashboard`);
   }
   return {};
 };
