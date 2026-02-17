@@ -245,7 +245,7 @@ async function createContainers(
         "--log-format",
         "json",
         "--listen",
-        "0.0.0.0:8776",
+        `0.0.0.0:${nodePort}`,
       ],
       ExposedPorts: {
         [`${nodePort}/tcp`]: {},
