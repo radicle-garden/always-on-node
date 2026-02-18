@@ -79,7 +79,7 @@ resource "scaleway_block_volume" "aon_logs" {
 
 
 data "scaleway_instance_image" "packer_vm" {
-  name = "radicle-garden-2026.01.30-b6c8ff6"
+  name = "radicle-garden-2026.02.18-6c5eac5"
   architecture = "arm64"
   zone = var.scaleway_zone
 }
