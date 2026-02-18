@@ -62,10 +62,12 @@
       {@render children()}
     </div>
   </main>
-  <a
-    href={resolve("/help")}
-    class="txt-body-s-medium hover:bg-surface-raised fixed bottom-4 left-4 z-30 inline-flex items-center gap-1 rounded-sm border border-border-subtle bg-surface-canvas px-3 py-2 text-text-primary">
-    <Icon name="help" />
-    Help
-  </a>
+  {#if page.url.pathname !== "/help"}
+    <a
+      href={resolve("/help")}
+      class="txt-body-s-medium hover:bg-surface-raised fixed bottom-4 left-4 z-30 inline-flex items-center gap-1 rounded-sm border border-border-subtle bg-surface-canvas px-3 py-2 text-text-primary">
+      <Icon name="help" />
+      Help
+    </a>
+  {/if}
 </div>
