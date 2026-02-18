@@ -27,7 +27,7 @@ export interface RepoInfo {
   seeding: number;
   issues: { open: number; closed: number };
   patches: { open: number; merged: number; draft: number; archived: number };
-  lastCommit?: { time: number };
+  lastCommit?: { time: number; sha: string };
   syncing?: boolean;
   activity?: WeeklyActivity[];
 }
@@ -119,13 +119,16 @@ export const load: PageServerLoad = async ({ locals }) => {
         const repoData = await httpdClient.getByRid(repo.rid);
         const projectData = repoData.payloads["xyz.radicle.project"];
 
-        let lastCommitTime: number | undefined;
+        let lastCommit: { time: number; sha: string } | undefined;
         try {
           const commitInfo = await httpdClient.getCommitBySha(
             repo.rid,
             projectData.meta.head,
           );
-          lastCommitTime = commitInfo.commit.committer.time;
+          lastCommit = {
+            time: commitInfo.commit.committer.time,
+            sha: projectData.meta.head,
+          };
         } catch {
           // Ignore commit fetch errors
         }
@@ -139,7 +142,7 @@ export const load: PageServerLoad = async ({ locals }) => {
           seeding: repoData.seeding,
           issues: projectData.meta.issues,
           patches: projectData.meta.patches,
-          lastCommit: lastCommitTime ? { time: lastCommitTime } : undefined,
+          lastCommit,
           activity: groupCommitsByWeek(commits.activity),
         });
       } catch (e) {

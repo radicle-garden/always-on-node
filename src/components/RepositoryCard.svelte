@@ -31,6 +31,9 @@
   let formRef: HTMLFormElement | undefined = $state();
   let activityContainerRef: HTMLDivElement | undefined = $state();
   let activityContainerWidth = $state<number | null>(null);
+  let repoHref = $derived(
+    `https://app.radicle.xyz/nodes/${nodeHttpdHostPort}/${repo.rid}`,
+  );
 
   $effect(() => {
     if (!activityContainerRef) return;
@@ -126,8 +129,9 @@
           <div class="flex items-center gap-2">
             <RepoAvatar name={repo.name} rid={repo.rid} styleWidth="2rem" />
             {#if asLink}
+              <!-- eslint-disable svelte/no-navigation-without-resolve -- external link -->
               <a
-                href={`https://app.radicle.xyz/nodes/${nodeHttpdHostPort}/${repo.rid}`}
+                href={repoHref}
                 target="_blank"
                 class="txt-body-l-semibold flex min-w-0 items-center gap-1 hover:underline"
                 onmouseenter={() => (hover = true)}
@@ -137,6 +141,7 @@
                   <Icon name="open-external" />
                 {/if}
               </a>
+              <!-- eslint-enable svelte/no-navigation-without-resolve -->
             {:else}
               <div class="txt-body-l-semibold flex min-w-0 items-center gap-1">
                 <span class="truncate">{repo.name || "Untitled"}</span>
@@ -183,23 +188,34 @@
         <div class="flex items-center justify-between">
           <div
             class="txt-code-regular flex items-center gap-2 font-mono text-text-tertiary">
-            <div
-              class="flex items-center gap-1"
+            <!-- eslint-disable svelte/no-navigation-without-resolve -- external links -->
+            <a
+              href={`${repoHref}/issues`}
+              target="_blank"
+              class="flex items-center gap-1 hover:underline"
               title={`${repo.issues.open} issue${repo.issues.open === 1 ? "" : "s"}`}>
               <Icon name="issue" />
               {repo.issues.open}
-            </div>
-            <div
-              class="flex items-center gap-1"
+            </a>
+            <a
+              href={`${repoHref}/patches`}
+              target="_blank"
+              class="flex items-center gap-1 hover:underline"
               title={`${repo.patches.open} patch${repo.patches.open === 1 ? "" : "es"}`}>
               <Icon name="patch" />
               {repo.patches.open}
-            </div>
+            </a>
+            <!-- eslint-enable svelte/no-navigation-without-resolve -->
           </div>
           {#if repo.lastCommit}
-            <div class="txt-body-m-regular text-text-tertiary">
+            <!-- eslint-disable svelte/no-navigation-without-resolve -- external link -->
+            <a
+              href={`${repoHref}/commits/${repo.lastCommit.sha}`}
+              target="_blank"
+              class="txt-body-m-regular text-text-tertiary hover:underline">
               Updated {timeAgo(new Date(repo.lastCommit.time * 1000), true)} ago
-            </div>
+            </a>
+            <!-- eslint-enable svelte/no-navigation-without-resolve -->
           {/if}
         </div>
       </div>
