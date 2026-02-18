@@ -339,6 +339,8 @@ async function handleWebhookEvent(
             // has already been synced to the database. Returning 500 would
             // cause Stripe to retry, but the subscription state is correct.
             // Container failures should be handled through monitoring/alerts.
+          } else {
+            log.info("Successfully activated node for user", { userId });
           }
         }
 
