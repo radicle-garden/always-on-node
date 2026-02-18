@@ -120,20 +120,13 @@ export const load: PageServerLoad = async ({ locals }) => {
         const projectData = repoData.payloads["xyz.radicle.project"];
 
         let lastCommit: { time: number; sha: string } | undefined;
-        try {
-          const commitInfo = await httpdClient.getCommitBySha(
-            repo.rid,
-            projectData.meta.head,
-          );
+        const commits = await httpdClient.getActivity(repo.rid);
+        if (commits.activity.length > 0) {
           lastCommit = {
-            time: commitInfo.commit.committer.time,
+            time: commits.activity[0],
             sha: projectData.meta.head,
           };
-        } catch {
-          // Ignore commit fetch errors
         }
-
-        const commits = await httpdClient.getActivity(repo.rid);
 
         repositories.push({
           rid: repo.rid,
