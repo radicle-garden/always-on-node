@@ -22,7 +22,7 @@ const devFormat = winston.format.combine(
 );
 
 export const logger = winston.createLogger({
-  level: isDev ? "debug" : "info",
+  level: config.logLevel,
   format: isDev ? devFormat : jsonFormat,
   transports: [new winston.transports.Console()],
 });

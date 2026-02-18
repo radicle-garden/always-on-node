@@ -19,6 +19,7 @@ export interface AppConfig {
   httpdScheme: string;
   httpdPort: number;
   nodeEnv: string;
+  logLevel: string;
   dockerHost: string;
   radicleNodeContainer: string;
   radicleHttpdContainer: string;
@@ -62,6 +63,7 @@ export function getConfig(): AppConfig {
     httpdScheme: process.env.HTTPD_SCHEME || configJson.httpdScheme,
     httpdPort: Number(process.env.HTTPD_PORT) || configJson.httpdPort,
     nodeEnv: process.env.NODE_ENV || configJson.nodeEnv,
+    logLevel: process.env.LOG_LEVEL || configJson.logLevel,
     dockerHost: process.env.DOCKER_HOST || configJson.dockerHost,
     radicleNodeContainer:
       process.env.RADICLE_NODE_CONTAINER || configJson.radicleNodeContainer,
