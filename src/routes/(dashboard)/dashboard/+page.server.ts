@@ -30,6 +30,7 @@ export interface RepoInfo {
   lastCommit?: { time: number; sha: string };
   syncing?: boolean;
   activity?: WeeklyActivity[];
+  visibility?: "public" | "private";
 }
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -137,6 +138,8 @@ export const load: PageServerLoad = async ({ locals }) => {
           patches: projectData.meta.patches,
           lastCommit,
           activity: groupCommitsByWeek(commits.activity),
+          visibility:
+            repoData.visibility.type === "private" ? "private" : "public",
         });
       } catch (e) {
         log.warn("Failed to fetch repo", { rid: repo.rid, error: e });

@@ -31,6 +31,11 @@
   let formRef: HTMLFormElement | undefined = $state();
   let activityContainerRef: HTMLDivElement | undefined = $state();
   let activityContainerWidth = $state<number | null>(null);
+  let isPrivate = $derived(repo.visibility === "private");
+  let repoName = $derived(
+    isPrivate ? "Private repo" : (repo.name ?? "Untitled"),
+  );
+  let repoDescription = $derived(repo.description ?? "No description");
   let repoHref = $derived(
     `https://app.radicle.xyz/nodes/${nodeHttpdHostPort}/${repo.rid}`,
   );
@@ -127,7 +132,13 @@
       <div class="flex w-full">
         <div class="truncate font-medium">
           <div class="flex items-center gap-2">
-            <RepoAvatar name={repo.name} rid={repo.rid} styleWidth="2rem" />
+            {#if isPrivate}
+              <div class="flex items-center bg-surface-strong p-1">
+                <Icon name="lock" />
+              </div>
+            {:else}
+              <RepoAvatar name={repo.name} rid={repo.rid} styleWidth="2rem" />
+            {/if}
             {#if asLink}
               <!-- eslint-disable svelte/no-navigation-without-resolve -- external link -->
               <a
@@ -136,7 +147,7 @@
                 class="txt-body-l-semibold flex min-w-0 items-center gap-1 hover:underline"
                 onmouseenter={() => (hover = true)}
                 onmouseleave={() => (hover = false)}>
-                <span class="truncate">{repo.name || "Untitled"}</span>
+                <span class="truncate">{repoName}</span>
                 {#if hover}
                   <Icon name="open-external" />
                 {/if}
@@ -144,7 +155,7 @@
               <!-- eslint-enable svelte/no-navigation-without-resolve -->
             {:else}
               <div class="txt-body-l-semibold flex min-w-0 items-center gap-1">
-                <span class="truncate">{repo.name || "Untitled"}</span>
+                <span class="truncate">{repoName}</span>
               </div>
             {/if}
           </div>
@@ -163,9 +174,11 @@
       </div>
       <div class="flex w-full">
         <div class="flex min-w-1/2 flex-col text-sm sm:min-w-auto">
-          <div class="txt-body-m-regular line-clamp-3">
-            {repo.description || "No description"}
-          </div>
+          {#if !isPrivate}
+            <div class="txt-body-m-regular line-clamp-3">
+              {repoDescription}
+            </div>
+          {/if}
           <div class="flex font-mono text-text-tertiary">
             <RepoId rid={repo.rid} />
           </div>
@@ -173,7 +186,7 @@
         <div
           class="ml-auto min-w-1/2 sm:min-w-auto"
           bind:this={activityContainerRef}>
-          {#if repo.activity}
+          {#if !isPrivate && repo.activity}
             <ActivityDiagram
               id={repo.rid}
               viewBoxHeight={100}
@@ -184,41 +197,43 @@
         </div>
       </div>
 
-      <div class="flex flex-col gap-2">
-        <div class="flex items-center justify-between">
-          <div
-            class="txt-code-regular flex items-center gap-2 font-mono text-text-tertiary">
-            <!-- eslint-disable svelte/no-navigation-without-resolve -- external links -->
-            <a
-              href={`${repoHref}/issues`}
-              target="_blank"
-              class="flex items-center gap-1 hover:underline"
-              title={`${repo.issues.open} issue${repo.issues.open === 1 ? "" : "s"}`}>
-              <Icon name="issue" />
-              {repo.issues.open}
-            </a>
-            <a
-              href={`${repoHref}/patches`}
-              target="_blank"
-              class="flex items-center gap-1 hover:underline"
-              title={`${repo.patches.open} patch${repo.patches.open === 1 ? "" : "es"}`}>
-              <Icon name="patch" />
-              {repo.patches.open}
-            </a>
-            <!-- eslint-enable svelte/no-navigation-without-resolve -->
+      {#if !isPrivate}
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <div
+              class="txt-code-regular flex items-center gap-2 font-mono text-text-tertiary">
+              <!-- eslint-disable svelte/no-navigation-without-resolve -- external links -->
+              <a
+                href={`${repoHref}/issues`}
+                target="_blank"
+                class="flex items-center gap-1 hover:underline"
+                title={`${repo.issues.open} issue${repo.issues.open === 1 ? "" : "s"}`}>
+                <Icon name="issue" />
+                {repo.issues.open}
+              </a>
+              <a
+                href={`${repoHref}/patches`}
+                target="_blank"
+                class="flex items-center gap-1 hover:underline"
+                title={`${repo.patches.open} patch${repo.patches.open === 1 ? "" : "es"}`}>
+                <Icon name="patch" />
+                {repo.patches.open}
+              </a>
+              <!-- eslint-enable svelte/no-navigation-without-resolve -->
+            </div>
+            {#if repo.lastCommit}
+              <!-- eslint-disable svelte/no-navigation-without-resolve -- external link -->
+              <a
+                href={`${repoHref}/commits/${repo.lastCommit.sha}`}
+                target="_blank"
+                class="txt-body-m-regular text-text-tertiary hover:underline">
+                Updated {timeAgo(new Date(repo.lastCommit.time * 1000), true)} ago
+              </a>
+              <!-- eslint-enable svelte/no-navigation-without-resolve -->
+            {/if}
           </div>
-          {#if repo.lastCommit}
-            <!-- eslint-disable svelte/no-navigation-without-resolve -- external link -->
-            <a
-              href={`${repoHref}/commits/${repo.lastCommit.sha}`}
-              target="_blank"
-              class="txt-body-m-regular text-text-tertiary hover:underline">
-              Updated {timeAgo(new Date(repo.lastCommit.time * 1000), true)} ago
-            </a>
-            <!-- eslint-enable svelte/no-navigation-without-resolve -->
-          {/if}
         </div>
-      </div>
+      {/if}
     </div>
   {/if}
 </div>
