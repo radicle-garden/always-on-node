@@ -50,18 +50,13 @@
         To seed a private repository, you need to add your Always On Node to the
         repository’s allowlist.
       </div>
-      <div class="txt-body-m-regular">1. Copy your Always On Node’s ID:</div>
-      <div class="w-fit">
-        <Command cmd={data.nodeId} />
-      </div>
-      <div class="txt-body-m-regular">
-        2. Add it to the repository’s allowlist:
-      </div>
       <div class="w-fit">
         <Command
           cmd={`rad id update --title "Add radicle.garden seed node to allow list" --allow did:key:${data.nodeId}`} />
       </div>
-      <div class="txt-body-m-regular">3. Sync changes</div>
+      <div class="txt-body-m-regular">
+        Then sync your changes with the network.
+      </div>
       <div class="w-fit">
         <Command cmd="rad sync" />
       </div>
