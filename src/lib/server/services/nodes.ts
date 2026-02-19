@@ -504,6 +504,7 @@ function parseNodeStatus(status: string): NodeStatus {
 export type Repo = {
   rid: string;
   fetching: boolean;
+  visibility?: "public" | "private";
 };
 
 export async function getSeededReposForNode(
@@ -535,12 +536,19 @@ export async function getSeededReposForNode(
       });
     }
 
-    const lsRids: string[] =
-      lsResult?.stdout.match(/\brad:[a-zA-Z0-9]+\b/g) ?? [];
+    const lsRepos = new Map<string, "public" | "private">();
+    if (lsResult) {
+      for (const line of lsResult.stdout.split("\n")) {
+        const match = line.match(/\b(rad:[a-zA-Z0-9]+)\s+(public|private)\b/);
+        if (match) {
+          lsRepos.set(match[1], match[2] as "public" | "private");
+        }
+      }
+    }
 
     log.debug("Retrieved seeded repositories", {
       nodeId,
-      count: lsRids.length,
+      count: lsRepos.size,
       userId: node.user_id,
     });
 
@@ -556,15 +564,17 @@ export async function getSeededReposForNode(
     const seedRids: string[] =
       seedResult?.stdout.match(/\brad:[a-zA-Z0-9]+\b/g) ?? [];
 
-    const setLsRids = new Set(lsRids);
-    const fetchingRids = seedRids.filter(item => !setLsRids.has(item));
-    const repos = [
-      ...lsRids.map(r => {
-        return { rid: r, fetching: false };
-      }),
-      ...fetchingRids.map(r => {
-        return { rid: r, fetching: true };
-      }),
+    const fetchingRids = seedRids.filter(rid => !lsRepos.has(rid));
+    const repos: Repo[] = [
+      ...[...lsRepos.entries()].map(([rid, visibility]) => ({
+        rid,
+        fetching: false,
+        visibility,
+      })),
+      ...fetchingRids.map(rid => ({
+        rid,
+        fetching: true,
+      })),
     ];
 
     return {

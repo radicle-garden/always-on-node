@@ -115,6 +115,16 @@ export const load: PageServerLoad = async ({ locals }) => {
         patches: { open: 0, merged: 0, draft: 0, archived: 0 },
         syncing: true,
       });
+    } else if (repo.visibility === "private") {
+      repositories.push({
+        rid: repo.rid,
+        name: "",
+        description: "",
+        seeding: 0,
+        issues: { open: 0, closed: 0 },
+        patches: { open: 0, merged: 0, draft: 0, archived: 0 },
+        visibility: "private",
+      });
     } else {
       try {
         const repoData = await httpdClient.getByRid(repo.rid);
