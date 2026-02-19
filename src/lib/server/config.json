@@ -20,8 +20,8 @@
     "z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.xyz:8776",
     "z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo@rosa.radicle.xyz:8776"
   ],
-  "nodePortRangeStart": 7000,
-  "nodePortRangeEnd": 7999,
+  "nodePortRangeStart": 57000,
+  "nodePortRangeEnd": 57010,
   "public": {
     "defaultHttpdApiHostname": "localhost",
     "defaultHttpdApiPort": 9999,
