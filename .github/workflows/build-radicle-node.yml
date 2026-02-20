@@ -79,18 +79,17 @@ jobs:
         run: |
           git --version
 
-          git fetch --all 
+          git fetch --all
 
           # Set source date. This is honored by `asciidoctor` and other tools.
           SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)
-          RADICLE_VERSION=$(./build/version)
+          RADICLE_VERSION=$(./build/version || echo "${GITHUB_REF_NAME}")
           GIT_HEAD=$(git rev-parse --short HEAD)
 
           echo "radicle_version=$RADICLE_VERSION" >> $GITHUB_OUTPUT
           echo "source_date_epoch=$SOURCE_DATE_EPOCH" >> $GITHUB_OUTPUT
           echo "git_head=$GIT_HEAD" >> $GITHUB_OUTPUT
           echo "tags=$RADICLE_VERSION" >> $GITHUB_OUTPUT
-
           echo "version: $RADICLE_VERSION, date: $SOURCE_DATE_EPOCH, git head: $GIT_HEAD"
 
   build-heartwood:
