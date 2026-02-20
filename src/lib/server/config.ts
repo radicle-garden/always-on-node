@@ -35,6 +35,14 @@ export interface AppConfig {
   stripeApiBase?: string;
   nodePortRangeStart: number;
   nodePortRangeEnd: number;
+  /** CPU limit for the radicle-node container as fractional cores (e.g. 0.5 = half a core). 0 means no limit. */
+  nodeContainerCpuLimit: number;
+  /** Memory limit for the radicle-node container in bytes. 0 means no limit. */
+  nodeContainerMemoryLimitBytes: number;
+  /** CPU limit for the radicle-httpd container as fractional cores. 0 means no limit. */
+  httpdContainerCpuLimit: number;
+  /** Memory limit for the radicle-httpd container in bytes. 0 means no limit. */
+  httpdContainerMemoryLimitBytes: number;
   public: {
     defaultHttpdApiHostname: string;
     defaultHttpdApiPort: number;
@@ -95,6 +103,18 @@ export function getConfig(): AppConfig {
       configJson.nodePortRangeStart,
     nodePortRangeEnd:
       Number(process.env.NODE_PORT_RANGE_END) || configJson.nodePortRangeEnd,
+    nodeContainerCpuLimit:
+      Number(process.env.NODE_CONTAINER_CPU_LIMIT) ||
+      configJson.nodeContainerCpuLimit,
+    nodeContainerMemoryLimitBytes:
+      Number(process.env.NODE_CONTAINER_MEMORY_LIMIT_BYTES) ||
+      configJson.nodeContainerMemoryLimitBytes,
+    httpdContainerCpuLimit:
+      Number(process.env.HTTPD_CONTAINER_CPU_LIMIT) ||
+      configJson.httpdContainerCpuLimit,
+    httpdContainerMemoryLimitBytes:
+      Number(process.env.HTTPD_CONTAINER_MEMORY_LIMIT_BYTES) ||
+      configJson.httpdContainerMemoryLimitBytes,
     public: {
       defaultHttpdApiHostname:
         process.env.DEFAULT_HTTPD_API_HOSTNAME ||

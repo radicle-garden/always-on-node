@@ -22,6 +22,10 @@
   ],
   "nodePortRangeStart": 57000,
   "nodePortRangeEnd": 57010,
+  "nodeContainerCpuLimit": 0,
+  "nodeContainerMemoryLimitBytes": 0,
+  "httpdContainerCpuLimit": 0,
+  "httpdContainerMemoryLimitBytes": 0,
   "public": {
     "defaultHttpdApiHostname": "localhost",
     "defaultHttpdApiPort": 9999,

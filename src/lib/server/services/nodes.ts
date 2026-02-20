@@ -33,6 +33,25 @@ type RadEnv = {
 
 const log = createServiceLogger("Nodes");
 
+/** Convert a fractional CPU value to a CpuQuota value (microseconds per period).
+ * The default CpuPeriod is 100,000 µs (100 ms), so 0.5 cores → 50,000 µs quota.
+ * 0 means no limit, matching the Docker API convention.
+ *   ┌──────────┬────────────┬──────────────────────────────┐
+ *   │ cpuLimit │  CpuQuota  │           meaning            │
+ *   ├──────────┼────────────┼──────────────────────────────┤
+ *   │ 0        │ 0          │ no limit                     │
+ *   ├──────────┼────────────┼──────────────────────────────┤
+ *   │ 0.5      │ 50_000 µs  │ half a core per 100ms period │
+ *   ├──────────┼────────────┼──────────────────────────────┤
+ *   │ 1.0      │ 100_000 µs │ one full core                │
+ *   ├──────────┼────────────┼──────────────────────────────┤
+ *   │ 2.0      │ 200_000 µs │ two cores                    │
+ *   └──────────┴────────────┴──────────────────────────────┘
+ * */
+function cpuToCpuQuota(cpuLimit: number): number {
+  return cpuLimit > 0 ? Math.round(cpuLimit * 100_000) : 0;
+}
+
 interface ServiceResult<T> {
   success: boolean;
   content?: T;
@@ -265,6 +284,8 @@ async function createContainers(
           Name: "always",
         },
         UsernsMode: "keep-id:uid=11011,gid=11011",
+        CpuQuota: cpuToCpuQuota(config.nodeContainerCpuLimit),
+        Memory: config.nodeContainerMemoryLimitBytes,
       },
       Labels: {
         app: "garden",
@@ -293,6 +314,8 @@ async function createContainers(
           Name: "always",
         },
         UsernsMode: "keep-id:uid=11011,gid=11011",
+        CpuQuota: cpuToCpuQuota(config.httpdContainerCpuLimit),
+        Memory: config.httpdContainerMemoryLimitBytes,
       },
       Labels: {
         app: "garden",
