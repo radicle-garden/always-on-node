@@ -33,9 +33,9 @@
   let activityContainerWidth = $state<number | null>(null);
   let isPrivate = $derived(repo.visibility === "private");
   let repoName = $derived(
-    isPrivate ? "Private repo" : (repo.name ?? "Untitled"),
+    isPrivate ? "Private repo" : (repo.name || "Untitled"),
   );
-  let repoDescription = $derived(repo.description ?? "No description");
+  let repoDescription = $derived(repo.description || "No description");
   let repoHref = $derived(
     `https://app.radicle.xyz/nodes/${nodeHttpdHostPort}/${repo.rid}`,
   );
