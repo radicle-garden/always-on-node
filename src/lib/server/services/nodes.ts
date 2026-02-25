@@ -132,8 +132,6 @@ function parseSeedCommandResult(
 }
 
 async function createNode(user: User): Promise<Node | null> {
-  const nodeAlias = `${user.handle}_seed`;
-
   const radHome = getRadHome(user.handle);
   if (!radHome) {
     log.warn(`Failed to get RAD_HOME for user ${user.handle}`, {
@@ -157,7 +155,7 @@ async function createNode(user: User): Promise<Node | null> {
       userId: user.id,
     });
 
-    await execa(radBinary, ["auth", "--alias", nodeAlias], { env });
+    await execa(radBinary, ["auth", "--alias", user.handle], { env });
 
     const nodeId = (
       await execa(radBinary, ["self", "--nid"], { env })
@@ -177,7 +175,7 @@ async function createNode(user: User): Promise<Node | null> {
       const db = await getDb();
       log.info("Creating new node", { nodeId, userId: user.id });
 
-      const nodeData = createNodeData(nodeId, nodeAlias, user.id);
+      const nodeData = createNodeData(nodeId, user.handle, user.id);
       const [persistedNode] = await db
         .insert(schema.nodes)
         .values(nodeData)
@@ -185,7 +183,7 @@ async function createNode(user: User): Promise<Node | null> {
 
       try {
         await createContainers(
-          nodeAlias,
+          user.handle,
           user.id,
           nodePort,
           radHome,
@@ -772,9 +770,8 @@ export async function unseedRepo(
 
 export async function stopContainers(user: User): Promise<ServiceResult<void>> {
   try {
-    const nodeAlias = `${user.handle}_seed`;
-    const nodeContainerName = `${nodeAlias}-node`;
-    const httpdContainerName = `${nodeAlias}-httpd`;
+    const nodeContainerName = `${user.handle}-node`;
+    const httpdContainerName = `${user.handle}-httpd`;
 
     const docker = await DockerClient.fromDockerHost(config.dockerHost);
 
@@ -828,9 +825,8 @@ export async function stopContainers(user: User): Promise<ServiceResult<void>> {
 
 async function startContainers(user: User): Promise<ServiceResult<void>> {
   try {
-    const nodeAlias = `${user.handle}_seed`;
-    const nodeContainerName = `${nodeAlias}-node`;
-    const httpdContainerName = `${nodeAlias}-httpd`;
+    const nodeContainerName = `${user.handle}-node`;
+    const httpdContainerName = `${user.handle}-httpd`;
 
     const docker = await DockerClient.fromDockerHost(config.dockerHost);
 

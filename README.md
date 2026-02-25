@@ -109,4 +109,4 @@ Use any future expiry date (e.g., `12/34`), any 3-digit CVC.
 3. Go to your profile page - you should see the subscription section
 4. Click "Start Free Trial" and complete checkout with test card
 5. Verify in the webhook listener terminal that events are being received
-6. Check that your containers are running: `podman ps | grep {username}_seed`
+6. Check that your containers are running: `podman ps | grep {username}`
