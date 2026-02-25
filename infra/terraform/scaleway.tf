@@ -65,7 +65,7 @@ resource "scaleway_block_volume" "aon_nodes_data" {
   name = "aon_nodes_data"
   tags = ["radiclegarden", "always-on-node", "data"]
   size_in_gb = 100
-  iops       = 5000
+  iops       = 15000
   zone = var.scaleway_zone
 }
 
