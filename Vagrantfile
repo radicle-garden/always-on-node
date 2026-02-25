@@ -18,13 +18,13 @@ Vagrant.configure("2") do |config|
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine and only allow access
   # via 127.0.0.1 to disable public access
-  config.vm.network "forwarded_port", guest: 80, host: 3080, host_ip: "127.0.0.1"
+  config.vm.network "forwarded_port", guest: 80, host: 3080, host_ip: "127.0.0.1", auto_correct: true
   for i in 57000...57010
-      config.vm.network :forwarded_port, guest: i, host: i, host_ip: "127.0.0.1"
+      config.vm.network :forwarded_port, guest: i, host: i, host_ip: "127.0.0.1", auto_correct: true
   end
-  config.vm.network "forwarded_port", guest: 5173, host: 5173, host_ip: "127.0.0.1"
-  config.vm.network "forwarded_port", guest: 5432, host: 55432, host_ip: "127.0.0.1"
-  config.vm.network "forwarded_port", guest: 9091, host: 9091, host_ip: "127.0.0.1"
+  config.vm.network "forwarded_port", guest: 5173, host: 5173, host_ip: "127.0.0.1", auto_correct: true
+  config.vm.network "forwarded_port", guest: 5432, host: 55432, host_ip: "127.0.0.1", auto_correct: true
+  config.vm.network "forwarded_port", guest: 9091, host: 9091, host_ip: "127.0.0.1", auto_correct: true
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
@@ -132,12 +132,13 @@ EOF
   config.vm.post_up_message = <<-MSG
 ┌──────────────────────────────────────────────┐
 │ Radicle Gardener · Dev Environment           │
-├──────────────────────────────────────────────┤
-│ VM IP:        192.168.33.10                  │
-│ SSH:          vagrant ssh                    │
-│ Logs:         tail -f sveltekit.log          │
-│ Dev Server:   http://localhost:5173          │
-│ Clean:        pnpm clean                     │
-└──────────────────────────────────────────────┘
+├────────────────────────────────────────────────┤
+│ VM IP:        192.168.33.10                    │
+│ SSH:          vagrant ssh                      │
+│ Logs:         tail -f sveltekit.log            │
+│ Dev Server:   http://localhost:5173 (*)        │
+│ Ports:        (*) use `vagrant port` to verify │
+│ Clean:        pnpm clean                       │
+└────────────────────────────────────────────────┘
 MSG
 end
