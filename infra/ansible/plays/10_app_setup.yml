@@ -112,3 +112,37 @@
         healthcheck_interval: 10s
         healthcheck_timeout: 5s
         healthcheck_start_period: 5s
+
+- name: Install e2e test dependencies
+  hosts: dev
+  gather_facts: no
+  become: true
+  become_user: "{{ system_username }}"
+  vars_files:
+    - ../environments/{{ deploy_env | default('production') }}.yml
+  tasks:
+    - name: Install pipx
+      become: true
+      become_user: root
+      package:
+        name: pipx
+        state: present
+
+    - name: Install podman-compose via pipx
+      command: pipx install podman-compose
+      args:
+        creates: /home/{{ system_username }}/.local/bin/podman-compose
+
+    - name: Install Playwright globally
+      become: true
+      become_user: root
+      community.general.npm:
+        name: "@playwright/test"
+        version: "1.58.0"
+        global: true
+        executable: /usr/bin/npm
+
+    - name: Install Playwright Chromium browser and system dependencies
+      ansible.builtin.shell: playwright install chromium --with-deps
+      args:
+        creates: /home/{{ system_username }}/.cache/ms-playwright/chromium_headless_shell-1208

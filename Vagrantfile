@@ -7,7 +7,7 @@ Vagrant.configure("2") do |config|
   # https://docs.vagrantup.com.
 
   config.vm.box = "radicle_garden/gardener"
-  config.vm.box_version = "0.2.5"
+  config.vm.box_version = "0.3.0"
 
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine. In the example below,
@@ -43,7 +43,7 @@ Vagrant.configure("2") do |config|
 
   # Sync the project folder, but we'll handle node_modules separately
   # to ensure correct architecture (Linux) dependencies
-  config.vm.synced_folder ".", "/vagrant", mount_options: ["dmode=775,fmode=664"]
+  config.vm.synced_folder ".", "/vagrant", mount_options: ["dmode=775,fmode=775"]
 
   # Create a VM-local node_modules and bind mount it into /vagrant
   # This ensures native dependencies are built for Linux, not macOS
