@@ -146,3 +146,8 @@
       ansible.builtin.shell: playwright install chromium --with-deps
       args:
         creates: /home/{{ system_username }}/.cache/ms-playwright/chromium_headless_shell-1208
+
+    - name: Install Claude Code CLI
+      ansible.builtin.shell: curl -fsSL https://claude.ai/install.sh | bash
+      args:
+        creates: /home/{{ system_username }}/.local/bin/claude
