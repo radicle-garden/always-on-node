@@ -23,7 +23,7 @@ concurrency:
 env:
   REGISTRY: quay.io
   IMAGE_NAME: radicle_garden/radicle-httpd
-  RADICLE_HTTPD_VERSION: "0.23.0"
+  RADICLE_HTTPD_VERSION: "0.24.0"
   ALPINE_VERSION: "3.23"
 
 jobs:
