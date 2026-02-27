@@ -1,7 +1,7 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
   import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
-  import { timeAgo } from "$lib/utils";
+  import { absoluteTimestamp, formatTimestamp } from "$lib/utils";
 
   import { toast } from "svelte-sonner";
 
@@ -223,8 +223,9 @@
                 href={`${repoHref}/commits/${repo.lastCommit.sha}`}
                 target="_blank"
                 rel="external"
+                title={absoluteTimestamp(repo.lastCommit.time)}
                 class="txt-body-m-regular text-text-tertiary hover:underline">
-                Updated {timeAgo(new Date(repo.lastCommit.time * 1000), true)} ago
+                Updated {formatTimestamp(repo.lastCommit.time)}
               </a>
             {/if}
           </div>
