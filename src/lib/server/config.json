@@ -17,6 +17,7 @@
   "nodeStatusMonitorTimeoutMs": 120000,
   "sseMaxListeners": 100,
   "nodePreferredSeeds": [
+    "z6MkuyPDChcwCruKGd2tw54FZo2HemY135JvTLzbVTvoWKJR@index.radicle.garden:8776",
     "z6MkrLMMsiPWUcNPHcRajuMi9mDfYckSoJyPwwnknocNYPm7@iris.radicle.xyz:8776",
     "z6Mkmqogy2qEM2ummccUthFEaaHvyYmYBYh3dbe9W4ebScxo@rosa.radicle.xyz:8776"
   ],
