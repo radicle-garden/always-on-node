@@ -44,9 +44,6 @@ export interface AppConfig {
   /** Memory limit for the radicle-httpd container in bytes. 0 means no limit. */
   httpdContainerMemoryLimitBytes: number;
   public: {
-    defaultHttpdApiHostname: string;
-    defaultHttpdApiPort: number;
-    defaultHttpdApiScheme: string;
     // Override this in production via PUBLIC_SERVICE_HOST_PORT to
     // radicle.garden or whatever domain we'll use.
     publicServiceHostPort: string;
@@ -116,15 +113,6 @@ export function getConfig(): AppConfig {
       Number(process.env.HTTPD_CONTAINER_MEMORY_LIMIT_BYTES) ||
       configJson.httpdContainerMemoryLimitBytes,
     public: {
-      defaultHttpdApiHostname:
-        process.env.DEFAULT_HTTPD_API_HOSTNAME ||
-        configJson.public.defaultHttpdApiHostname,
-      defaultHttpdApiPort:
-        Number(process.env.DEFAULT_HTTPD_API_PORT) ||
-        configJson.public.defaultHttpdApiPort,
-      defaultHttpdApiScheme:
-        process.env.DEFAULT_HTTPD_API_SCHEME ||
-        configJson.public.defaultHttpdApiScheme,
       publicServiceHostPort:
         process.env.PUBLIC_SERVICE_HOST_PORT ||
         configJson.public.publicServiceHostPort,

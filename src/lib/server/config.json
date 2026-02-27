@@ -28,9 +28,6 @@
   "httpdContainerCpuLimit": 0,
   "httpdContainerMemoryLimitBytes": 0,
   "public": {
-    "defaultHttpdApiHostname": "localhost",
-    "defaultHttpdApiPort": 9999,
-    "defaultHttpdApiScheme": "http",
     "publicServiceHostPort": "localhost:3080",
     "userMaxDiskUsageBytes": 5368709120
   }
