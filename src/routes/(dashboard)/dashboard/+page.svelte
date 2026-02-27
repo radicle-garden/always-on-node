@@ -168,7 +168,8 @@
         {repositories}
         showActions={!nodeStatuses[nodeId]?.isBooting && !isWaitingForNode}
         showCreateDialog
-        {nodeId} />
+        {nodeId}
+        httpdScheme={data.httpdScheme} />
     {/if}
   </div>
 {:else}

@@ -14,12 +14,14 @@
     nodeId,
     showActions,
     nodeHttpdHostPort,
+    httpdScheme,
   }: {
     nodeHttpdHostPort: string;
     repositories: RepoInfo[];
     showCreateDialog: boolean;
     showActions: boolean;
     nodeId?: string;
+    httpdScheme: string;
   } = $props();
 
   let filter = $state("");
@@ -112,7 +114,8 @@
           repo={r}
           {nodeHttpdHostPort}
           {nodeId}
-          showRemoveButton={showCreateDialog} />
+          showRemoveButton={showCreateDialog}
+          {httpdScheme} />
       </div>
     {/each}
   </div>
