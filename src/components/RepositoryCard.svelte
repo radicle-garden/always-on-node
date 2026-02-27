@@ -1,8 +1,13 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
+  import type { WeeklyActivity } from "$lib/commit";
+  import { groupCommitsByWeek } from "$lib/commit";
   import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
+  import { Fetcher } from "$lib/http-client/lib/fetcher";
+  import { Client } from "$lib/http-client/lib/repo";
   import { timeAgo } from "$lib/utils";
 
+  import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
 
   import type { RepoInfo } from "../routes/(dashboard)/dashboard/+page.server";
@@ -19,13 +24,21 @@
     nodeId,
     showRemoveButton = false,
     asLink = true,
+    httpdScheme,
   }: {
     repo: RepoInfo;
     nodeHttpdHostPort: string;
     nodeId?: string;
     showRemoveButton?: boolean;
     asLink?: boolean;
+    httpdScheme: string;
   } = $props();
+
+  let httpdHostname = $derived(nodeHttpdHostPort.split(":")[0]);
+  let httpdPort = $derived.by(() => {
+    const portStr = nodeHttpdHostPort.split(":")[1];
+    return portStr ? parseInt(portStr) : 3080;
+  });
 
   let hover = $state(false);
   let formRef: HTMLFormElement | undefined = $state();
@@ -37,6 +50,14 @@
   let repoHref = $derived(
     `https://app.radicle.xyz/nodes/${nodeHttpdHostPort}/${repo.rid}`,
   );
+
+  let fetchedActivity = $state<WeeklyActivity[] | undefined>(undefined);
+  let latestCommit = $state<{ time: number; sha: string } | undefined>(
+    undefined,
+  );
+
+  let shouldFetchActivity = $derived(!isPrivate && !repo.syncing);
+  let activityLoading = $derived(shouldFetchActivity && !fetchedActivity);
 
   $effect(() => {
     if (!activityContainerRef) return;
@@ -51,6 +72,44 @@
 
     return () => {
       resizeObserver.disconnect();
+    };
+  });
+
+  onMount(() => {
+    if (!shouldFetchActivity) return;
+
+    const controller = new AbortController();
+
+    const httpdClient = new Client(
+      new Fetcher({
+        hostname: httpdHostname,
+        port: httpdPort,
+        scheme: httpdScheme,
+      }),
+    );
+
+    httpdClient
+      .getActivity(repo.rid, { abort: controller.signal })
+      .then(commits => {
+        if (!shouldFetchActivity) return;
+
+        if (commits.activity.length > 0 && repo.head) {
+          latestCommit = {
+            time: commits.activity[0],
+            sha: repo.head,
+          };
+        }
+
+        fetchedActivity = groupCommitsByWeek(commits.activity);
+      })
+      .catch(err => {
+        if (err.name !== "AbortError") {
+          console.error("Failed to fetch activity:", err);
+        }
+      });
+
+    return () => {
+      controller.abort();
     };
   });
 
@@ -101,7 +160,8 @@
                 {repo}
                 {nodeHttpdHostPort}
                 {nodeId}
-                onRemove={handleUnseed} />
+                onRemove={handleUnseed}
+                {httpdScheme} />
             {/if}
           </div>
         </div>
@@ -165,7 +225,8 @@
               {repo}
               {nodeHttpdHostPort}
               {nodeId}
-              onRemove={handleUnseed} />
+              onRemove={handleUnseed}
+              {httpdScheme} />
           {/if}
         </div>
       </div>
@@ -181,14 +242,16 @@
           </div>
         </div>
         <div
-          class="ml-auto min-w-1/2 sm:min-w-auto"
+          class="ml-auto min-h-12 min-w-1/2 sm:min-w-auto"
           bind:this={activityContainerRef}>
-          {#if !isPrivate && repo.activity}
+          {#if !isPrivate && activityLoading}
+            <Skeleton class="h-12 w-24 bg-surface-subtle md:w-48.75" />
+          {:else if !isPrivate && fetchedActivity}
             <ActivityDiagram
               id={repo.rid}
               viewBoxHeight={100}
               styleColor="var(--color-surface-brand-secondary)"
-              activity={repo.activity}
+              activity={fetchedActivity}
               containerWidth={activityContainerWidth ?? 185} />
           {/if}
         </div>
@@ -218,13 +281,15 @@
                 {repo.patches.open}
               </a>
             </div>
-            {#if repo.lastCommit}
+            {#if activityLoading}
+              <Skeleton class="h-4 w-26.5 bg-surface-subtle" />
+            {:else if latestCommit}
               <a
-                href={`${repoHref}/commits/${repo.lastCommit.sha}`}
+                href={`${repoHref}/commits/${latestCommit.sha}`}
                 target="_blank"
                 rel="external"
                 class="txt-body-m-regular text-text-tertiary hover:underline">
-                Updated {timeAgo(new Date(repo.lastCommit.time * 1000), true)} ago
+                Updated {timeAgo(new Date(latestCommit.time * 1000), true)} ago
               </a>
             {/if}
           </div>

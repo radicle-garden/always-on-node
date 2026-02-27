@@ -1,5 +1,3 @@
-import type { WeeklyActivity } from "$lib/commit";
-import { groupCommitsByWeek } from "$lib/commit";
 import { config } from "$lib/server/config";
 import { createHttpdClient } from "$lib/server/httpdClient";
 import { createServiceLogger } from "$lib/server/logger";
@@ -27,10 +25,9 @@ export interface RepoInfo {
   seeding: number;
   issues: { open: number; closed: number };
   patches: { open: number; merged: number; draft: number; archived: number };
-  lastCommit?: { time: number; sha: string };
   syncing?: boolean;
-  activity?: WeeklyActivity[];
   visibility?: "public" | "private";
+  head?: string;
 }
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -130,15 +127,6 @@ export const load: PageServerLoad = async ({ locals }) => {
         const repoData = await httpdClient.getByRid(repo.rid);
         const projectData = repoData.payloads["xyz.radicle.project"];
 
-        let lastCommit: { time: number; sha: string } | undefined;
-        const commits = await httpdClient.getActivity(repo.rid);
-        if (commits.activity.length > 0) {
-          lastCommit = {
-            time: commits.activity[0],
-            sha: projectData.meta.head,
-          };
-        }
-
         repositories.push({
           rid: repo.rid,
           name: projectData.data.name,
@@ -146,10 +134,9 @@ export const load: PageServerLoad = async ({ locals }) => {
           seeding: repoData.seeding,
           issues: projectData.meta.issues,
           patches: projectData.meta.patches,
-          lastCommit,
-          activity: groupCommitsByWeek(commits.activity),
           visibility:
             repoData.visibility.type === "private" ? "private" : "public",
+          head: projectData.meta.head,
         });
       } catch (e) {
         log.warn("Failed to fetch repo", { rid: repo.rid, error: e });
@@ -181,6 +168,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     stripePriceId: config.stripePriceId,
     publicServiceHostPort: config.public.publicServiceHostPort,
     userMaxDiskUsageBytes: config.public.userMaxDiskUsageBytes,
+    httpdScheme: config.httpdScheme,
   };
 };
 

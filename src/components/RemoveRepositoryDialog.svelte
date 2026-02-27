@@ -15,6 +15,7 @@
     nodeHttpdHostPort,
     nodeId,
     onRemove,
+    httpdScheme,
   }: {
     open?: boolean;
     title: string;
@@ -23,6 +24,7 @@
     nodeHttpdHostPort: string;
     nodeId?: string;
     onRemove: () => void;
+    httpdScheme: string;
   } = $props();
 
   let hover = $state(false);
@@ -74,7 +76,8 @@
           {nodeHttpdHostPort}
           {nodeId}
           showRemoveButton={false}
-          asLink={false} />
+          asLink={false}
+          {httpdScheme} />
       </div>
     </Dialog.Header>
     <Dialog.Footer class="grid grid-cols-2 gap-2">
