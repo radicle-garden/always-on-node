@@ -47,39 +47,47 @@ export function getDaysPassed(from: Date, to: Date): number {
   return Math.floor((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000));
 }
 
-export function timeAgo(date: Date, short = false) {
-  const now = new Date();
-  const then = date;
-  const diff = now.getTime() - then.getTime();
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  if (seconds < 60) {
-    return `${seconds}${short ? "s" : " second"}${short || seconds === 1 ? "" : "s"}`;
-  }
-
-  if (minutes < 60) {
-    return `${minutes}${short ? "m" : " minute"}${short || minutes === 1 ? "" : "s"}`;
-  }
-
-  if (hours < 24) {
-    return `${hours}${short ? "h" : " hour"}${short || hours === 1 ? "" : "s"}`;
-  }
-
-  if (days < 30) {
-    return `${days}${short ? "d" : " day"}${short || days === 1 ? "" : "s"}`;
-  }
-
-  // Months
-  if (days < 365) {
-    return `${Math.floor(days / 30)}${short ? "mo" : " month"}${short || Math.floor(days / 30) === 1 ? "" : "s"}`;
-  }
-
-  // Years
-  return `${Math.floor(days / 365)}${short ? "y" : " year"}${short || Math.floor(days / 365) === 1 ? "" : "s"}`;
+export function absoluteTimestamp(time: number | undefined) {
+  return time ? new Date(time * 1000).toString() : undefined;
 }
+
+export const formatTimestamp = (
+  timestamp: number,
+  current = new Date().getTime(),
+): string => {
+  const units: Record<string, number> = {
+    year: 24 * 60 * 60 * 1000 * 365,
+    month: (24 * 60 * 60 * 1000 * 365) / 12,
+    day: 24 * 60 * 60 * 1000,
+    hour: 60 * 60 * 1000,
+    minute: 60 * 1000,
+    second: 1000,
+  };
+
+  timestamp = timestamp * 1000;
+  const rtf = new Intl.RelativeTimeFormat("en", {
+    numeric: "auto",
+    style: "long",
+  });
+  const elapsed = current - timestamp;
+
+  if (elapsed > units["year"]) {
+    return "more than a year ago";
+  } else if (elapsed < 0) {
+    return "now";
+  }
+
+  for (const u in units) {
+    if (elapsed > units[u] || u === "second") {
+      return rtf.format(
+        Math.round(elapsed / units[u]) * -1,
+        u as Intl.RelativeTimeFormatUnit,
+      );
+    }
+  }
+
+  return new Date(timestamp).toUTCString();
+};
 
 export async function copyToClipboard(text: string) {
   await navigator.clipboard.writeText(text);

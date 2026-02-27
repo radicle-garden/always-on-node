@@ -2,7 +2,7 @@
   import { enhance } from "$app/forms";
   import type { WeeklyActivity } from "$lib/commit";
   import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
-  import { timeAgo } from "$lib/utils";
+  import { absoluteTimestamp, formatTimestamp } from "$lib/utils";
 
   import { toast } from "svelte-sonner";
 
@@ -270,8 +270,9 @@
                 href={`${repoHref}/commits/${lastCommitData.sha}`}
                 target="_blank"
                 rel="external"
+                title={absoluteTimestamp(lastCommitData.time)}
                 class="txt-body-m-regular text-text-tertiary hover:underline">
-                Updated {timeAgo(new Date(lastCommitData.time * 1000), true)} ago
+                Updated {formatTimestamp(lastCommitData.time)}
               </a>
             {/if}
           </div>
