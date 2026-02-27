@@ -358,9 +358,9 @@ async function execNodeCommand(
       ...args,
     ]);
 
-    log.debug("Node command output", { stdout, userId: node.user_id });
+    log.debug(`Node command stdout:\n${stdout}`, { userId: node.user_id });
     if (stderr) {
-      log.warn("Node command stderr", { stderr, userId: node.user_id });
+      log.warn(`Node command stderr:\n${stderr}`, { userId: node.user_id });
     }
 
     return { stdout, stderr };
