@@ -1,5 +1,4 @@
 import type { WeeklyActivity } from "$lib/commit";
-import { groupCommitsByWeek } from "$lib/commit";
 import { config } from "$lib/server/config";
 import { createHttpdClient } from "$lib/server/httpdClient";
 import { createServiceLogger } from "$lib/server/logger";
@@ -130,15 +129,6 @@ export const load: PageServerLoad = async ({ locals }) => {
         const repoData = await httpdClient.getByRid(repo.rid);
         const projectData = repoData.payloads["xyz.radicle.project"];
 
-        let lastCommit: { time: number; sha: string } | undefined;
-        const commits = await httpdClient.getActivity(repo.rid);
-        if (commits.activity.length > 0) {
-          lastCommit = {
-            time: commits.activity[0],
-            sha: projectData.meta.head,
-          };
-        }
-
         repositories.push({
           rid: repo.rid,
           name: projectData.data.name,
@@ -146,8 +136,6 @@ export const load: PageServerLoad = async ({ locals }) => {
           seeding: repoData.seeding,
           issues: projectData.meta.issues,
           patches: projectData.meta.patches,
-          lastCommit,
-          activity: groupCommitsByWeek(commits.activity),
           visibility:
             repoData.visibility.type === "private" ? "private" : "public",
         });
