@@ -256,14 +256,7 @@ async function createContainers(
     {
       Image: nodeImage,
       Env: ["RUST_BACKTRACE=1", "RAD_HOME=/radicle", "RAD_PASSPHRASE="],
-      Cmd: [
-        "--log-logger",
-        "structured",
-        "--log-format",
-        "json",
-        "--listen",
-        `0.0.0.0:${nodePort}`,
-      ],
+      Cmd: ["--log-logger", "structured", "--log-format", "json"],
       ExposedPorts: {
         [`${nodePort}/tcp`]: {},
       },
