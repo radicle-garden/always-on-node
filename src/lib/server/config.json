@@ -27,6 +27,7 @@
   "nodeContainerMemoryLimitBytes": 0,
   "httpdContainerCpuLimit": 0,
   "httpdContainerMemoryLimitBytes": 0,
+  "nodeFetchPackReceive": "2.0 GiB",
   "public": {
     "defaultHttpdApiHostname": "localhost",
     "defaultHttpdApiPort": 9999,

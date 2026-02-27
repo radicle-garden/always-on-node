@@ -43,6 +43,7 @@ export interface AppConfig {
   httpdContainerCpuLimit: number;
   /** Memory limit for the radicle-httpd container in bytes. 0 means no limit. */
   httpdContainerMemoryLimitBytes: number;
+  nodeFetchPackReceive: string;
   public: {
     defaultHttpdApiHostname: string;
     defaultHttpdApiPort: number;
@@ -115,6 +116,8 @@ export function getConfig(): AppConfig {
     httpdContainerMemoryLimitBytes:
       Number(process.env.HTTPD_CONTAINER_MEMORY_LIMIT_BYTES) ||
       configJson.httpdContainerMemoryLimitBytes,
+    nodeFetchPackReceive:
+      process.env.NODE_FETCH_PACK_RECEIVE || configJson.nodeFetchPackReceive,
     public: {
       defaultHttpdApiHostname:
         process.env.DEFAULT_HTTPD_API_HOSTNAME ||
