@@ -1,7 +1,8 @@
 import type { WeeklyActivity } from "$lib/commit";
 import { groupCommitsByWeek } from "$lib/commit";
+import { Fetcher } from "$lib/http-client/lib/fetcher";
+import { Client } from "$lib/http-client/lib/repo";
 import { config } from "$lib/server/config";
-import { createHttpdClient } from "$lib/server/httpdClient";
 import { createServiceLogger } from "$lib/server/logger";
 import {
   type Repo,
@@ -102,7 +103,13 @@ export const load: PageServerLoad = async ({ locals }) => {
   }
 
   const repositories: RepoInfo[] = [];
-  const httpdClient = createHttpdClient(currentUser.handle);
+  const httpdClient = new Client(
+    new Fetcher({
+      hostname: `${currentUser.handle}.${config.fqdn}`,
+      port: config.httpdPort,
+      scheme: config.httpdScheme,
+    }),
+  );
 
   for (const repo of repos) {
     if (repo.fetching) {
