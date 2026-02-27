@@ -1069,6 +1069,19 @@ async function updateConfig(
       },
     );
   }
+
+  await execa(
+    config.radBinaryPath,
+    [
+      "config",
+      "set",
+      "node.limits.fetchPackReceive",
+      config.nodeFetchPackReceive,
+    ],
+    {
+      env,
+    },
+  );
 }
 
 export async function getPortFromConfig(env: RadEnv): Promise<number> {
