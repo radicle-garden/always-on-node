@@ -1,6 +1,5 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
-  import type { WeeklyActivity } from "$lib/commit";
   import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
   import { absoluteTimestamp, formatTimestamp } from "$lib/utils";
 
@@ -39,19 +38,6 @@
     `https://app.radicle.xyz/nodes/${nodeHttpdHostPort}/${repo.rid}`,
   );
 
-  let fetchedActivity = $state<WeeklyActivity[] | undefined>(undefined);
-  let fetchedLastCommit = $state<{ time: number; sha: string } | undefined>(
-    undefined,
-  );
-  let activityFetchDone = $state(false);
-
-  let activityData = $derived(repo.activity ?? fetchedActivity);
-  let lastCommitData = $derived(repo.lastCommit ?? fetchedLastCommit);
-  let shouldFetchActivity = $derived(
-    !repo.activity && !isPrivate && !repo.syncing,
-  );
-  let activityLoading = $derived(shouldFetchActivity && !activityFetchDone);
-
   $effect(() => {
     if (!activityContainerRef) return;
 
@@ -65,35 +51,6 @@
 
     return () => {
       resizeObserver.disconnect();
-    };
-  });
-
-  $effect(() => {
-    if (!shouldFetchActivity) return;
-
-    const rid = repo.rid;
-    const controller = new AbortController();
-
-    fetch(`/api/repos/${encodeURIComponent(rid)}/activity`, {
-      signal: controller.signal,
-    })
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to fetch activity");
-        return res.json();
-      })
-      .then(data => {
-        fetchedActivity = data.activity;
-        fetchedLastCommit = data.lastCommit;
-        activityFetchDone = true;
-      })
-      .catch(err => {
-        if (err.name !== "AbortError") {
-          activityFetchDone = true;
-        }
-      });
-
-    return () => {
-      controller.abort();
     };
   });
 
@@ -224,16 +181,14 @@
           </div>
         </div>
         <div
-          class="ml-auto min-h-12 min-w-1/2 sm:min-w-auto"
+          class="ml-auto min-w-1/2 sm:min-w-auto"
           bind:this={activityContainerRef}>
-          {#if !isPrivate && activityLoading}
-            <Skeleton class="ml-auto h-13 w-24 bg-surface-subtle md:w-48.75" />
-          {:else if !isPrivate && activityData}
+          {#if !isPrivate && repo.activity}
             <ActivityDiagram
               id={repo.rid}
               viewBoxHeight={100}
               styleColor="var(--color-surface-brand-secondary)"
-              activity={activityData}
+              activity={repo.activity}
               containerWidth={activityContainerWidth ?? 185} />
           {/if}
         </div>
@@ -263,16 +218,14 @@
                 {repo.patches.open}
               </a>
             </div>
-            {#if activityLoading}
-              <Skeleton class="h-4 w-26.5 bg-surface-subtle" />
-            {:else if lastCommitData}
+            {#if repo.lastCommit}
               <a
-                href={`${repoHref}/commits/${lastCommitData.sha}`}
+                href={`${repoHref}/commits/${repo.lastCommit.sha}`}
                 target="_blank"
                 rel="external"
-                title={absoluteTimestamp(lastCommitData.time)}
+                title={absoluteTimestamp(repo.lastCommit.time)}
                 class="txt-body-m-regular text-text-tertiary hover:underline">
-                Updated {formatTimestamp(lastCommitData.time)}
+                Updated {formatTimestamp(repo.lastCommit.time)}
               </a>
             {/if}
           </div>
