@@ -11,6 +11,7 @@ const webserverPort = parseInt(process.env.PLAYWRIGHT_WEBSERVER_PORT || "3000");
 
 export default defineConfig({
   testDir: "tests/e2e",
+  testIgnore: ["**/*.staging.test.ts"],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
