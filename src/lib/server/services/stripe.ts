@@ -311,7 +311,7 @@ async function handleWebhookEvent(
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
-        await syncSubscriptionFromStripe(subscription.id);
+        await syncSubscriptionFromEvent(subscription);
 
         if (
           subscription.status === "active" ||
@@ -383,7 +383,7 @@ async function handleWebhookEvent(
 
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
-        await syncSubscriptionFromStripe(subscription.id);
+        await syncSubscriptionFromEvent(subscription);
 
         const userId = Number(subscription.metadata.user_id);
         if (!userId || isNaN(userId)) {
