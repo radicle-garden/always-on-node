@@ -89,3 +89,7 @@ export function buildSubscriptionPayload(overrides: {
     trial_end: overrides.trialEnd ?? null,
   } as Stripe.Subscription;
 }
+
+export const THIRTY_DAYS_IN_SECONDS = 30 * 24 * 60 * 60;
+export const ONE_WEEK_IN_SECONDS = 7 * 24 * 60 * 60;
+export const NOW_IN_SECONDS = Math.floor(Date.now() / 1000);

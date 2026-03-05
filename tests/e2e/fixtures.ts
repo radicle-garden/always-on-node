@@ -1,9 +1,11 @@
+import { getDb } from "$lib/server/db";
+
 import jwt from "jsonwebtoken";
 
 import type { Page } from "@playwright/test";
 import { test as base } from "@playwright/test";
 
-import { deleteUserByEmail, getUserByEmail } from "./helpers/db";
+import { deleteUserByEmail, getUserByEmail } from "../helpers/db";
 
 export interface TestUser {
   handle: string;
@@ -42,7 +44,7 @@ export const it = base.extend<AuthFixtures>({
     await page.waitForURL("/register");
     await page.waitForSelector("text=Check your email");
 
-    const user = await getUserByEmail(testUser.email);
+    const user = await getUserByEmail(await getDb(), testUser.email);
     if (!user) throw new Error("User not created");
 
     const token = jwt.sign(
@@ -57,7 +59,7 @@ export const it = base.extend<AuthFixtures>({
 
     await use(testUser);
 
-    await deleteUserByEmail(testUser.email);
+    await deleteUserByEmail(await getDb(), testUser.email);
   },
 
   authenticatedPage: async (
