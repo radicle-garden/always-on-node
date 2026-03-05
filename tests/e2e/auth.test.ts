@@ -1,5 +1,8 @@
+import { getDb } from "$lib/server/db";
+
+import { deleteUserByEmail } from "../helpers/db";
+
 import { describe, expect, it } from "./fixtures";
-import { deleteUserByEmail } from "./helpers/db";
 
 describe("/login page", () => {
   it("logs in with valid credentials", async ({ page, verifiedUser }) => {
@@ -69,7 +72,7 @@ describe("/register page", () => {
         page.getByText("Please verify your email address to login."),
       ).toBeVisible();
     } finally {
-      await deleteUserByEmail(unverifiedEmail);
+      await deleteUserByEmail(await getDb(), unverifiedEmail);
     }
   });
 });
