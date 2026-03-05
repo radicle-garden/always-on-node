@@ -1050,6 +1050,14 @@ async function updateConfig(
 
   await execa(
     config.radBinaryPath,
+    ["config", "unset", "node.externalAddresses"],
+    {
+      env,
+    },
+  );
+
+  await execa(
+    config.radBinaryPath,
     ["config", "push", "node.externalAddresses", `${nodeFqdn}:${port}`],
     {
       env,
