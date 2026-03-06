@@ -1,6 +1,8 @@
 import { getDb } from "$lib/server/db";
 import { stopContainers } from "$lib/server/services/nodes";
 
+import Stripe from "stripe";
+
 import { test as base, expect } from "@playwright/test";
 
 import {
@@ -9,7 +11,10 @@ import {
   getUserByEmail,
   insertStripeCustomer,
 } from "../helpers/db";
-import { buildSubscriptionPayload } from "../helpers/stripe";
+import {
+  buildStripeClientConfig,
+  buildSubscriptionPayload,
+} from "../helpers/stripe";
 
 import type { TestUser } from "./fixtures";
 import { it as baseIt } from "./fixtures";
@@ -32,7 +37,17 @@ export const it = baseIt.extend<SubscribedUserFixtures>({
     // that assert container state start from a known-clean state.
     await stopContainers(user);
 
-    const stripeCustomerId = `cus_test_${user.id}`;
+    // Create a real customer in stripe-mock so checkout/portal session
+    // endpoints can use the customer ID via the Stripe API.
+    const stripeClient = new Stripe(
+      process.env.STRIPE_SECRET_SERVER_SIDE_KEY!,
+      buildStripeClientConfig(),
+    );
+    const customer = await stripeClient.customers.create({
+      email: user.email,
+      name: user.handle,
+    });
+    const stripeCustomerId = customer.id;
     await insertStripeCustomer(await getDb(), user.id, stripeCustomerId);
 
     await use({ ...verifiedUser, stripeCustomerId, userId: user.id });
