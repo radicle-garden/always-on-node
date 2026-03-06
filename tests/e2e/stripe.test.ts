@@ -4,20 +4,12 @@ import { stopContainers } from "$lib/server/services/nodes";
 import Stripe from "stripe";
 
 import { getSubscriptionByUserId, getUserByEmail } from "../helpers/db";
-import { buildSubscriptionPayload } from "../helpers/stripe";
+import { buildSubscriptionPayload, NOW_IN_SECONDS, ONE_WEEK_IN_SECONDS } from "../helpers/stripe";
 
 import { isContainerRunning } from "./helpers/containers";
 import { getCookieHeader } from "./helpers/page";
 import { postWebhook } from "./helpers/webhook";
-import {
-  describe,
-  expect,
-  it,
-  startContainersViaWebhook,
-} from "./stripe.fixtures";
-
-const ONE_WEEK_IN_SECONDS = 7 * 24 * 60 * 60;
-const NOW_IN_SECONDS = Math.floor(Date.now() / 1000);
+import { describe, expect, it, startContainersViaWebhook } from "./stripe.fixtures";
 
 describe("POST /api/stripe/webhook", () => {
   describe("on customer.subscription.created", () => {

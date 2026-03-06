@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   buildStripeEvent,
-  buildSubscriptionPayload,
+  buildSubscriptionPayload, ONE_WEEK_IN_SECONDS, THIRTY_DAYS_IN_SECONDS
 } from "../../../helpers/stripe";
 
 // ---------------------------------------------------------------------------
@@ -98,13 +98,14 @@ interface MockDb {
   where: ReturnType<typeof vi.fn>;
 }
 
+const FAKE_NOW_IN_SECONDS = 1700000000;
 /** Unit test defaults for subscription fields (stable timestamps, test price ID). */
 const UNIT_SUB_DEFAULTS = {
   priceId: "price_test_789",
-  trialStart: 1700000000,
-  trialEnd: 1700604800,
-  currentPeriodStart: 1700000000,
-  currentPeriodEnd: 1702592000,
+  trialStart: FAKE_NOW_IN_SECONDS,
+  trialEnd: FAKE_NOW_IN_SECONDS + ONE_WEEK_IN_SECONDS,
+  currentPeriodStart: FAKE_NOW_IN_SECONDS,
+  currentPeriodEnd: FAKE_NOW_IN_SECONDS + THIRTY_DAYS_IN_SECONDS,
 } as const;
 
 function createMockSubscription(
@@ -182,7 +183,7 @@ describe("syncSubscriptionFromStripe", () => {
     expect(mockDb.insert).not.toHaveBeenCalled();
   });
 
-  it("logs error and returns early when no matching customer found", async () => {
+  it("no subscription upsert, when no matching customer found", async () => {
     const sub = createMockSubscription();
     mockSubscriptionsRetrieve.mockResolvedValue(sub);
     mockDb.query.stripeCustomers.findFirst.mockResolvedValue(null);
@@ -194,7 +195,7 @@ describe("syncSubscriptionFromStripe", () => {
   });
 
   it("maps trial_end timestamp from Unix epoch to JS Date", async () => {
-    const trialEndEpoch = 1700604800;
+    const trialEndEpoch = FAKE_NOW_IN_SECONDS+ONE_WEEK_IN_SECONDS;
     const sub = createMockSubscription({ trialEnd: trialEndEpoch });
     mockSubscriptionsRetrieve.mockResolvedValue(sub);
     mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
@@ -210,7 +211,7 @@ describe("syncSubscriptionFromStripe", () => {
   });
 
   it("maps cancel_at and canceled_at timestamps from Unix epoch to JS Date", async () => {
-    const cancelAtEpoch = 1710604800;
+    const cancelAtEpoch = FAKE_NOW_IN_SECONDS+ONE_WEEK_IN_SECONDS;
     const canceledAtEpoch = 1710691200;
     const sub = createMockSubscription({
       cancelAt: cancelAtEpoch,
