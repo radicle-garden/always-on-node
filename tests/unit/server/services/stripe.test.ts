@@ -9,8 +9,10 @@ import type Stripe from "stripe";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  ONE_WEEK_IN_SECONDS,
+  THIRTY_DAYS_IN_SECONDS,
   buildStripeEvent,
-  buildSubscriptionPayload, ONE_WEEK_IN_SECONDS, THIRTY_DAYS_IN_SECONDS
+  buildSubscriptionPayload,
 } from "../../../helpers/stripe";
 
 // ---------------------------------------------------------------------------
@@ -195,7 +197,7 @@ describe("syncSubscriptionFromStripe", () => {
   });
 
   it("maps trial_end timestamp from Unix epoch to JS Date", async () => {
-    const trialEndEpoch = FAKE_NOW_IN_SECONDS+ONE_WEEK_IN_SECONDS;
+    const trialEndEpoch = FAKE_NOW_IN_SECONDS + ONE_WEEK_IN_SECONDS;
     const sub = createMockSubscription({ trialEnd: trialEndEpoch });
     mockSubscriptionsRetrieve.mockResolvedValue(sub);
     mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
@@ -211,7 +213,7 @@ describe("syncSubscriptionFromStripe", () => {
   });
 
   it("maps cancel_at and canceled_at timestamps from Unix epoch to JS Date", async () => {
-    const cancelAtEpoch = FAKE_NOW_IN_SECONDS+ONE_WEEK_IN_SECONDS;
+    const cancelAtEpoch = FAKE_NOW_IN_SECONDS + ONE_WEEK_IN_SECONDS;
     const canceledAtEpoch = 1710691200;
     const sub = createMockSubscription({
       cancelAt: cancelAtEpoch,

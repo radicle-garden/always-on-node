@@ -4,12 +4,21 @@ import { stopContainers } from "$lib/server/services/nodes";
 import Stripe from "stripe";
 
 import { getSubscriptionByUserId, getUserByEmail } from "../helpers/db";
-import { buildSubscriptionPayload, NOW_IN_SECONDS, ONE_WEEK_IN_SECONDS } from "../helpers/stripe";
+import {
+  NOW_IN_SECONDS,
+  ONE_WEEK_IN_SECONDS,
+  buildSubscriptionPayload,
+} from "../helpers/stripe";
 
 import { isContainerRunning } from "./helpers/containers";
 import { getCookieHeader } from "./helpers/page";
 import { postWebhook } from "./helpers/webhook";
-import { describe, expect, it, startContainersViaWebhook } from "./stripe.fixtures";
+import {
+  describe,
+  expect,
+  it,
+  startContainersViaWebhook,
+} from "./stripe.fixtures";
 
 describe("POST /api/stripe/webhook", () => {
   describe("on customer.subscription.created", () => {
