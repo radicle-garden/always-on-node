@@ -237,12 +237,12 @@ async function createContainers(
   const nodeImagePull = docker.imageCreate({
     fromImage: nodeImageName,
     tag: nodeImageTag,
-    platform: "linux/arm64",
+    platform: config.containerPlatform,
   });
   const httpdImagePull = docker.imageCreate({
     fromImage: httpdImageName,
     tag: httpdImageTag,
-    platform: "linux/arm64",
+    platform: config.containerPlatform,
   });
 
   await nodeImagePull.wait();
@@ -274,7 +274,7 @@ async function createContainers(
         RestartPolicy: {
           Name: "always",
         },
-        UsernsMode: "keep-id:uid=11011,gid=11011",
+        UsernsMode: config.containerUsernsMode,
         CpuQuota: cpuToCpuQuota(config.nodeContainerCpuLimit),
         Memory: config.nodeContainerMemoryLimitBytes,
       },
@@ -285,7 +285,7 @@ async function createContainers(
         node_id: nodeId,
       },
     },
-    { name: nodeContainerName, platform: "linux/arm64" },
+    { name: nodeContainerName, platform: config.containerPlatform },
   );
 
   log.info(`Created node container ${nodeContainerName}`, {
@@ -304,7 +304,7 @@ async function createContainers(
         RestartPolicy: {
           Name: "always",
         },
-        UsernsMode: "keep-id:uid=11011,gid=11011",
+        UsernsMode: config.containerUsernsMode,
         CpuQuota: cpuToCpuQuota(config.httpdContainerCpuLimit),
         Memory: config.httpdContainerMemoryLimitBytes,
       },
@@ -315,7 +315,7 @@ async function createContainers(
         node_id: nodeId,
       },
     },
-    { name: httpdContainerName, platform: "linux/arm64" },
+    { name: httpdContainerName, platform: config.containerPlatform },
   );
 
   log.info(`Created httpd container ${httpdContainerName}`, {

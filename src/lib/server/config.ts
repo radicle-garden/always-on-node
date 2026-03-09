@@ -21,6 +21,8 @@ export interface AppConfig {
   nodeEnv: string;
   logLevel: string;
   dockerHost: string;
+  containerPlatform: string;
+  containerUsernsMode: string;
   radicleNodeContainer: string;
   radicleHttpdContainer: string;
   nodeBootingTimeoutMs: number;
@@ -71,6 +73,10 @@ export function getConfig(): AppConfig {
     nodeEnv: process.env.NODE_ENV || configJson.nodeEnv,
     logLevel: process.env.LOG_LEVEL || configJson.logLevel,
     dockerHost: process.env.DOCKER_HOST || configJson.dockerHost,
+    containerPlatform:
+      process.env.CONTAINER_PLATFORM || configJson.containerPlatform,
+    containerUsernsMode:
+      process.env.CONTAINER_USERNS_MODE ?? configJson.containerUsernsMode,
     radicleNodeContainer:
       process.env.RADICLE_NODE_CONTAINER || configJson.radicleNodeContainer,
     radicleHttpdContainer:
