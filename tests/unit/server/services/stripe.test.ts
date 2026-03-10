@@ -44,7 +44,8 @@ vi.mock("$lib/server/db", () => {
       users: { findFirst: vi.fn() },
     },
     insert: vi.fn().mockReturnThis(),
-    values: vi.fn().mockResolvedValue(undefined),
+    values: vi.fn().mockReturnThis(),
+    onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
     update: vi.fn().mockReturnThis(),
     set: vi.fn().mockReturnThis(),
     where: vi.fn().mockResolvedValue(undefined),
@@ -95,6 +96,7 @@ interface MockDb {
   };
   insert: ReturnType<typeof vi.fn>;
   values: ReturnType<typeof vi.fn>;
+  onConflictDoUpdate: ReturnType<typeof vi.fn>;
   update: ReturnType<typeof vi.fn>;
   set: ReturnType<typeof vi.fn>;
   where: ReturnType<typeof vi.fn>;
@@ -134,7 +136,8 @@ beforeEach(async () => {
   mockDb = (await getDb()) as unknown as MockDb;
 
   mockDb.insert.mockReturnThis();
-  mockDb.values.mockResolvedValue(undefined);
+  mockDb.values.mockReturnThis();
+  mockDb.onConflictDoUpdate.mockResolvedValue(undefined);
   mockDb.update.mockReturnThis();
   mockDb.set.mockReturnThis();
   mockDb.where.mockResolvedValue(undefined);
@@ -145,11 +148,10 @@ beforeEach(async () => {
 // ---------------------------------------------------------------------------
 
 describe("syncSubscriptionFromStripe", () => {
-  it("inserts a new subscription row when none exists", async () => {
+  it("upserts a subscription row via onConflictDoUpdate", async () => {
     const sub = createMockSubscription({ status: "trialing" });
     mockSubscriptionsRetrieve.mockResolvedValue(sub);
     mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
-    mockDb.query.stripeSubscriptions.findFirst.mockResolvedValue(null);
 
     await stripeService.syncSubscriptionFromStripe("sub_test_123");
 
@@ -162,27 +164,11 @@ describe("syncSubscriptionFromStripe", () => {
         stripe_price_id: "price_test_789",
       }),
     );
-    expect(mockDb.update).not.toHaveBeenCalled();
-  });
-
-  it("updates an existing subscription row", async () => {
-    const sub = createMockSubscription({ status: "active" });
-    mockSubscriptionsRetrieve.mockResolvedValue(sub);
-    mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
-    mockDb.query.stripeSubscriptions.findFirst.mockResolvedValue({
-      id: 99,
-      stripe_subscription_id: "sub_test_123",
-      status: "trialing",
-    });
-
-    await stripeService.syncSubscriptionFromStripe("sub_test_123");
-
-    expect(mockDb.update).toHaveBeenCalled();
-    expect(mockDb.set).toHaveBeenCalledWith(
-      expect.objectContaining({ status: "active" }),
+    expect(mockDb.onConflictDoUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        target: "stripe_subscription_id",
+      }),
     );
-    expect(mockDb.where).toHaveBeenCalled();
-    expect(mockDb.insert).not.toHaveBeenCalled();
   });
 
   it("no subscription upsert, when no matching customer found", async () => {
@@ -201,7 +187,6 @@ describe("syncSubscriptionFromStripe", () => {
     const sub = createMockSubscription({ trialEnd: trialEndEpoch });
     mockSubscriptionsRetrieve.mockResolvedValue(sub);
     mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
-    mockDb.query.stripeSubscriptions.findFirst.mockResolvedValue(null);
 
     await stripeService.syncSubscriptionFromStripe("sub_test_123");
 
@@ -221,7 +206,6 @@ describe("syncSubscriptionFromStripe", () => {
     });
     mockSubscriptionsRetrieve.mockResolvedValue(sub);
     mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
-    mockDb.query.stripeSubscriptions.findFirst.mockResolvedValue(null);
 
     await stripeService.syncSubscriptionFromStripe("sub_test_123");
 
@@ -256,7 +240,6 @@ describe("handleWebhookEvent", () => {
       userId: "42",
     });
     mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
-    mockDb.query.stripeSubscriptions.findFirst.mockResolvedValue(null);
 
     const result = await stripeService.handleWebhookEvent(
       createMockEvent("customer.subscription.created", sub),
@@ -274,7 +257,6 @@ describe("handleWebhookEvent", () => {
       userId: "7",
     });
     mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
-    mockDb.query.stripeSubscriptions.findFirst.mockResolvedValue({ id: 99 });
 
     const result = await stripeService.handleWebhookEvent(
       createMockEvent("customer.subscription.updated", sub),
@@ -292,7 +274,6 @@ describe("handleWebhookEvent", () => {
       metadata: { user_id: "" },
     });
     mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
-    mockDb.query.stripeSubscriptions.findFirst.mockResolvedValue(null);
 
     const result = await stripeService.handleWebhookEvent(
       createMockEvent("customer.subscription.created", sub),
@@ -309,7 +290,6 @@ describe("handleWebhookEvent", () => {
       userId: "42",
     });
     mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
-    mockDb.query.stripeSubscriptions.findFirst.mockResolvedValue(null);
     vi.mocked(ensureNodeActiveForUser).mockResolvedValue({
       success: false,
       error: "container error",
@@ -350,9 +330,6 @@ describe("handleWebhookEvent", () => {
     async ({ eventType, status }) => {
       const sub = createMockSubscription({ status, userId: "5" });
       mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
-      mockDb.query.stripeSubscriptions.findFirst.mockResolvedValue({
-        id: 99,
-      });
       mockDb.query.users.findFirst.mockResolvedValue({
         id: 5,
         handle: "testuser",

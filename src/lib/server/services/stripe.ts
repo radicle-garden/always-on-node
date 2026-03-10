@@ -232,13 +232,6 @@ async function syncSubscriptionFromEvent(
       return;
     }
 
-    const existingSubscription = await db.query.stripeSubscriptions.findFirst({
-      where: eq(
-        schema.stripeSubscriptions.stripe_subscription_id,
-        subscription.id,
-      ),
-    });
-
     if (!subscription.items.data || subscription.items.data.length === 0) {
       log.error("No items found in subscription", {
         subscriptionId: subscription.id,
@@ -274,14 +267,13 @@ async function syncSubscriptionFromEvent(
       updated_at: new Date(),
     };
 
-    if (existingSubscription) {
-      await db
-        .update(schema.stripeSubscriptions)
-        .set(subscriptionData)
-        .where(eq(schema.stripeSubscriptions.id, existingSubscription.id));
-    } else {
-      await db.insert(schema.stripeSubscriptions).values(subscriptionData);
-    }
+    await db
+      .insert(schema.stripeSubscriptions)
+      .values(subscriptionData)
+      .onConflictDoUpdate({
+        target: schema.stripeSubscriptions.stripe_subscription_id,
+        set: subscriptionData,
+      });
   } catch (error) {
     log.error("Failed to sync subscription", {
       subscriptionId: subscription.id,
