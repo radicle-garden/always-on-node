@@ -171,15 +171,14 @@ describe("syncSubscriptionFromStripe", () => {
     );
   });
 
-  it("no subscription upsert, when no matching customer found", async () => {
+  it("throws when no matching customer found", async () => {
     const sub = createMockSubscription();
     mockSubscriptionsRetrieve.mockResolvedValue(sub);
     mockDb.query.stripeCustomers.findFirst.mockResolvedValue(null);
 
-    await stripeService.syncSubscriptionFromStripe("sub_test_123");
-
-    expect(mockDb.insert).not.toHaveBeenCalled();
-    expect(mockDb.update).not.toHaveBeenCalled();
+    await expect(
+      stripeService.syncSubscriptionFromStripe("sub_test_123"),
+    ).rejects.toThrow("Customer not found");
   });
 
   it("maps trial_end timestamp from Unix epoch to JS Date", async () => {
@@ -268,18 +267,18 @@ describe("handleWebhookEvent", () => {
     expect(mockSubscriptionsRetrieve).not.toHaveBeenCalled();
   });
 
-  it("does not call ensureNodeActiveForUser when user_id metadata is empty", async () => {
+  it("returns failure when customer is not found in DB", async () => {
     const sub = createMockSubscription({
       status: "trialing",
-      metadata: { user_id: "" },
     });
-    mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
+    mockDb.query.stripeCustomers.findFirst.mockResolvedValue(null);
 
     const result = await stripeService.handleWebhookEvent(
       createMockEvent("customer.subscription.created", sub),
     );
 
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
+    expect(result.statusCode).toBe(500);
     expect(ensureNodeActiveForUser).not.toHaveBeenCalled();
     expect(mockSubscriptionsRetrieve).not.toHaveBeenCalled();
   });

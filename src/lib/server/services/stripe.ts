@@ -217,80 +217,65 @@ async function syncSubscriptionFromEvent(
 ): Promise<void> {
   const db = await getDb();
 
-  try {
-    const customer = await db.query.stripeCustomers.findFirst({
-      where: eq(
-        schema.stripeCustomers.stripe_customer_id,
-        subscription.customer as string,
-      ),
-    });
+  const customer = await db.query.stripeCustomers.findFirst({
+    where: eq(
+      schema.stripeCustomers.stripe_customer_id,
+      subscription.customer as string,
+    ),
+  });
 
-    if (!customer) {
-      log.error("Customer not found for subscription", {
-        subscriptionId: subscription.id,
-      });
-      return;
-    }
-
-    if (!subscription.items.data || subscription.items.data.length === 0) {
-      log.error("No items found in subscription", {
-        subscriptionId: subscription.id,
-      });
-      return;
-    }
-
-    const firstItem = subscription.items.data[0];
-    const subscriptionData = {
-      stripe_customer_id: customer.id,
-      stripe_subscription_id: subscription.id,
-      stripe_price_id: firstItem.price.id,
-      status: subscription.status,
-      current_period_start: firstItem.current_period_start
-        ? new Date(firstItem.current_period_start * 1000)
-        : new Date(),
-      current_period_end: firstItem.current_period_end
-        ? new Date(firstItem.current_period_end * 1000)
-        : new Date(),
-      cancel_at_period_end: subscription.cancel_at_period_end,
-      cancel_at: subscription.cancel_at
-        ? new Date(subscription.cancel_at * 1000)
-        : null,
-      canceled_at: subscription.canceled_at
-        ? new Date(subscription.canceled_at * 1000)
-        : null,
-      trial_start: subscription.trial_start
-        ? new Date(subscription.trial_start * 1000)
-        : null,
-      trial_end: subscription.trial_end
-        ? new Date(subscription.trial_end * 1000)
-        : null,
-      updated_at: new Date(),
-    };
-
-    await db
-      .insert(schema.stripeSubscriptions)
-      .values(subscriptionData)
-      .onConflictDoUpdate({
-        target: schema.stripeSubscriptions.stripe_subscription_id,
-        set: subscriptionData,
-      });
-  } catch (error) {
-    log.error("Failed to sync subscription", {
-      subscriptionId: subscription.id,
-      error,
-    });
+  if (!customer) {
+    throw new Error(
+      `Customer not found for subscription ${subscription.id} (stripe_customer_id: ${subscription.customer})`,
+    );
   }
+
+  if (!subscription.items.data || subscription.items.data.length === 0) {
+    throw new Error(`No items found in subscription ${subscription.id}`);
+  }
+
+  const firstItem = subscription.items.data[0];
+  const subscriptionData = {
+    stripe_customer_id: customer.id,
+    stripe_subscription_id: subscription.id,
+    stripe_price_id: firstItem.price.id,
+    status: subscription.status,
+    current_period_start: firstItem.current_period_start
+      ? new Date(firstItem.current_period_start * 1000)
+      : new Date(),
+    current_period_end: firstItem.current_period_end
+      ? new Date(firstItem.current_period_end * 1000)
+      : new Date(),
+    cancel_at_period_end: subscription.cancel_at_period_end,
+    cancel_at: subscription.cancel_at
+      ? new Date(subscription.cancel_at * 1000)
+      : null,
+    canceled_at: subscription.canceled_at
+      ? new Date(subscription.canceled_at * 1000)
+      : null,
+    trial_start: subscription.trial_start
+      ? new Date(subscription.trial_start * 1000)
+      : null,
+    trial_end: subscription.trial_end
+      ? new Date(subscription.trial_end * 1000)
+      : null,
+    updated_at: new Date(),
+  };
+
+  await db
+    .insert(schema.stripeSubscriptions)
+    .values(subscriptionData)
+    .onConflictDoUpdate({
+      target: schema.stripeSubscriptions.stripe_subscription_id,
+      set: subscriptionData,
+    });
 }
 
 async function syncSubscriptionFromStripe(
   subscriptionId: string,
 ): Promise<void> {
-  try {
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-    await syncSubscriptionFromEvent(subscription);
-  } catch (error) {
-    log.error("Failed to sync subscription", { subscriptionId, error });
-  }
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  await syncSubscriptionFromEvent(subscription);
 }
 
 async function handleWebhookEvent(
