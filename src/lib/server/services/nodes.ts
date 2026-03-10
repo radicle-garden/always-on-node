@@ -1,8 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import { execa } from "execa";
 import fs from "fs";
+import { readFile, writeFile } from "fs/promises";
 import getPort, { portNumbers } from "get-port";
 import path from "path";
+import YAML from "yaml";
 
 import { DockerClient } from "@docker/node-sdk";
 
@@ -140,7 +142,7 @@ async function createNode(user: User): Promise<Node | null> {
     return null;
   }
 
-  fs.mkdirSync(radHome, { recursive: true });
+  fs.mkdirSync(`${radHome}/broker`, { recursive: true });
 
   const radBinary = config.radBinaryPath;
 
@@ -170,6 +172,26 @@ async function createNode(user: User): Promise<Node | null> {
 
     const nodeFqdn = `${user.handle}.${config.fqdn}`;
     await updateConfig(nodePort, env, nodeFqdn, config.nodePreferredSeeds);
+
+    // write broker config file
+    try {
+      await writeBrokerConfig(`${radHome}/broker/broker-config.yaml`, {
+        user_node_id: nodeId,
+        user_handle: user.handle,
+        rad_clone_url: nodeFqdn,
+        rad_browse_url: config.explorerUrl + "/seeds/" + nodeFqdn,
+        rad_commit_status_url: config.frontendUrl + "/api/commit-status",
+        webhooks_datasource_url: config.databaseUrl,
+      });
+    } catch (err) {
+      log.warn(`failed to write broker config file`, {
+        error: String(err),
+        userId: user.id,
+      });
+      return null;
+    }
+
+    log.info(`Created broker config for node ${nodeId}`);
 
     try {
       const db = await getDb();
@@ -230,9 +252,13 @@ async function createContainers(
 
   const nodeImage = config.radicleNodeContainer;
   const httpdImage = config.radicleHttpdContainer;
+  const brokerImage = config.radicleBrokerContainer;
+
   const [nodeImageName, nodeImageTag] = config.radicleNodeContainer.split(":");
   const [httpdImageName, httpdImageTag] =
     config.radicleHttpdContainer.split(":");
+  const [brokerImageName, brokerImageTag] =
+    config.radicleBrokerContainer.split(":");
 
   const nodeImagePull = docker.imageCreate({
     fromImage: nodeImageName,
@@ -244,9 +270,15 @@ async function createContainers(
     tag: httpdImageTag,
     platform: "linux/arm64",
   });
+  const brokerImagePull = docker.imageCreate({
+    fromImage: brokerImageName,
+    tag: brokerImageTag,
+    platform: "linux/arm64",
+  });
 
   await nodeImagePull.wait();
   await httpdImagePull.wait();
+  await brokerImagePull.wait();
   log.debug(`Images pulled successfully for ${nodeAlias}`, {
     userId,
   });
@@ -320,6 +352,51 @@ async function createContainers(
 
   log.info(`Created httpd container ${httpdContainerName}`, {
     containerId: httpdContainer.Id,
+    userId,
+  });
+
+  const brokerContainerName = `${nodeAlias}-broker`;
+  const brokerContainer = await docker.containerCreate(
+    {
+      Image: brokerImage,
+      Env: [
+        "RUST_LOG=debug",
+        "RUST_BACKTRACE=1",
+        "RAD_HOME=/radicle",
+        "RAD_PASSPHRASE=",
+      ],
+      Cmd: [
+        "--config",
+        `/home/radicle/broker-config.yaml`,
+        `--log-level`,
+        `debug`,
+        `process-events`,
+      ],
+      HostConfig: {
+        Binds: [
+          `${radHome}:/radicle`,
+          `${radHome}/broker/data:/data`,
+          `${radHome}/broker/broker-config.yaml:/home/radicle/broker-config.yaml`,
+        ],
+        RestartPolicy: {
+          Name: "always",
+        },
+        UsernsMode: "keep-id:uid=11011,gid=11011",
+        CpuQuota: cpuToCpuQuota(config.brokerContainerCpuLimit),
+        Memory: config.brokerContainerMemoryLimitBytes,
+      },
+      Labels: {
+        app: "garden",
+        component: "radicle-broker",
+        garden_user: userHandle,
+        node_id: nodeId,
+      },
+    },
+    { name: brokerContainerName, platform: "linux/arm64" },
+  );
+
+  log.info(`Created broker container ${brokerContainerName}`, {
+    containerId: brokerContainer.Id,
     userId,
   });
 
@@ -765,6 +842,7 @@ export async function stopContainers(user: User): Promise<ServiceResult<void>> {
   try {
     const nodeContainerName = `${user.handle}-node`;
     const httpdContainerName = `${user.handle}-httpd`;
+    const brokerContainerName = `${user.handle}-broker`;
 
     const docker = await DockerClient.fromDockerHost(config.dockerHost);
 
@@ -802,6 +880,24 @@ export async function stopContainers(user: User): Promise<ServiceResult<void>> {
       );
     }
 
+    try {
+      const brokerContainer =
+        await docker.containerInspect(brokerContainerName);
+      if (brokerContainer.State?.Running && brokerContainer.Id) {
+        await docker.containerStop(brokerContainer.Id);
+        log.info(`Stopped broker container ${brokerContainerName}`, {
+          userId: user.id,
+        });
+      }
+    } catch {
+      log.warn(
+        `Broker container ${brokerContainerName} not found or already stopped`,
+        {
+          userId: user.id,
+        },
+      );
+    }
+
     return { success: true, message: "Containers stopped", statusCode: 200 };
   } catch (error) {
     log.error("Failed to stop containers", {
@@ -820,17 +916,13 @@ async function startContainers(user: User): Promise<ServiceResult<void>> {
   try {
     const nodeContainerName = `${user.handle}-node`;
     const httpdContainerName = `${user.handle}-httpd`;
+    const brokerContainerName = `${user.handle}-broker`;
 
     const docker = await DockerClient.fromDockerHost(config.dockerHost);
 
+    let nodeContainer;
     try {
-      const nodeContainer = await docker.containerInspect(nodeContainerName);
-      if (!nodeContainer.State?.Running && nodeContainer.Id) {
-        await docker.containerStart(nodeContainer.Id);
-        log.info(`Started node container ${nodeContainerName}`, {
-          userId: user.id,
-        });
-      }
+      nodeContainer = await docker.containerInspect(nodeContainerName);
     } catch {
       log.warn(`Node container ${nodeContainerName} not found`, {
         userId: user.id,
@@ -842,15 +934,29 @@ async function startContainers(user: User): Promise<ServiceResult<void>> {
         statusCode: 404,
       };
     }
-
-    try {
-      const httpdContainer = await docker.containerInspect(httpdContainerName);
-      if (!httpdContainer.State?.Running && httpdContainer.Id) {
-        await docker.containerStart(httpdContainer.Id);
-        log.info(`Started httpd container ${httpdContainerName}`, {
+    if (!nodeContainer.State?.Running && nodeContainer.Id) {
+      try {
+        await docker.containerStart(nodeContainer.Id);
+        log.info(`Started node container ${nodeContainerName}`, {
           userId: user.id,
         });
+      } catch (error) {
+        log.error(`Failed to start node container ${nodeContainerName}`, {
+          error: String(error),
+          userId: user.id,
+          category: "nodeCreation",
+        });
+        return {
+          success: false,
+          error: "Failed to start node container",
+          statusCode: 500,
+        };
       }
+    }
+
+    let httpdContainer;
+    try {
+      httpdContainer = await docker.containerInspect(httpdContainerName);
     } catch {
       log.warn(`HTTPD container ${httpdContainerName} not found`, {
         userId: user.id,
@@ -861,6 +967,59 @@ async function startContainers(user: User): Promise<ServiceResult<void>> {
         error: "HTTPD container not found",
         statusCode: 404,
       };
+    }
+    if (!httpdContainer.State?.Running && httpdContainer.Id) {
+      try {
+        await docker.containerStart(httpdContainer.Id);
+        log.info(`Started httpd container ${httpdContainerName}`, {
+          userId: user.id,
+        });
+      } catch (error) {
+        log.error(`Failed to start httpd container ${httpdContainerName}`, {
+          error: String(error),
+          userId: user.id,
+          category: "nodeCreation",
+        });
+        return {
+          success: false,
+          error: "Failed to start httpd container",
+          statusCode: 500,
+        };
+      }
+    }
+
+    let brokerContainer;
+    try {
+      brokerContainer = await docker.containerInspect(brokerContainerName);
+    } catch {
+      log.warn(`Broker container ${brokerContainerName} not found`, {
+        userId: user.id,
+        category: "nodeCreation",
+      });
+      return {
+        success: false,
+        error: "Broker container not found",
+        statusCode: 404,
+      };
+    }
+    if (!brokerContainer.State?.Running && brokerContainer.Id) {
+      try {
+        await docker.containerStart(brokerContainer.Id);
+        log.info(`Started broker container ${brokerContainerName}`, {
+          userId: user.id,
+        });
+      } catch (error) {
+        log.error(`Failed to start broker container ${brokerContainerName}`, {
+          error: String(error),
+          userId: user.id,
+          category: "nodeCreation",
+        });
+        return {
+          success: false,
+          error: "Failed to start broker container",
+          statusCode: 500,
+        };
+      }
     }
 
     return { success: true, message: "Containers started", statusCode: 200 };
@@ -1110,6 +1269,45 @@ export async function getPortFromConfig(env: RadEnv): Promise<number> {
     throw new Error(`Port number out of valid range (1-65535): ${port}`);
   }
   return port;
+}
+
+const BROKER_CONFIG_TEMPLATE_PATH = "./static/broker-config.yaml.template";
+
+interface BrokerConfigOptions {
+  user_node_id: string;
+  user_handle: string;
+  rad_clone_url: string;
+  rad_browse_url: string;
+  rad_commit_status_url: string;
+  webhooks_datasource_url: string;
+}
+
+async function writeBrokerConfig(
+  outputPath: fs.PathLike,
+  opts: BrokerConfigOptions,
+): Promise<void> {
+  const template = await readFile(BROKER_CONFIG_TEMPLATE_PATH, "utf8");
+  const doc = YAML.parseDocument(template, { logLevel: "silent" });
+
+  const env = ["adapters", "webhooks", "env"];
+  doc.setIn([...env, "RAD_NODE_ID"], opts.user_node_id);
+  doc.setIn([...env, "RAD_USER_HANDLE"], opts.user_handle);
+  doc.setIn([...env, "RAD_BROWSE_URL"], opts.rad_browse_url);
+  doc.setIn([...env, "RAD_CLONE_URL"], opts.rad_clone_url);
+  doc.setIn([...env, "RAD_COMMIT_STATUS_URL"], opts.rad_commit_status_url);
+  doc.setIn(
+    ["adapters", "webhooks", "sensitive_env", "WEBHOOKS_DATASOURCE_URL"],
+    opts.webhooks_datasource_url,
+  );
+
+  YAML.visit(doc, {
+    Scalar(_key, node) {
+      if (node.tag === "!Node") node.value = opts.user_node_id;
+    },
+  });
+
+  await writeFile(outputPath, doc.toString({ nullStr: "" }), "utf8");
+  log.debug(`Broker config written to ${outputPath}`);
 }
 
 export const testExports = { parseNodeStatus };

@@ -1,9 +1,10 @@
 {
-  "databaseUrl": "postgres://garden:garden@localhost:5432/garden",
+  "databaseUrl": "postgres://garden:garden@192.168.33.10:5432/garden",
   "profileStoragePath": "/home/vagrant/.local/share/radicle/profiles/",
   "radBinaryPath": "/home/vagrant/.radicle/bin/rad",
   "jwtExpiresIn": "15m",
   "frontendUrl": "http://localhost:5173",
+  "explorerUrl": "https://app.radicle.xyz",
   "fqdn": "localhost",
   "httpdScheme": "http",
   "httpdPublicScheme": "http",
@@ -13,6 +14,7 @@
   "dockerHost": "unix:///run/user/1000/podman/podman.sock",
   "radicleNodeContainer": "quay.io/radicle_garden/radicle-node:1.6.1",
   "radicleHttpdContainer": "quay.io/radicle_garden/radicle-httpd:0.24.0",
+  "radicleBrokerContainer": "quay.io/radicle_garden/radicle-broker:0.26.0",
   "nodeBootingTimeoutMs": 120000,
   "nodeStatusPollIntervalMs": 5000,
   "nodeStatusMonitorTimeoutMs": 120000,
@@ -28,6 +30,8 @@
   "nodeContainerMemoryLimitBytes": 0,
   "httpdContainerCpuLimit": 0,
   "httpdContainerMemoryLimitBytes": 0,
+  "brokerContainerCpuLimit": 0,
+  "brokerContainerMemoryLimitBytes": 0,
   "nodeFetchPackReceive": "2.0 GiB",
   "reservedUsernames": ["app", "admin", "root"],
   "public": {

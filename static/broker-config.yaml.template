@@ -1,0 +1,32 @@
+default_adapter: webhooks
+db: /data/broker-db.sqlite
+report_dir: /data/reports
+max_run_time: 30m
+adapters:
+  webhooks:
+    command: /usr/local/bin/radicle-webhooks-adapter
+    env:
+      LOG_LEVEL: debug
+      COMMIT_STATUS_TIMEOUT_SECS: 1500
+      COMMIT_STATUS_POLLING_INTERVAL_SECS: 15
+      RAD_NODE_ID: ""
+      RAD_USER_HANDLE: ""
+      RAD_BROWSE_URL: ""
+      RAD_CLONE_URL: ""
+      RAD_COMMIT_STATUS_URL: ""
+    sensitive_env:
+      WEBHOOKS_DATASOURCE_URL: ""
+      RAD_PASSPHRASE: ""
+filters:
+  - !And
+    - !Or
+      - !BranchCreated
+      - !BranchUpdated
+      - !PatchCreated
+      - !PatchUpdated
+      - !TagCreated
+      - !TagUpdated
+      - !TagDeleted
+    - !Or
+      - !AnyDelegate
+      - !Node ""

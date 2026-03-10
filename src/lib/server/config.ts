@@ -15,6 +15,7 @@ export interface AppConfig {
   emailSenderAddress: string | undefined;
   jwtExpiresIn: string;
   frontendUrl: string;
+  explorerUrl: string;
   fqdn: string;
   httpdScheme: string;
   // The scheme used by the browser to reach the httpd (may differ from
@@ -26,6 +27,7 @@ export interface AppConfig {
   dockerHost: string;
   radicleNodeContainer: string;
   radicleHttpdContainer: string;
+  radicleBrokerContainer: string;
   nodeBootingTimeoutMs: number;
   nodeStatusPollIntervalMs: number;
   nodeStatusMonitorTimeoutMs: number;
@@ -46,6 +48,10 @@ export interface AppConfig {
   httpdContainerCpuLimit: number;
   /** Memory limit for the radicle-httpd container in bytes. 0 means no limit. */
   httpdContainerMemoryLimitBytes: number;
+  /** CPU limit for the radicle-ci-broker container as fractional cores. 0 means no limit. */
+  brokerContainerCpuLimit: number;
+  /** Memory limit for the radicle-ci-broker container in bytes. 0 means no limit. */
+  brokerContainerMemoryLimitBytes: number;
   nodeFetchPackReceive: string;
   reservedUsernames: string[];
   public: {
@@ -62,13 +68,13 @@ export function getConfig(): AppConfig {
     appSecret: process.env.APP_SECRET || "default_secret_change_me",
     resendApiKey: process.env.RESEND_API_KEY,
     emailSenderAddress: process.env.EMAIL_SENDER_ADDRESS,
-
     databaseUrl: process.env.DATABASE_URL || configJson.databaseUrl,
     profileStoragePath:
       process.env.PROFILE_STORAGE_PATH || configJson.profileStoragePath,
     radBinaryPath: process.env.RAD_BINARY_PATH || configJson.radBinaryPath,
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || configJson.jwtExpiresIn,
     frontendUrl: process.env.FRONTEND_URL || configJson.frontendUrl,
+    explorerUrl: process.env.EXPLORER_URL || configJson.explorerUrl,
     fqdn: process.env.FQDN || configJson.fqdn,
     httpdScheme: process.env.HTTPD_SCHEME || configJson.httpdScheme,
     httpdPublicScheme:
@@ -81,6 +87,8 @@ export function getConfig(): AppConfig {
       process.env.RADICLE_NODE_CONTAINER || configJson.radicleNodeContainer,
     radicleHttpdContainer:
       process.env.RADICLE_HTTPD_CONTAINER || configJson.radicleHttpdContainer,
+    radicleBrokerContainer:
+      process.env.RADICLE_BROKER_CONTAINER || configJson.radicleBrokerContainer,
     nodeBootingTimeoutMs:
       Number(process.env.NODE_BOOTING_TIMEOUT_MS) ||
       configJson.nodeBootingTimeoutMs,
@@ -119,6 +127,12 @@ export function getConfig(): AppConfig {
     httpdContainerMemoryLimitBytes:
       Number(process.env.HTTPD_CONTAINER_MEMORY_LIMIT_BYTES) ||
       configJson.httpdContainerMemoryLimitBytes,
+    brokerContainerCpuLimit:
+      Number(process.env.BROKER_CONTAINER_CPU_LIMIT) ||
+      configJson.brokerContainerCpuLimit,
+    brokerContainerMemoryLimitBytes:
+      Number(process.env.BROKER_CONTAINER_MEMORY_LIMIT_BYTES) ||
+      configJson.brokerContainerMemoryLimitBytes,
     nodeFetchPackReceive:
       process.env.NODE_FETCH_PACK_RECEIVE || configJson.nodeFetchPackReceive,
     reservedUsernames:
