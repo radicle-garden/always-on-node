@@ -151,7 +151,10 @@ describe("syncSubscriptionFromStripe", () => {
   it("upserts a subscription row via onConflictDoUpdate", async () => {
     const sub = createMockSubscription({ status: "trialing" });
     mockSubscriptionsRetrieve.mockResolvedValue(sub);
-    mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
+    mockDb.query.stripeCustomers.findFirst.mockResolvedValue({
+      id: 10,
+      user_id: 42,
+    });
 
     await stripeService.syncSubscriptionFromStripe("sub_test_123");
 
@@ -185,7 +188,10 @@ describe("syncSubscriptionFromStripe", () => {
     const trialEndEpoch = FAKE_NOW_IN_SECONDS + ONE_WEEK_IN_SECONDS;
     const sub = createMockSubscription({ trialEnd: trialEndEpoch });
     mockSubscriptionsRetrieve.mockResolvedValue(sub);
-    mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
+    mockDb.query.stripeCustomers.findFirst.mockResolvedValue({
+      id: 10,
+      user_id: 42,
+    });
 
     await stripeService.syncSubscriptionFromStripe("sub_test_123");
 
@@ -204,7 +210,10 @@ describe("syncSubscriptionFromStripe", () => {
       canceledAt: canceledAtEpoch,
     });
     mockSubscriptionsRetrieve.mockResolvedValue(sub);
-    mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
+    mockDb.query.stripeCustomers.findFirst.mockResolvedValue({
+      id: 10,
+      user_id: 42,
+    });
 
     await stripeService.syncSubscriptionFromStripe("sub_test_123");
 
@@ -236,9 +245,11 @@ describe("handleWebhookEvent", () => {
   it("calls ensureNodeActiveForUser when subscription is created with status trialing", async () => {
     const sub = createMockSubscription({
       status: "trialing",
-      userId: "42",
     });
-    mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
+    mockDb.query.stripeCustomers.findFirst.mockResolvedValue({
+      id: 10,
+      user_id: 42,
+    });
 
     const result = await stripeService.handleWebhookEvent(
       createMockEvent("customer.subscription.created", sub),
@@ -253,9 +264,11 @@ describe("handleWebhookEvent", () => {
   it("calls ensureNodeActiveForUser when subscription is updated to active", async () => {
     const sub = createMockSubscription({
       status: "active",
-      userId: "7",
     });
-    mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
+    mockDb.query.stripeCustomers.findFirst.mockResolvedValue({
+      id: 10,
+      user_id: 7,
+    });
 
     const result = await stripeService.handleWebhookEvent(
       createMockEvent("customer.subscription.updated", sub),
@@ -286,9 +299,11 @@ describe("handleWebhookEvent", () => {
   it("still returns success when ensureNodeActiveForUser fails", async () => {
     const sub = createMockSubscription({
       status: "active",
-      userId: "42",
     });
-    mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
+    mockDb.query.stripeCustomers.findFirst.mockResolvedValue({
+      id: 10,
+      user_id: 42,
+    });
     vi.mocked(ensureNodeActiveForUser).mockResolvedValue({
       success: false,
       error: "container error",
@@ -327,8 +342,11 @@ describe("handleWebhookEvent", () => {
   ])(
     "calls stopContainers when subscription is $label",
     async ({ eventType, status }) => {
-      const sub = createMockSubscription({ status, userId: "5" });
-      mockDb.query.stripeCustomers.findFirst.mockResolvedValue({ id: 10 });
+      const sub = createMockSubscription({ status });
+      mockDb.query.stripeCustomers.findFirst.mockResolvedValue({
+        id: 10,
+        user_id: 5,
+      });
       mockDb.query.users.findFirst.mockResolvedValue({
         id: 5,
         handle: "testuser",

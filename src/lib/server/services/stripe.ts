@@ -214,7 +214,7 @@ async function createCustomerPortalSession(
 
 async function syncSubscriptionFromEvent(
   subscription: Stripe.Subscription,
-): Promise<void> {
+): Promise<{ customerId: number; userId: number }> {
   const db = await getDb();
 
   const customer = await db.query.stripeCustomers.findFirst({
@@ -269,6 +269,8 @@ async function syncSubscriptionFromEvent(
       target: schema.stripeSubscriptions.stripe_subscription_id,
       set: subscriptionData,
     });
+
+  return { customerId: customer.id, userId: customer.user_id };
 }
 
 async function syncSubscriptionFromStripe(
@@ -288,20 +290,12 @@ async function handleWebhookEvent(
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
-        await syncSubscriptionFromEvent(subscription);
+        const { userId } = await syncSubscriptionFromEvent(subscription);
 
         if (
           subscription.status === "active" ||
           subscription.status === "trialing"
         ) {
-          const userId = Number(subscription.metadata.user_id);
-          if (!userId || isNaN(userId)) {
-            log.error("Invalid or missing user_id in subscription metadata", {
-              metadataUserId: subscription.metadata.user_id,
-            });
-            break;
-          }
-
           log.info("Activating node for user", {
             userId,
             status: subscription.status,
@@ -325,14 +319,6 @@ async function handleWebhookEvent(
           subscription.status === "canceled" ||
           subscription.status === "past_due"
         ) {
-          const userId = Number(subscription.metadata.user_id);
-          if (!userId || isNaN(userId)) {
-            log.error("Invalid or missing user_id in subscription metadata", {
-              metadataUserId: subscription.metadata.user_id,
-            });
-            break;
-          }
-
           log.info("Stopping containers for user", {
             userId,
             status: subscription.status,
@@ -360,15 +346,7 @@ async function handleWebhookEvent(
 
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
-        await syncSubscriptionFromEvent(subscription);
-
-        const userId = Number(subscription.metadata.user_id);
-        if (!userId || isNaN(userId)) {
-          log.error("Invalid or missing user_id in subscription metadata", {
-            metadataUserId: subscription.metadata.user_id,
-          });
-          break;
-        }
+        const { userId } = await syncSubscriptionFromEvent(subscription);
 
         log.info("Stopping containers for user (subscription deleted)", {
           userId,
