@@ -129,7 +129,7 @@ export const stripeSubscriptionsRelations = relations(
   }),
 );
 
-// Webhook adapter tables — owned by Garden, read/written by the CI broker adapter.
+// Webhook tables
 
 export const webhookTriggerEvents = pgTable("webhook_trigger_event", {
   uuid: text("uuid").primaryKey(),
