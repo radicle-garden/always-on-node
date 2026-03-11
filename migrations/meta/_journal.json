@@ -50,6 +50,13 @@
       "when": 1775737527920,
       "tag": "0006_lowercase_handles",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1773217640944,
+      "tag": "0007_hesitant_sabretooth",
+      "breakpoints": true
     }
   ]
 }

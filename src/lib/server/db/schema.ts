@@ -1,8 +1,10 @@
 import { relations, sql } from "drizzle-orm";
 import {
   boolean,
+  index,
   integer,
   pgTable,
+  primaryKey,
   serial,
   text,
   timestamp,
@@ -127,7 +129,100 @@ export const stripeSubscriptionsRelations = relations(
   }),
 );
 
+// Webhook adapter tables — owned by Garden, read/written by the CI broker adapter.
+
+export const webhookTriggerEvents = pgTable("webhook_trigger_event", {
+  uuid: text("uuid").primaryKey(),
+  event_type: text("event_type"),
+  repo_id: text("repo_id"),
+  timestamp: timestamp("timestamp", { withTimezone: true }),
+});
+
+export const webhooks = pgTable(
+  "webhook",
+  {
+    uuid: text("uuid").primaryKey(),
+    event_uuid: text("event_uuid")
+      .notNull()
+      .references(() => webhookTriggerEvents.uuid),
+    url: text("url"),
+    name: text("name"),
+    content_type: text("content_type"),
+    request_headers: text("request_headers"),
+    request_payload: text("request_payload"),
+  },
+  table => [index("webhook_event_uuid_idx").on(table.event_uuid)],
+);
+
+export const webhookInvocations = pgTable(
+  "webhook_invocation",
+  {
+    uuid: text("uuid").primaryKey(),
+    webhook_uuid: text("webhook_uuid")
+      .notNull()
+      .references(() => webhooks.uuid),
+    response_status_code: integer("response_status_code"),
+    response_headers: text("response_headers"),
+    response_payload: text("response_payload"),
+    error_message: text("error_message"),
+    timestamp: timestamp("timestamp", { withTimezone: true }),
+  },
+  table => [
+    index("webhook_invocation_webhook_uuid_idx").on(table.webhook_uuid),
+  ],
+);
+
+export const webhookRepoConfigurations = pgTable(
+  "webhook_repo_configuration",
+  {
+    node_id: text("node_id").notNull(),
+    repo_id: text("repo_id").notNull(),
+    url: text("url"),
+    context: text("context").notNull(),
+    content_type: text("content_type"),
+    secret: text("secret"),
+    deleted_at: timestamp("deleted_at", { withTimezone: true }),
+  },
+  table => [
+    uniqueIndex("webhook_repo_configuration_unique_idx").on(
+      table.node_id,
+      table.repo_id,
+      table.context,
+    ),
+  ],
+);
+
+export const repoCommitStatuses = pgTable(
+  "repo_commit_status",
+  {
+    node_id: text("node_id").notNull(),
+    repo_id: text("repo_id").notNull(),
+    sha: text("sha").notNull(),
+    state: text("state").notNull(),
+    description: text("description"),
+    target_url: text("target_url"),
+    context: text("context").notNull(),
+    created_at: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updated_at: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  table => [
+    primaryKey({
+      columns: [table.node_id, table.repo_id, table.sha, table.context],
+    }),
+  ],
+);
+
 export type User = typeof users.$inferSelect;
 export type Node = typeof nodes.$inferSelect;
 export type StripeCustomer = typeof stripeCustomers.$inferSelect;
 export type StripeSubscription = typeof stripeSubscriptions.$inferSelect;
+export type WebhookTriggerEvent = typeof webhookTriggerEvents.$inferSelect;
+export type Webhook = typeof webhooks.$inferSelect;
+export type WebhookInvocation = typeof webhookInvocations.$inferSelect;
+export type WebhookRepoConfiguration =
+  typeof webhookRepoConfigurations.$inferSelect;
+export type RepoCommitStatus = typeof repoCommitStatuses.$inferSelect;
