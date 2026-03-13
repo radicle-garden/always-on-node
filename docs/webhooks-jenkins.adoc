@@ -1,0 +1,218 @@
+== Radicle Garden CI with Jenkins
+
+Wire Jenkins up to your Radicle Garden node so that every push and patch
+triggers a pipeline and the build result appears on the commit in your
+Radicle client.
+
+=== Prerequisites
+
+Before you start, ensure: - your Jenkins is reachable from your Garden
+node at its public URL, - you have the
+link:webhooks-quickstart.adoc#before-you-start[prerequisites] already set
+up.
+
+=== Step 1: Add the credential for the webhook shared secret
+
+This shared secret is used to verify the authenticity of the webhook
+payload and ensures that your Jenkins only accepts requests to run
+builds from Radicle Garden. The secret protects against arbitrary
+requests from unauthorized sources.
+
+From the web UI, go to: *Manage Jenkins → Credentials → Add Credentials*
+
+* Kind: *Secret text*
+* ID: `+webhook-shared-secret+` (the references this exact ID)
+* Secret: generate with `+openssl rand -hex 32+`
+
+=== Step 2: Plugins
+
+[arabic]
+. Jenkins needs to have these plugins:
+
+* https://plugins.jenkins.io/generic-webhook-trigger/[Generic Webhook
+Trigger]
+* https://plugins.jenkins.io/job-dsl/[Job DSL]
+* https://plugins.jenkins.io/workflow-aggregator/[Pipeline]
+
+For example, this is the relevant sections for `+jenkins.basePlugins+`
+and `+jenkins.plugins+` of the Jenkins Helm chart values:
+
+....
+jenkins:
+[...] 
+  basePlugins:
+    - name: job-dsl
+      version: "1.93"
+    - name: configuration-as-code
+      version: "2006.v001a_2ca_6b_574"
+    - name: workflow-job
+      version: "1559.va_a_533730b_ea_d"
+    - name: workflow-aggregator
+      version: "608.v67378e9d3db_1"
+[...] 
+  # plugins are plugins required by the user
+  plugins:
+   - name: generic-webhook-trigger
+     version: "2.4.1"
+....
+
+With the webhooks trigger plugin installed, you’ll also need to
+configure it to use the `+webhook-shared-secret+` credential that it
+reads from the webhook `+x-radicle-signature+` header.
+
+For example, here is the relevant Configuration As Code (CASC) config
+map:
+
+....
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jenkins-operator-casc
+data:
+  1-webhooks-config.yaml: |
+    unclassified:
+      whitelist:
+        enabled: true
+        whitelistItems:
+          - hmacAlgorithm: "HmacSHA256"
+            hmacCredentialId: "webhook-shared-secret"
+            hmacEnabled: true
+            hmacHeader: "x-radicle-signature"
+....
+
+=== Step 3: Add some Jenkins jobs to your repo
+
+Through the Job DSL plugin, you can tell Jenkins where to find the
+pipeline definition for your project. You can do that by creating 2
+files:
+
+[arabic]
+. the Job definition (which can also live inside your repo, for example:
+`+.jenkins/jobs/test.groovy+`). You can use this example as a
+starting point, but remember to *adapt for your environment* —
+edit these lines:
++
+[source,groovy]
+----
+include::jenkins-example/.jenkins/jobs/test.groovy[]
+----
+
+[width="100%",cols="84%,16%",options="header",]
+|===
+|Line |Change to
+|`+token('radicle-ci-jenkins-example')+` |A random string unique to this
+job. Must match the `+token=+` query param in the webhook URL you
+register with `+rad webhooks add+`.
+
+|`+url('https://index.radicle.garden/<your-rid>.git')+` |The clone URL
+Jenkins should use to fetch the pipeline file at build time. For a
+radicle.garden-seeded repo, it’s
+`+https://index.radicle.garden/<rid-without-"rad:"-prefix>.git+`.
+|===
+
+[arabic, start=2]
+. the Pipeline definition (also inside your repo, e.g. in
+`+.jenkins/pipelines/test.jenkinsfile+`). You can use this example
+as a starting point, but remember to *adapt for your environment*
+— edit these lines:
++
+[source,groovy]
+----
+include::jenkins-example/.jenkins/pipelines/test.jenkinsfile[]
+----
+
+[width="100%",cols="84%,16%",options="header",]
+|===
+|Line |Change to
+|`+url('https://index.radicle.garden/<your-rid>.git')+` |The clone URL
+Jenkins should use to fetch the pipeline file at build time. For a
+radicle.garden-seeded repo, it’s
+`+https://index.radicle.garden/<rid-without-"rad:"-prefix>.git+`.
+|===
+
+Commit and push.
+
+=== Step 4: Create the Jenkins job
+
+You can, of course, create the Jenkins job manually, through the web UI,
+but since we’re using the Job DSL plugin, it’s better to have that in
+code as well!
+
+The Configuration As Code (CASC) plugin allows you to tell Jenkins where
+to pick up your Job definition like so:
+
+....
+jenkins:
+[...]
+  seedJobs:
+    - id: your-project-name
+      targets: ".jenkins/jobs/*.jenkinsfile"
+      description: ""
+      repositoryBranch: main
+      repositoryUrl: https://index.radicle.garden/<your-rid>.git
+....
+
+You may need to restart Jenkins after adding this. But once you see the
+seed job in the Jenkins UI, and the seed job has ran, you should see
+your pipeline too. If you can see both of these, it’s finally time to
+wire the two up together!
+
+=== Step 5: Register the webhook in Radicle
+
+From the repo working copy:
+
+[source,bash]
+----
+rad webhooks add \
+  --name jenkins \
+  --url 'https://<your-jenkins>/generic-webhook-trigger/invoke?token=<your-token>' \
+  --secret '<the-same-secret-you-put-in-Jenkins>' \
+  --nid z6Mk...                # your Garden node's NID
+
+git add .radicle/webhooks/jenkins.yaml
+git commit -m 'Enable Jenkins webhook'
+git push rad
+----
+
+[width="100%",cols="8%,92%",options="header",]
+|===
+|Flag |Note
+|`+--name+` |Becomes the filename and the `+context+` on commit status
+(`+jenkins+`, `+woodpecker+`, …). If you have multiple jobs on Jenkins,
+use a distinct name per job.
+
+|`+--url+` |Must be reachable from your Garden node. Use the token from
+Step 3 above.
+
+|`+--secret+` |Copy into your CI system’s credential store (the one you
+set in Step 1).
+
+|`+--nid+` |Your Garden node’s NID.
+|===
+
+=== Step 6: Push a commit and watch it flow
+
+[source,bash]
+----
+git commit --allow-empty -m 'First Jenkins trigger'
+git push rad
+----
+
+Within a few seconds:
+
+[arabic]
+. Garden node POSTs the event to Jenkins.
+. Generic Webhook Trigger starts a build.
+. Pipeline POSTs `+state: "running"+` to `+commit_status_url+`. Opening
+the repo in radicle-desktop at this point shows the commit status as
+"`running`".
+. `+Info+` stage prints the event metadata.
+. `+Lint+` + `+Test+` stages run (placeholders — replace with your own).
+. `+post { always }+` POSTs `+state: "success"+` or `+"failure"+`.
+. Garden updates the commit status. radicle-desktop now shows
+"`success`" or "`failure`".
+
+=== Support
+
+If you’re having trouble, reach out to us for
+link:webhooks-quickstart.adoc#support[Support].

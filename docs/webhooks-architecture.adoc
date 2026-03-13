@@ -1,0 +1,184 @@
+== Webhooks Architecture
+
+This document describes the technical implementation of the webhooks
+feature in Radicle Garden, including database schema, authentication
+flow, and integration points.
+
+=== Overview
+
+The webhooks system enables bidirectional communication between Radicle
+nodes and external CI/CD systems:
+
+[arabic]
+. *Outbound*: Radicle events trigger webhooks to external systems (e.g.,
+Jenkins)
+. *Inbound*: External systems report build status back to Garden via API
+
+=== Architecture Components
+
+==== 1. Webhook Configuration Storage
+
+Webhook configurations are stored as *age-encrypted YAML files* inside
+each repository at `+.radicle/webhooks/<name>.yaml+`:
+
+[source,yaml]
+----
+---
+webhook_name:
+  payload_url: https://jenkins.example.com/generic-webhook-trigger/invoke
+  content_type: application/json
+  shared_secret: <secret>
+----
+
+* Age-Encrypted with the public keys of all the radicle nodes that should
+have access: e.g. the delegates nodes and the CI nodes.
+* Decrypted at runtime using the running node’s private key
+(`{radHome}/keys/radicle`)
+
+==== 2. Database Schema
+
+The following tables support webhook functionality:
+
+- `webhook_trigger_event`: Records of events that triggered webhooks,
+- `webhook`: Outgoing webhook records
+- `webhook_invocation`: Webhook delivery attempts
+- `webhook_repo_configuration`: DB-sourced webhook configs (complementing repo-stored configs)
+- `repo_commit_status`: CI build status per commit
+
+==== 3. Authentication: HMAC-SHA256
+
+The `+shared_secret+` is used for bidirectional authentication:
+
+===== Outgoing (Adapter → CI System)
+
+* Adapter signs webhook payload with HMAC-SHA256
+* Signature sent in `+x-radicle-signature+` or `+X-Hub-Signature-256+`
+header
+* Format: `+sha256=<hex-digest>+`
+
+===== Incoming (CI System → Garden)
+
+* CI system computes `+HMAC-SHA256(secret, request_body)+`
+* Signature sent in `+X-Garden-Signature-256+` header
+* Format: `+sha256=<hex-digest>+`
+
+==== 4. Secret Verification Flow
+
+When the commit status endpoint receives a callback:
+
+[arabic]
+. Look up webhook secret (two sources, in order):
+* *DB first*: Query `+webhook_repo_configuration+` by
+`+(node_id, repo_id, context)+`
+* *Repo fallback*: Decrypt `+.radicle/webhooks/*.yaml+` from node’s
+repository storage
+. Verify HMAC with `+crypto.timingSafeEqual+`
+. Update `+repo_commit_status+` table
+
+==== 5. Commit Status API Endpoint
+
+`+POST /api/commit-status+` — Updates CI build status (e.g.
+`success`, `failure`, `running`, etc.), so that the webhooks adapter
+can then report back to the Radicle CI Broker the correct build
+status from the external CI engine.
+
+
+=== Event Flow Diagram
+
+....
+                    Setup (one-time)
+                    ════════════════
+
+ User                CLI                          Repo (.radicle/webhooks/)
+  │                   │                                     │
+  │  rad webhooks │                                     │
+  │  add --name jenkins                                     │
+  │  --secret <S>     │                                     │
+  │  --url <url>      │                                     │
+  │  --nid <nid>      │                                     │
+  │──────────────────▶│                                     │
+  │                   │  encrypt YAML with CI node's pub key│
+  │                   │────────────────────────────────────▶│
+  │                   │                                     │
+  │                   │     jenkins.yaml (age-encrypted)    │
+  │                   │     ┌─────────────────────────────┐ │
+  │                   │     │ ---                         │ │
+  │                   │     │ jenkins:                    │ │
+  │                   │     │   payload_url: <url>        │ │
+  │                   │     │   content_type: app/json    │ │
+  │                   │     │   shared_secret: <S>        │ │
+  │                   │     └─────────────────────────────┘ │
+  │                   │                                     │
+  │  Copy secret <S> to Jenkins credentials                 │
+
+
+                    CI Event Flow
+                    ═════════════
+
+ Radicle       CI Broker        Webhooks         Jenkins           Garden API
+  Node                          Adapter                           /api/commit-status
+   │               │               │                │                  │
+   │ push event    │               │                │                  │
+   │──────────────▶│               │                │                  │
+   │               │  process      │                │                  │
+   │               │  event        │                │                  │
+   │               │──────────────▶│                │                  │
+   │               │               │                │                  │
+   │               │  ┌────────────┴──────────┐     │                  │
+   │               │  │ 1. Decrypt webhook    │     │                  │
+   │               │  │    config from repo   │     │                  │
+   │               │  │ 2. Insert             │     │                  │
+   │               │  │    repo_commit_status │     │                  │
+   │               │  │    state="triggered"  │     │                  │
+   │               │  └────────────┬──────────┘     │                  │
+   │               │               │                │                  │
+   │               │               │  POST webhook  │                  │
+   │               │               │  (HMAC-signed) │                  │
+   │               │               │  payload:      │                  │
+   │               │               │   node_id      │                  │
+   │               │               │   repo_id      │                  │
+   │               │               │   sha          │                  │
+   │               │               │   context      │                  │
+   │               │───────────────▶│                │                  │
+   │               │               │                │                  │
+   │               │               │                │  run build       │
+   │               │               │                │  ──────────┐     │
+   │               │               │                │            │     │
+   │               │               │                │  ◀─────────┘     │
+   │               │               │                │                  │
+   │               │               │                │  POST            │
+   │               │               │                │  {node_id,       │
+   │               │               │                │   repo_id, sha,  │
+   │               │               │                │   context,       │
+   │               │               │                │   state=success} │
+   │               │               │                │  X-Garden-       │
+   │               │               │                │  Signature-256:  │
+   │               │               │                │  sha256=HMAC(<S>)│
+   │               │               │                │─────────────────▶│
+   │               │               │                │                  │
+   │               │               │                │              ┌───┴─────────────┐
+   │               │               │                │              │ 1. Look up <S>  │
+   │               │               │                │              │    (DB or repo) │
+   │               │               │                │              │ 2. Verify HMAC  │
+   │               │               │                │              │ 3. Upsert       │
+   │               │               │                │              │    commit_status│
+   │               │               │                │              │    state=success│
+   │               │               │                │              └───┬─────────────┘
+   │               │               │                │                  │
+   │               │               │                │    200 {updated} │
+   │               │               │                │◀─────────────────│
+   │               │               │                │                  │
+   │               │               │  poll DB       │                  │
+   │               │               │  ─────────┐    │                  │
+   │               │               │           │    │                  │
+   │               │               │  ◀────────┘    │                  │
+   │               │               │                │                  │
+   │               │  state=success│                │                  │
+   │               │◀──────────────│                │                  │
+   │               │               │                │                  │
+   │  update CI    │               │                │                  │
+   │  status       │               │                │                  │
+   │◀──────────────│               │                │                  │
+   │               │               │                │                  │
+....
+

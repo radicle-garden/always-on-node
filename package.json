@@ -30,6 +30,7 @@
     "@types/md5": "^2.3.6",
     "@types/pg": "^8.16.0",
     "@typescript-eslint/parser": "^8.54.0",
+    "asciidoctor": "^3.0.4",
     "dotenv": "^17.2.3",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",

@@ -1,0 +1,85 @@
+#!/usr/bin/env groovy
+
+def commitSha = env.pushAfter ?: env.patchAfter
+def commitBranch = env.pushBranch ?: env.patchTarget
+
+def postCommitStatus(String state, String failureMessage = null) {
+    if (!env.commitStatusUrl) {
+        if (failureMessage) {
+            echo failureMessage
+        }
+        return
+    }
+
+    def body = """{"node_id":"${env.nodeId}","repo_id":"${env.repositoryId}","sha":"${commitSha}","context":"${env.webhookContext}","state":"${state}","target_url":"${env.BUILD_URL ?: ''}"}"""
+
+    echo "Reporting commit status: ${state}"
+    echo "Body: ${body}"
+
+    withCredentials([
+        string(credentialsId: 'webhook-shared-secret', variable: 'WEBHOOK_SECRET'),
+    ]) {
+        sh """
+            SIG=\$(printf '%s' '${body}' | openssl dgst -sha256 -hmac '${WEBHOOK_SECRET}' | cut -d' ' -f2)
+            curl -sf -X POST '${env.commitStatusUrl}' \
+                -H 'Content-Type: application/json' \
+                -H "X-Garden-Signature-256: sha256=\${SIG}" \
+                -d '${body}' || echo "${failureMessage ?: 'Commit status POST failed (non-fatal)'}"
+        """
+    }
+}
+
+pipeline {
+    stages {
+        stage('Checkout') {
+            checkout scm
+        }
+
+        // It is important to have this first stage in your jenkins pipeline, so you can see the commit status updated
+        // in Radicle. Technically speaking, it isn't part of the CI pipeline and this functionality (reporting
+        // pipeline status)could later be moved to a dedicated Jenkins plugin.
+        stage('Update status on Radicle') {
+            steps {
+                script {
+                    postCommitStatus('running', 'Running status POST failed (non-fatal)')
+                }
+            }
+        }
+
+        stage('Info') {
+            steps {
+                echo "Repository: ${env.repositoryName ?: 'N/A'}"
+                echo "Branch: ${commitBranch ?: 'N/A'}"
+                echo "Commit SHA: ${commitSha ?: 'N/A'}"
+                echo "Context: ${env.webhookContext ?: 'N/A'}"
+                echo "Commit Status URL: ${env.commitStatusUrl ?: 'N/A'}"
+            }
+        }
+
+        stage('Lint') {
+            steps {
+                echo "Running lint checks..."
+                sh 'sleep 2'
+                echo "Lint passed. Ha! 8)"
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo "Running tests..."
+                sh 'sleep 3'
+                echo "Tests passed. ＼（＾ ＾）／"
+            }
+        }
+    }
+
+    // this ensures the status is always updated on Radicle after the job has run.
+    post {
+        always {
+            script {
+                def state = currentBuild.currentResult == 'SUCCESS' ? 'success' : 'failure'
+                postCommitStatus(state, 'Commit status POST failed (non-fatal)')
+            }
+        }
+    }
+}

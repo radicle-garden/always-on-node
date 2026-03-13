@@ -592,3 +592,170 @@ html {
 .divider {
   border-top: 1px solid var(--color-border-subtle);
 }
+
+.adoc-content {
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.adoc-content a {
+  color: var(--color-text-brand, var(--color-text-primary));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.adoc-content a:hover {
+  text-decoration: none;
+}
+
+.adoc-content h2,
+.adoc-content h3,
+.adoc-content h4 {
+  color: var(--color-text-primary);
+  margin-top: 1rem;
+}
+
+.adoc-content h2 {
+  font: var(--txt-heading-xl);
+}
+
+.adoc-content h3 {
+  font: var(--txt-heading-l);
+}
+
+.adoc-content h4 {
+  font: var(--txt-heading-m);
+}
+
+.adoc-content .sect1,
+.adoc-content .sect2,
+.adoc-content .sect3 {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.adoc-content .sectionbody {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.adoc-content p {
+  line-height: 1.6;
+}
+
+.adoc-content strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.adoc-content ul,
+.adoc-content ol {
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.adoc-content ul {
+  list-style: disc;
+}
+
+.adoc-content ol {
+  list-style: decimal;
+}
+
+.adoc-content li > p {
+  margin: 0;
+}
+
+.adoc-content code {
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0.25rem;
+  padding: 0.05rem 0.35rem;
+  font: var(--txt-code-regular);
+  font-family: var(--font-mono);
+}
+
+.adoc-content pre {
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0.375rem;
+  padding: 1rem;
+  overflow-x: auto;
+  font: var(--txt-code-regular);
+  font-family: var(--font-mono);
+  line-height: 1.5;
+}
+
+.adoc-content pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.adoc-content .listingblock,
+.adoc-content .literalblock {
+  margin: 0;
+}
+
+.adoc-content .title {
+  color: var(--color-text-tertiary);
+  font: var(--txt-body-s-semibold);
+  margin-bottom: 0.25rem;
+}
+
+.adoc-content blockquote,
+.adoc-content .quoteblock {
+  border-left: 3px solid var(--color-border-mid);
+  padding-left: 1rem;
+  color: var(--color-text-tertiary);
+}
+
+.adoc-content .admonitionblock {
+  border-left: 3px solid var(--color-border-mid);
+  background: var(--color-surface-subtle);
+  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
+}
+
+.adoc-content .admonitionblock > table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.adoc-content .admonitionblock td.icon {
+  padding-right: 0.75rem;
+  color: var(--color-text-tertiary);
+  vertical-align: top;
+  white-space: nowrap;
+  font: var(--txt-body-s-semibold);
+  text-transform: uppercase;
+}
+
+.adoc-content table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.adoc-content table.tableblock th,
+.adoc-content table.tableblock td {
+  border: 1px solid var(--color-border-subtle);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.adoc-content table.tableblock th {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.adoc-content hr {
+  border: none;
+  border-top: 1px solid var(--color-border-subtle);
+}

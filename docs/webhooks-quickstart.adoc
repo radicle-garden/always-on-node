@@ -1,0 +1,32 @@
+== Webhooks in radicle.garden
+
+Webhooks let your Radicle Garden node notify external services when a
+push or patch lands on one of its repositories — typical use is
+triggering a CI build, posting to chat, or feeding events into your own
+backend.
+
+=== Before you start
+
+* Ensure you have `rad-webhooks` CLI installed:
+
+```shell
+curl -sSfL https://index.radicle.garden/raw/rad:z2jrMkSbYgoVVB2tnzDaja55iX42R/head/install.sh | bash
+```
+
+* Verify everything is set up correctly, by running: `rad webhooks` . You
+should see the CLI usage instructions.
+
+
+=== Guides
+
+Pick your guide, depending on what you want to achieve:
+
+[arabic]
+. link:webhooks-smoke-test.adoc[Getting Started with Webhooks] — Enable a
+generic webhook and verify it fires, using
+https://webhook.site[webhook.site] as a dummy receiver. 5-minute smoke
+test. *Recommended for newcomers.*
+. link:webhooks-jenkins.adoc[Trigger CI runs on your Jenkins] — End-to-end
+Jenkins example: receive webhooks, run a pipeline, post commit status
+back.
+

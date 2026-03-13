@@ -1,0 +1,119 @@
+== Generic Webhook Setup
+
+Enable a webhook on a repo seeded by your Radicle Garden node and verify
+it fires, using https://webhook.site[webhook.site] as a throwaway
+receiver. Takes about 5 minutes and is the recommended smoke test before
+you wire up a real CI system.
+
+Prerequisites →
+link:webhooks-quickstart.adoc#before-you-start[Before you start].
+
+=== Steps
+
+[arabic]
+. Confirm your repo is seeded by your Garden node.
+. Grab your Garden node ID from
+`+https://radicle.network/nodes/<garden-username>.radicle.garden+` (top
+left).
+. Open https://webhook.site. Copy the `+https://webhook.site/<uuid>+`
+URL shown at the top. Leave the tab open.
+. From your repo working copy, register the webhook. `+--nid+` is the
+node ID from step 2 — the CLI derives the encryption key from it
+automatically.
++
+[source,bash]
+----
+rad webhooks add \
+  --name smoke-test \
+  --url 'https://webhook.site/<uuid>' \
+  --secret 'any-string-is-fine-here' \
+  --nid <the node id from the Garden dashboard>
+----
+. Commit and push the config so your node sees it:
++
+[source,bash]
+----
+git add .radicle/webhooks/smoke-test.yaml
+git commit -m 'Smoke-test webhook'
+git push rad
+----
+. Watch webhook.site — within ~30 s a `+POST+` should appear with:
+* `+x-radicle-event-type: push+` header,
+* `+X-Hub-Signature-256: sha256=…+` (HMAC-SHA256 of the body using your
+`+--secret+`),
+* JSON body containing `+repository+`, `+after+`, `+branch+`,
+`+context+`, `+commit_status_url+`.
+. Clean up:
++
+[source,bash]
+----
+rad webhooks delete --name smoke-test
+git commit -am 'Remove smoke-test webhook'
+git push rad
+----
+
+If nothing arrives, see
+link:webhooks-quickstart.adoc#troubleshooting[Troubleshooting].
+
+____
+Tip: You can also use git’s clean/smudge filters to have webhook
+settings files automatically encrypted/decrypted by means of a
+`+.gitattributes+` entry. See the
+https://radicle.network/nodes/index.radicle.garden/rad%3Az2hCUNw2T1qU31LyGy7VPEiS7BkxW/tree/docs/webhook_settings_persistence.md#:~:text=trigger%20the%20webhooks.-,Automated,-encryption%20%26%20decryption[persistence
+doc] for more details.
+____
+
+=== Next
+
+Once the smoke test works, you know the delivery path is healthy.
+Connect a real CI system →
+link:webhooks-jenkins.adoc[Jenkins setup guide].
+
+=== Manage webhooks
+
+Run the below commands in a working copy of your repo.
+
+The `+ls+`/`+show+`/`+delete+` subcommands use your local private
+key (default `+$RAD_HOME/keys/radicle+`) to decrypt any webhook
+configuration files found inside of `.radicle/webhooks/` in your repo.
+
+[source,bash]
+----
+rad webhooks ls
+rad webhooks show   --name <name>
+rad webhooks delete --name <name>
+----
+
+Updating = delete + re-add.
+
+=== Troubleshooting
+
+*Nothing arrives at the webhook URL*
+
+[arabic]
+. `+rad webhooks ls+` shows the webhook.
+. `+git ls-files .radicle/webhooks+` shows it on the remote (if not, it
+wasn’t pushed).
+. The URL is reachable _from your Garden node_ — not just your laptop.
+
+*`+commit_status_url+` callback returns 401/403*
+
+Signature mismatch. Sign the *raw* body with HMAC-SHA256, hex digest,
+lowercase; header format is exactly
+`+X-Garden-Signature-256: sha256=<hex>+`.
+
+*"`refusing to decrypt`" in adapter logs*
+
+Wrong `+--nid+` at `+add+` time — the file was encrypted for a different
+node. Re-add with the correct NID.
+
+*Signature verification failing on the CI side*
+
+* Sign the raw body, not a re-serialized copy.
+* Use a timing-safe comparison (`+hmac.compare_digest+`,
+`+crypto.timingSafeEqual+`).
+
+=== Support
+
+Create a new topic on the `+#Garden+` channel on
+https://radicle.zulipchat.com[Radicle Zulip].

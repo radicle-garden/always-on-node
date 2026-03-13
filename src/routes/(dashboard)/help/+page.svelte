@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from "$app/paths";
   import Command from "$components/Command.svelte";
   import FAQ from "$components/FAQ.svelte";
   import Footer from "$components/Footer.svelte";
@@ -15,7 +16,7 @@
 
 <div class="flex flex-col gap-8">
   <div class="txt-heading-xxl">Help</div>
-  <div class="grid grid-cols-1 grid-rows-2 gap-8 sm:grid-cols-2 sm:grid-rows-1">
+  <div class="grid grid-cols-1 gap-8 sm:grid-cols-3">
     <div class="flex flex-col gap-8 rounded-sm bg-surface-subtle p-6">
       <div class="flex flex-col gap-2">
         <div class="txt-heading-m">Support</div>
@@ -44,6 +45,20 @@
         class="flex items-center gap-2 font-bold text-brand-hover hover:underline">
         Get in touch
         <Icon name="open-external" />
+      </a>
+    </div>
+    <div class="flex flex-col gap-8 rounded-sm bg-surface-subtle p-6">
+      <div class="flex flex-col gap-2">
+        <div class="txt-heading-m">CI &amp; Webhooks</div>
+        <div class="txt-body-m-regular text-text-tertiary">
+          Wire Radicle events up to Jenkins or any webhook-capable CI system.
+        </div>
+      </div>
+      <a
+        href={resolve("/help/ci")}
+        class="flex items-center gap-2 font-bold text-brand-hover hover:underline">
+        Read the guide
+        <Icon name="arrow-right" />
       </a>
     </div>
   </div>
