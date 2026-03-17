@@ -32,7 +32,7 @@
   <div
     class="relative h-10 w-full overflow-hidden rounded-lg border border-border-mid bg-surface-canvas">
     <img
-      src="/img/bg/storage.png"
+      src="/img/bg/bg.png"
       alt="Storage"
       class="absolute top-0 left-0 min-h-full object-cover"
       style="width: {Math.round(bytesToPercentage(size ?? 0))}%" />
