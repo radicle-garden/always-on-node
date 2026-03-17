@@ -91,7 +91,7 @@
         </div>
         <div class="md:ml-auto">
           <Button
-            class="bg-surface-canvas font-bold text-text-primary hover:bg-text-primary hover:text-text-on-brand"
+            class="bg-surface-canvas font-bold text-text-primary hover:bg-text-primary hover:text-white"
             target="_blank"
             href="https://radicle.dev">
             Visit radicle.dev<Icon name="open-external" />
