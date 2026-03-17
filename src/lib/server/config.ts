@@ -44,6 +44,7 @@ export interface AppConfig {
   /** Memory limit for the radicle-httpd container in bytes. 0 means no limit. */
   httpdContainerMemoryLimitBytes: number;
   nodeFetchPackReceive: string;
+  reservedUsernames: string[];
   public: {
     // Override this in production via PUBLIC_SERVICE_HOST_PORT to
     // radicle.garden or whatever domain we'll use.
@@ -115,6 +116,9 @@ export function getConfig(): AppConfig {
       configJson.httpdContainerMemoryLimitBytes,
     nodeFetchPackReceive:
       process.env.NODE_FETCH_PACK_RECEIVE || configJson.nodeFetchPackReceive,
+    reservedUsernames:
+      process.env.RESERVED_USERNAMES?.split(",") ||
+      configJson.reservedUsernames,
     public: {
       publicServiceHostPort:
         process.env.PUBLIC_SERVICE_HOST_PORT ||

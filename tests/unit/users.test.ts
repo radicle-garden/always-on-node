@@ -1,7 +1,11 @@
 import { getDb } from "$lib/server/db";
 import { setPassword, verifyPassword } from "$lib/server/entities";
 import { stripeService } from "$lib/server/services/stripe";
-import { canDeleteAccount, deleteUser } from "$lib/server/services/users";
+import {
+  canDeleteAccount,
+  createNewUser,
+  deleteUser,
+} from "$lib/server/services/users";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -15,6 +19,19 @@ vi.mock("$lib/server/services/nodes", () => ({
   stopContainers: vi.fn().mockResolvedValue({ success: true }),
 }));
 
+vi.mock("$lib/server/config", () => ({
+  config: {
+    appSecret: "test-secret",
+    reservedUsernames: ["admin", "api", "www", "root"],
+  },
+}));
+
+vi.mock("$lib/server/services/email", () => ({
+  emailService: {
+    sendVerificationEmail: vi.fn().mockResolvedValue({ success: true }),
+  },
+}));
+
 vi.mock("$lib/server/db", () => {
   const mockDb = {
     query: {
@@ -25,11 +42,20 @@ vi.mock("$lib/server/db", () => {
     update: vi.fn().mockReturnThis(),
     set: vi.fn().mockReturnThis(),
     where: vi.fn().mockResolvedValue(undefined),
+    insert: vi.fn().mockReturnThis(),
+    values: vi.fn().mockReturnThis(),
+    returning: vi.fn().mockResolvedValue([]),
   };
   return {
     getDb: vi.fn().mockResolvedValue(mockDb),
     schema: {
-      users: { id: "id", deleted: "deleted", user_id: "user_id" },
+      users: {
+        id: "id",
+        email: "email",
+        handle: "handle",
+        deleted: "deleted",
+        user_id: "user_id",
+      },
       nodes: { user_id: "user_id", deleted: "deleted" },
     },
   };
@@ -40,6 +66,9 @@ interface MockDb {
   update: ReturnType<typeof vi.fn>;
   set: ReturnType<typeof vi.fn>;
   where: ReturnType<typeof vi.fn>;
+  insert: ReturnType<typeof vi.fn>;
+  values: ReturnType<typeof vi.fn>;
+  returning: ReturnType<typeof vi.fn>;
 }
 
 describe("canDeleteAccount", () => {
@@ -255,6 +284,59 @@ describe("deleteUser", () => {
     expect(result.success).toBe(true);
     expect(result.statusCode).toBe(200);
     expect(mockDb.update).toHaveBeenCalled();
+  });
+});
+
+describe("createNewUser", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("rejects reserved usernames", async () => {
+    const result = await createNewUser(
+      "admin",
+      "admin@example.com",
+      "pass1234",
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("This username is reserved and cannot be used");
+    expect(result.statusCode).toBe(400);
+  });
+
+  it("rejects reserved usernames case-insensitively", async () => {
+    const result = await createNewUser(
+      "Admin",
+      "admin@example.com",
+      "pass1234",
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("This username is reserved and cannot be used");
+    expect(result.statusCode).toBe(400);
+  });
+
+  it("allows non-reserved usernames", async () => {
+    const mockDb = (await getDb()) as unknown as MockDb;
+    mockDb.query.users.findFirst.mockResolvedValue(null);
+    mockDb.returning.mockResolvedValue([
+      {
+        id: 1,
+        handle: "alice",
+        email: "alice@example.com",
+        email_verified: false,
+        deleted: false,
+      },
+    ]);
+
+    const result = await createNewUser(
+      "alice",
+      "alice@example.com",
+      "pass1234",
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.statusCode).toBe(201);
   });
 });
 

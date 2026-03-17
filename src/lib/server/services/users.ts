@@ -112,6 +112,15 @@ export async function createNewUser(
       };
     }
 
+    if (config.reservedUsernames.includes(handle.toLowerCase())) {
+      return {
+        success: false,
+        error: "This username is reserved and cannot be used",
+        content: null,
+        statusCode: 400,
+      };
+    }
+
     log.info("Creating user", { handle, email });
 
     const [savedUser] = await db

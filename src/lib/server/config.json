@@ -28,6 +28,7 @@
   "httpdContainerCpuLimit": 0,
   "httpdContainerMemoryLimitBytes": 0,
   "nodeFetchPackReceive": "2.0 GiB",
+  "reservedUsernames": ["app", "admin", "root"],
   "public": {
     "publicServiceHostPort": "localhost:3080",
     "userMaxDiskUsageBytes": 5368709120
