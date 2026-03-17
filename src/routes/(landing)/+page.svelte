@@ -91,7 +91,7 @@
         </div>
         <div class="md:ml-auto">
           <Button
-            class="bg-surface-canvas font-bold text-text-primary hover:bg-text-primary hover:text-white"
+            class="radicle-cta !font-bold"
             target="_blank"
             href="https://radicle.dev">
             Visit radicle.dev<Icon name="open-external" />
@@ -104,3 +104,15 @@
     <FAQ />
   </div>
 </div>
+
+<style>
+  :global(.radicle-cta) {
+    background: white !important;
+    color: black !important;
+  }
+
+  :global(.radicle-cta:hover) {
+    background: black !important;
+    color: white !important;
+  }
+</style>
