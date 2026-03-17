@@ -19,9 +19,9 @@
     </span>
   </div>
   <img
-    src="/img/landing/hero.png"
+    src="/img/landing/garden-hero.png"
     alt="Radicle Garden"
-    class="mt-10 h-120 w-full rounded-md object-cover object-top-left sm:mt-16 sm:h-128" />
+    class="mt-10 h-120 w-full rounded-md object-cover object-center sm:mt-16 sm:h-128" />
   <div class="txt-heading-xl mt-32 max-w-135 sm:mt-24">
     Why run an always‑on node? <span class="text-text-tertiary">
       Stay online, stay replicated, stay in control.
@@ -36,7 +36,7 @@
   <div class="mt-32 grid grid-cols-1 gap-6 sm:mt-16 md:grid-cols-3">
     <div class="col-span-1 flex flex-col gap-5">
       <img
-        src="/img/landing/always-reachable.png"
+        src="/img/landing/always-reachable.jpg"
         alt="Always reachable"
         class="h-66.5 w-full rounded-md object-cover" />
       <div>
@@ -49,7 +49,7 @@
     </div>
     <div class="col-span-1 flex flex-col gap-5">
       <img
-        src="/img/landing/simple-to-set-up.png"
+        src="/img/landing/simple-to-set-up.jpg"
         alt="Simple to set up"
         class="h-66.5 w-full rounded-md object-cover" />
       <div>
@@ -62,7 +62,7 @@
     </div>
     <div class="col-span-1 flex flex-col gap-5">
       <img
-        src="/img/landing/works-alongside-your-local-node.png"
+        src="/img/landing/works-alongside-your-local-node.jpg"
         alt="Works alongside your local node"
         class="h-66.5 w-full rounded-md object-cover" />
       <div>
@@ -75,22 +75,23 @@
     </div>
   </div>
   <div
-    class="relative mt-32 h-102 w-full rounded-md bg-[url('/img/landing/container-xs.png')] bg-cover bg-center p-6 md:mt-24 md:bg-[url('/img/landing/container.png')] md:bg-position-[center_right_-10rem]">
+    class="relative mt-32 h-102 w-full rounded-md bg-[url('/img/landing/radicle-hero.jpg')] bg-cover bg-center p-6 md:mt-24 md:bg-position-[center_right_-10rem]">
     <div class="flex h-full flex-col">
-      <div class="txt-heading-l md:txt-heading-xxl text-[black] md:max-w-128">
+      <div
+        class="txt-heading-l md:txt-heading-xxl text-text-on-brand md:max-w-128">
         Radicle is an open source, peer-to-peer code collaboration stack built
         on Git.
       </div>
       <div
         class="mt-auto flex w-full flex-col gap-4 md:flex-row md:items-end md:gap-0">
         <div
-          class="txt-body-l-medium md:txt-body-m-medium max-w-100 text-[black]">
+          class="txt-body-l-medium md:txt-body-m-medium max-w-100 text-text-on-brand">
           Get started in minutes—no servers required. Instantly share code and
           discover new projects.
         </div>
         <div class="md:ml-auto">
           <Button
-            class="bg-[white] font-bold text-[black]"
+            class="bg-surface-canvas font-bold text-text-primary hover:bg-text-primary hover:text-text-on-brand"
             target="_blank"
             href="https://radicle.dev">
             Visit radicle.dev<Icon name="open-external" />
