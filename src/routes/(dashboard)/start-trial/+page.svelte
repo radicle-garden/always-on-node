@@ -55,7 +55,7 @@
       </div>
     </div>
     <img
-      src="/img/bg/trial.png"
+      src="/img/bg/bg.png"
       class="h-75 w-full object-cover sm:ml-auto sm:w-75"
       alt="Trial" />
   </div>

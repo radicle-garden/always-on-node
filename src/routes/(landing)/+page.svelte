@@ -13,7 +13,7 @@
     </span>
   </div>
   <img
-    src="/img/landing/garden-hero.png"
+    src="/img/bg/bg.png"
     alt="Radicle Garden"
     class="mt-10 h-120 w-full rounded-md object-cover object-center sm:mt-16 sm:h-128" />
   <div class="txt-heading-xl mt-32 max-w-135 sm:mt-24">
