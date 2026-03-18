@@ -7,13 +7,7 @@
 
 <div class="flex w-full flex-col items-start">
   <div class="txt-heading-xxl sm:txt-heading-xxxl max-w-200 text-left">
-    An always-on node for your <a
-      href="https://radicle.dev"
-      target="_blank"
-      class="hover:underline">
-      Radicle
-    </a>
-    repositories.
+    An always-on node for your Radicle repositories.
     <span class="text-text-tertiary">
       The sovereignty of Radicle, with additional availability.
     </span>
