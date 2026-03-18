@@ -11,6 +11,10 @@
   let isSubmitting = $state(false);
 </script>
 
+<svelte:head>
+  <title>Reset password | Radicle Garden</title>
+</svelte:head>
+
 <div
   class="flex w-full flex-col items-center justify-center gap-8 bg-surface-canvas p-8 sm:w-100">
   <div class="flex h-full w-full flex-col items-start justify-start gap-8">

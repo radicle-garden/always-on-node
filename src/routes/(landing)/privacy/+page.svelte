@@ -1,6 +1,10 @@
 <script lang="ts">
 </script>
 
+<svelte:head>
+  <title>Privacy Policy | Radicle Garden</title>
+</svelte:head>
+
 {#snippet section(title: string, paragraphs: string[])}
   <div class="flex flex-col gap-6">
     <div class="txt-heading-xxl">{title}</div>

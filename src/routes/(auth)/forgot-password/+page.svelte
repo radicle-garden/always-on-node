@@ -14,6 +14,10 @@
   let email = $derived(form?.email ?? "");
 </script>
 
+<svelte:head>
+  <title>Forgot password | Radicle Garden</title>
+</svelte:head>
+
 <div class="w-full bg-surface-canvas p-8 sm:w-100">
   <div class="flex h-full w-full flex-col items-start justify-start gap-8">
     <div>

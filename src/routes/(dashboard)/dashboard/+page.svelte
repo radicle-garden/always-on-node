@@ -88,6 +88,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>Dashboard | Radicle Garden</title>
+</svelte:head>
+
 {#snippet nodeStatus()}
   {#if isNodeOnline}
     <Badge variant="success">

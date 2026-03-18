@@ -16,5 +16,9 @@
   });
 </script>
 
+<svelte:head>
+  <title>Radicle Garden</title>
+</svelte:head>
+
 <ModeWatcher />
 {@render children()}

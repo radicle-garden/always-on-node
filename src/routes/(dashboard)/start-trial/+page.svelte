@@ -33,6 +33,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Start free trial | Radicle Garden</title>
+</svelte:head>
+
 <div
   class="flex min-h-[calc(100vh-15.5rem)] items-center justify-center bg-surface-base">
   <div

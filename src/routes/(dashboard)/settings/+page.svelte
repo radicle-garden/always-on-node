@@ -80,6 +80,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Settings | Radicle Garden</title>
+</svelte:head>
+
 <div class="flex flex-col gap-8" class:invisible={!mounted}>
   <div class="flex flex-col gap-2">
     <div class="txt-heading-m">Plan</div>

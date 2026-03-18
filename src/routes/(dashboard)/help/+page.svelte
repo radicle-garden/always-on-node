@@ -9,6 +9,10 @@
   let { data }: { data: PageData } = $props();
 </script>
 
+<svelte:head>
+  <title>Help | Radicle Garden</title>
+</svelte:head>
+
 <div class="flex flex-col gap-8">
   <div class="txt-heading-xxl">Help</div>
   <div class="grid grid-cols-1 grid-rows-2 gap-8 sm:grid-cols-2 sm:grid-rows-1">
