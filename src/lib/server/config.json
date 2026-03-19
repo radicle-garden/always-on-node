@@ -12,7 +12,7 @@
   "nodeEnv": "development",
   "logLevel": "debug",
   "dockerHost": "unix:///run/user/1000/podman/podman.sock",
-  "radicleNodeContainer": "quay.io/radicle_garden/radicle-node:1.6.1",
+  "radicleNodeContainer": "quay.io/radicle_garden/radicle-node:1.7.0",
   "radicleHttpdContainer": "quay.io/radicle_garden/radicle-httpd:0.25.0",
   "radicleBrokerContainer": "quay.io/radicle_garden/radicle-broker:0.26.0",
   "nodeBootingTimeoutMs": 120000,
