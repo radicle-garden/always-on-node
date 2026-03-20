@@ -17,7 +17,7 @@
         dest: "{{ config_dir }}/radicle/always-on-node_env"
         owner: "{{ system_username }}"
         group: "{{ system_username }}"
-        mode: "0644"
+        mode: "0600"
 
     - name: Stop the service
       systemd:
