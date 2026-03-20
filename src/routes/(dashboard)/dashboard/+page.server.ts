@@ -193,6 +193,13 @@ export const actions = {
       return fail(400, { error: "Node ID and Repository ID are required" });
     }
 
+    const userOwnsNode = locals.user.nodes.some(
+      (n) => n.node_id === nodeId,
+    );
+    if (!userOwnsNode) {
+      return fail(403, { error: "Forbidden" });
+    }
+
     const parsedRid = parseRepositoryId(rid);
     if (!parsedRid) {
       return fail(400, { error: "Invalid Repository ID format" });
@@ -228,6 +235,13 @@ export const actions = {
 
     if (!nodeId || !rid) {
       return fail(400, { error: "Node ID and Repository ID are required" });
+    }
+
+    const userOwnsNode = locals.user.nodes.some(
+      (n) => n.node_id === nodeId,
+    );
+    if (!userOwnsNode) {
+      return fail(403, { error: "Forbidden" });
     }
 
     const parsedRid = parseRepositoryId(rid);
