@@ -113,6 +113,37 @@ loki.process "cron" {
 }
 
 
+// ############################################################################
+// ################### SSH auth logs #########################################
+// ############################################################################
+
+loki.source.journal "sshd" {
+  max_age    = "12h"
+  forward_to = [loki.process.sshd.receiver]
+  matches    = "_SYSTEMD_UNIT=ssh.service"
+  labels     = {app = "sshd", job = "garden", instance = "{{ inventory_hostname }}"}
+}
+
+loki.process "sshd" {
+  forward_to = [loki.write.grafana_cloud_loki.receiver]
+}
+
+
+// ############################################################################
+// ################### fail2ban logs #########################################
+// ############################################################################
+
+loki.source.journal "fail2ban" {
+  max_age    = "12h"
+  forward_to = [loki.process.fail2ban.receiver]
+  matches    = "_SYSTEMD_UNIT=fail2ban.service"
+  labels     = {app = "fail2ban", job = "garden", instance = "{{ inventory_hostname }}"}
+}
+
+loki.process "fail2ban" {
+  forward_to = [loki.write.grafana_cloud_loki.receiver]
+}
+
 
 // ############################################################################
 // ######################### Garden Container Logs ############################
