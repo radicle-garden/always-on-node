@@ -37,7 +37,8 @@
   let httpdHostname = $derived(nodeHttpdHostPort.split(":")[0]);
   let httpdPort = $derived.by(() => {
     const portStr = nodeHttpdHostPort.split(":")[1];
-    return portStr ? parseInt(portStr) : 3080;
+    if (portStr) return parseInt(portStr);
+    return httpdScheme === "https" ? 443 : 80;
   });
 
   let hover = $state(false);

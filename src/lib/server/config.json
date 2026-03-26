@@ -6,6 +6,7 @@
   "frontendUrl": "http://localhost:5173",
   "fqdn": "localhost",
   "httpdScheme": "http",
+  "httpdPublicScheme": "http",
   "httpdPort": 80,
   "nodeEnv": "development",
   "logLevel": "debug",

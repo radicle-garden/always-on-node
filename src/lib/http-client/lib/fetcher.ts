@@ -182,7 +182,11 @@ export class Fetcher {
 
     const pathSegment = path === undefined ? "" : `/${path}`;
 
-    let url = `${this.#baseUrl.scheme}://${this.#baseUrl.hostname}:${this.#baseUrl.port}/api/v1${pathSegment}`;
+    const isStandardPort =
+      (this.#baseUrl.scheme === "http" && this.#baseUrl.port === 80) ||
+      (this.#baseUrl.scheme === "https" && this.#baseUrl.port === 443);
+    const portSuffix = isStandardPort ? "" : `:${this.#baseUrl.port}`;
+    let url = `${this.#baseUrl.scheme}://${this.#baseUrl.hostname}${portSuffix}/api/v1${pathSegment}`;
 
     if (query) {
       const searchparams = new URLSearchParams(query as Record<string, string>);

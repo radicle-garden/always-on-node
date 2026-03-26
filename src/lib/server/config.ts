@@ -17,6 +17,9 @@ export interface AppConfig {
   frontendUrl: string;
   fqdn: string;
   httpdScheme: string;
+  // The scheme used by the browser to reach the httpd (may differ from
+  // httpdScheme which is used for internal server-to-httpd communication).
+  httpdPublicScheme: string;
   httpdPort: number;
   nodeEnv: string;
   logLevel: string;
@@ -68,6 +71,8 @@ export function getConfig(): AppConfig {
     frontendUrl: process.env.FRONTEND_URL || configJson.frontendUrl,
     fqdn: process.env.FQDN || configJson.fqdn,
     httpdScheme: process.env.HTTPD_SCHEME || configJson.httpdScheme,
+    httpdPublicScheme:
+      process.env.HTTPD_PUBLIC_SCHEME || configJson.httpdPublicScheme,
     httpdPort: Number(process.env.HTTPD_PORT) || configJson.httpdPort,
     nodeEnv: process.env.NODE_ENV || configJson.nodeEnv,
     logLevel: process.env.LOG_LEVEL || configJson.logLevel,

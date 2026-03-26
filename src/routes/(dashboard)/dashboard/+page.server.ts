@@ -175,7 +175,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     stripePriceId: config.stripePriceId,
     publicServiceHostPort: config.public.publicServiceHostPort,
     userMaxDiskUsageBytes: config.public.userMaxDiskUsageBytes,
-    httpdScheme: config.httpdScheme,
+    httpdScheme: config.httpdPublicScheme,
   };
 };
 
