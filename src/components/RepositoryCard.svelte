@@ -7,7 +7,6 @@
   import { Client } from "$lib/http-client/lib/repo";
   import { absoluteTimestamp, formatTimestamp } from "$lib/utils";
 
-  import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
 
   import type { RepoInfo } from "../routes/(dashboard)/dashboard/+page.server";
@@ -76,8 +75,11 @@
     };
   });
 
-  onMount(() => {
+  $effect(() => {
     if (!shouldFetchActivity) return;
+
+    fetchedActivity = undefined;
+    latestCommit = undefined;
 
     const controller = new AbortController();
 
@@ -92,8 +94,6 @@
     httpdClient
       .getActivity(repo.rid, { abort: controller.signal })
       .then(commits => {
-        if (!shouldFetchActivity) return;
-
         if (commits.activity.length > 0 && repo.head) {
           latestCommit = {
             time: commits.activity[0],
