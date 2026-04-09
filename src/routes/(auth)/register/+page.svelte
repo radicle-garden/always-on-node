@@ -88,12 +88,16 @@
       <form
         method="POST"
         action="?/register"
-        use:enhance={() => {
+        use:enhance={({ formData }) => {
           emailError = "";
           if (!isValidEmail(email)) {
             emailError = "Please enter a valid email address";
             return ({ update }) => update();
           }
+          formData.set(
+            "handle",
+            formData.get("handle")?.toString().toLowerCase() ?? "",
+          );
           isSubmitting = true;
           return async ({ update }) => {
             await update();
@@ -112,7 +116,7 @@
                 id="handle"
                 name="handle"
                 type="text"
-                class="border-0"
+                class="border-0 lowercase"
                 placeholder="hostname"
                 bind:value={handle}
                 aria-invalid={!!form?.errors?.handle}

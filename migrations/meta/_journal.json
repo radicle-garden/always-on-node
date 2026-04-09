@@ -43,6 +43,13 @@
       "when": 1770760866368,
       "tag": "0005_flimsy_vermin",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1775737527920,
+      "tag": "0006_lowercase_handles",
+      "breakpoints": true
     }
   ]
 }

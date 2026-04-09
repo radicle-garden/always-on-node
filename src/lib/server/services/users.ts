@@ -33,7 +33,7 @@ export async function retrieveUserByHandle(
     const db = await getDb();
     const user = await db.query.users.findFirst({
       where: and(
-        eq(schema.users.handle, username),
+        eq(schema.users.handle, username.toLowerCase()),
         eq(schema.users.deleted, false),
       ),
       with: {
@@ -73,6 +73,30 @@ export async function createNewUser(
   password: string,
 ): Promise<ServiceResult<User | null>> {
   try {
+    const handleRegex = /^[a-zA-Z]+[a-zA-Z0-9_-]+$/;
+    if (!handleRegex.test(handle)) {
+      return {
+        success: false,
+        error:
+          "Username must start with a letter and can only contain letters, numbers, dashes and underscores",
+        content: null,
+        statusCode: 400,
+      };
+    }
+
+    // Normalize handle to lowercase to avoid case mismatches between
+    // DNS hostnames (always lowercase) and filesystem paths.
+    handle = handle.toLowerCase();
+
+    if (config.reservedUsernames.includes(handle)) {
+      return {
+        success: false,
+        error: "This username is reserved and cannot be used",
+        content: null,
+        statusCode: 400,
+      };
+    }
+
     const db = await getDb();
 
     const existingUser = await db.query.users.findFirst({
@@ -99,26 +123,6 @@ export async function createNewUser(
           statusCode: 400,
         };
       }
-    }
-
-    const handleRegex = /^[a-zA-Z]+[a-zA-Z0-9_-]+$/;
-    if (!handleRegex.test(handle)) {
-      return {
-        success: false,
-        error:
-          "Username must start with a letter and can only contain letters, numbers, dashes and underscores",
-        content: null,
-        statusCode: 400,
-      };
-    }
-
-    if (config.reservedUsernames.includes(handle.toLowerCase())) {
-      return {
-        success: false,
-        error: "This username is reserved and cannot be used",
-        content: null,
-        statusCode: 400,
-      };
     }
 
     log.info("Creating user", { handle, email });
