@@ -3,7 +3,7 @@ ARG PLATFORM
 FROM --platform=linux/amd64 quay.io/radicle_garden/heartwood:$RADICLE_VERSION as heartwood
 
 FROM alpine:3.20
-RUN apk add git
+RUN apk add git jq
 
 ARG RADICLE_VERSION
 ARG PLATFORM
