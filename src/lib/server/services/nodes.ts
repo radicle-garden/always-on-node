@@ -1303,11 +1303,15 @@ async function writeBrokerConfig(
 
   YAML.visit(doc, {
     Scalar(_key, node) {
-      if (node.tag === "!Node") node.value = opts.user_node_id;
+      if (node.tag === "!Node") {
+        node.value = opts.user_node_id;
+      } else if (node.tag) {
+        node.value = null;
+      }
     },
   });
 
-  await writeFile(outputPath, doc.toString({ nullStr: "" }), "utf8");
+  await writeFile(outputPath, doc.toString(), "utf8");
   log.debug(`Broker config written to ${outputPath}`);
 }
 
