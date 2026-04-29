@@ -1,7 +1,9 @@
+import { read } from "$app/server";
+
 import { and, eq } from "drizzle-orm";
 import { execa } from "execa";
 import fs from "fs";
-import { readFile, writeFile } from "fs/promises";
+import { writeFile } from "fs/promises";
 import getPort, { portNumbers } from "get-port";
 import path from "path";
 import YAML from "yaml";
@@ -12,6 +14,7 @@ import { config } from "../config";
 import { getDb, schema } from "../db";
 import type { Node, User } from "../entities";
 import { createServiceLogger } from "../logger";
+import brokerConfigTemplateUrl from "../templates/broker-config.yaml.template?url";
 
 type NodeStatus =
   | {
@@ -1271,8 +1274,6 @@ export async function getPortFromConfig(env: RadEnv): Promise<number> {
   return port;
 }
 
-const BROKER_CONFIG_TEMPLATE_PATH = "./static/broker-config.yaml.template";
-
 interface BrokerConfigOptions {
   user_node_id: string;
   user_handle: string;
@@ -1286,7 +1287,7 @@ async function writeBrokerConfig(
   outputPath: fs.PathLike,
   opts: BrokerConfigOptions,
 ): Promise<void> {
-  const template = await readFile(BROKER_CONFIG_TEMPLATE_PATH, "utf8");
+  const template = await read(brokerConfigTemplateUrl).text();
   const doc = YAML.parseDocument(template, { logLevel: "silent" });
 
   const env = ["adapters", "webhooks", "env"];
