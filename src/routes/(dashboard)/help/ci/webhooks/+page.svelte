@@ -1,5 +1,13 @@
 <script lang="ts">
-  import html from "$docs/webhooks-smoke-test.adoc";
+  import rawHtml from "$docs/webhooks-smoke-test.adoc";
+
+  import type { PageData } from "./$types";
+
+  let { data }: { data: PageData } = $props();
+
+  let html = $derived(
+    rawHtml.replaceAll("{{NODE_ID}}", data.nodeId ?? "&lt;your node ID&gt;"),
+  );
 </script>
 
 <svelte:head>

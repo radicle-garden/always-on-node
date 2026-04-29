@@ -12,22 +12,19 @@ link:webhooks-quickstart.adoc#before-you-start[Before you start].
 
 [arabic]
 . Confirm your repo is seeded by your Garden node.
-. Grab your Garden node ID from
-`+https://radicle.network/nodes/<garden-username>.radicle.garden+` (top
-left).
 . Open https://webhook.site. Copy the `+https://webhook.site/<uuid>+`
 URL shown at the top. Leave the tab open.
-. From your repo working copy, register the webhook. `+--nid+` is the
-node ID from step 2 — the CLI derives the encryption key from it
+. From your repo working copy, register the webhook. `+--nid+` is your
+Garden node ID — the CLI derives the encryption key from it
 automatically.
 +
 [source,bash]
 ----
 rad webhooks add \
   --name smoke-test \
-  --url 'https://webhook.site/<uuid>' \
+  --nid {{NODE_ID}} \
   --secret 'any-string-is-fine-here' \
-  --nid <the node id from the Garden dashboard>
+  --url 'https://webhook.site/<uuid>'
 ----
 . Commit and push the config so your node sees it:
 +
