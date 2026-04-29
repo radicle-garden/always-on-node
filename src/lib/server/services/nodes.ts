@@ -1311,7 +1311,7 @@ async function writeBrokerConfig(
     },
   });
 
-  await writeFile(outputPath, doc.toString(), "utf8");
+  await writeFile(outputPath, doc.toString({ lineWidth: 0 }), "utf8");
   log.debug(`Broker config written to ${outputPath}`);
 }
 
