@@ -1,5 +1,6 @@
 <script lang="ts">
   import * as Accordion from "$lib/components/ui/accordion";
+  import { resolve } from "$app/paths";
 </script>
 
 <div class="txt-heading-xxl">
@@ -89,8 +90,12 @@
       </Accordion.Trigger>
       <Accordion.Content>
         <div class="txt-body-m-regular max-w-176">
-          Radicle CI is actively in development, and we plan to add support for
-          it, including a hosted version.
+          Radicle CI is actively in development, and there will be a hosted
+          version. For now, you can integrate with your own CI/CD system or use
+          hosted CI services, using <a
+          href={resolve("/help/ci")}
+          class="flex items-center gap-2 font-bold text-brand-hover hover:underline">
+          Webhooks</a>.
         </div>
       </Accordion.Content>
     </Accordion.Item>

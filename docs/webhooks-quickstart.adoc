@@ -30,3 +30,13 @@ test. *Recommended for newcomers.*
 Jenkins example: receive webhooks, run a pipeline, post commit status
 back.
 
+=== We Need Your Feedback
+
+This is a new feature aimed to help you integrate with existing
+CI solutions, while we're busy working on a hosted CI solution! As a
+new feature, there may still be some rough edges and we would love to
+have your feedback!
+
+Reach out to us on
+https://radicle.zulipchat.com/#narrow/channel/570942-Garden[zulip] for
+any issues you encounter, or if you have any questions.
