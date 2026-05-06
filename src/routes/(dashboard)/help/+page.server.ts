@@ -19,7 +19,7 @@ export const load: PageServerLoad = async ({ locals }) => {
   try {
     const port = await getPortFromConfig(env);
     connectAddress = user.nodes[0]
-      ? `${user.nodes[0].node_id}@${config.fqdn}:${port}`
+      ? `${user.nodes[0].node_id}@${user.handle}.${config.fqdn}:${port}`
       : undefined;
   } catch {
     // Ignore.
