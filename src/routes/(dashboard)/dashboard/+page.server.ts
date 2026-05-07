@@ -193,9 +193,7 @@ export const actions = {
       return fail(400, { error: "Node ID and Repository ID are required" });
     }
 
-    const userOwnsNode = locals.user.nodes.some(
-      (n) => n.node_id === nodeId,
-    );
+    const userOwnsNode = locals.user.nodes.some(n => n.node_id === nodeId);
     if (!userOwnsNode) {
       return fail(403, { error: "Forbidden" });
     }
@@ -237,9 +235,7 @@ export const actions = {
       return fail(400, { error: "Node ID and Repository ID are required" });
     }
 
-    const userOwnsNode = locals.user.nodes.some(
-      (n) => n.node_id === nodeId,
-    );
+    const userOwnsNode = locals.user.nodes.some(n => n.node_id === nodeId);
     if (!userOwnsNode) {
       return fail(403, { error: "Forbidden" });
     }
