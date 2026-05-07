@@ -16,7 +16,7 @@ export const POST: RequestHandler = async ({ locals, url }) => {
     const origin = url.origin;
     const result = await stripeService.createCustomerPortalSession(
       locals.user.id,
-      `${origin}/${locals.user.handle}`,
+      `${origin}/dashboard`,
     );
 
     if (!result.success) {
