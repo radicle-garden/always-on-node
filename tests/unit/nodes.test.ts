@@ -1,6 +1,9 @@
 import { testExports } from "$lib/server/services/nodes";
 
-import { describe, expect, it } from "vitest";
+import fs from "fs";
+import os from "os";
+import path from "path";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("parseNodeStatus", () => {
   describe("for a healthy running node", () => {
@@ -31,6 +34,38 @@ describe("parseNodeStatus", () => {
         sinceSeconds: 0,
       });
     });
+  });
+});
+
+describe("writeBrokerConfig", () => {
+  let tmpDir: string;
+
+  const opts = {
+    user_node_id: "z6MkwPUeUS2fJMfc2HZN1RQTQcTTuhw4HhPySB8JeUg2mVvx",
+    user_handle: "alice",
+    rad_clone_url: "alice.example.com",
+    rad_browse_url: "https://example.com/seeds/alice.example.com",
+    rad_commit_status_url: "https://example.com/api/commit-status",
+    webhooks_datasource_url: "postgres://localhost/db",
+  };
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "broker-config-test-"));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it("leaves an existing broker config untouched", async () => {
+    const target = path.join(tmpDir, "broker", "broker-config.yaml");
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    const sentinel = "# operator-edited content, do not clobber\n";
+    fs.writeFileSync(target, sentinel, "utf8");
+
+    await testExports.writeBrokerConfig(target, opts);
+
+    expect(fs.readFileSync(target, "utf8")).toBe(sentinel);
   });
 });
 

@@ -145,8 +145,6 @@ async function createNode(user: User): Promise<Node | null> {
     return null;
   }
 
-  fs.mkdirSync(`${radHome}/broker`, { recursive: true });
-
   const radBinary = config.radBinaryPath;
 
   const env = {
@@ -176,7 +174,6 @@ async function createNode(user: User): Promise<Node | null> {
     const nodeFqdn = `${user.handle}.${config.fqdn}`;
     await updateConfig(nodePort, env, nodeFqdn, config.nodePreferredSeeds);
 
-    // write broker config file
     try {
       await writeBrokerConfig(`${radHome}/broker/broker-config.yaml`, {
         user_node_id: nodeId,
@@ -1096,12 +1093,11 @@ export async function ensureNodeActiveForUser(
         // Once we've migrated prod/staging all nodes should have set
         // listenAddress:port in their configs and it should be safe to
         // remove this fallback.
+        const nodeFqdn = `${user.handle}.${config.fqdn}`;
         try {
           nodePort = await getPortFromConfig(env);
         } catch {
           nodePort = await allocateNodePort(userId);
-
-          const nodeFqdn = `${user.handle}.${config.fqdn}`;
           await updateConfig(
             nodePort,
             env,
@@ -1113,6 +1109,27 @@ export async function ensureNodeActiveForUser(
             nodePort,
             nodeFqdn,
           });
+        }
+
+        try {
+          await writeBrokerConfig(`${radHome}/broker/broker-config.yaml`, {
+            user_node_id: existingNode.node_id,
+            user_handle: user.handle,
+            rad_clone_url: nodeFqdn,
+            rad_browse_url: config.explorerUrl + "/seeds/" + nodeFqdn,
+            rad_commit_status_url: config.frontendUrl + "/api/commit-status",
+            webhooks_datasource_url: config.databaseUrl,
+          });
+        } catch (error) {
+          log.error("[Nodes] Couldn't write broker config", {
+            userId,
+            error: String(error),
+          });
+          return {
+            success: false,
+            error: `Failed to write broker config`,
+            statusCode: 500,
+          };
         }
 
         try {
@@ -1131,7 +1148,7 @@ export async function ensureNodeActiveForUser(
           });
           return {
             success: false,
-            error: `Failed to recreate containers: ${String(error)}`,
+            error: `Failed to recreate containers`,
             statusCode: 500,
           };
         }
@@ -1287,6 +1304,13 @@ async function writeBrokerConfig(
   outputPath: fs.PathLike,
   opts: BrokerConfigOptions,
 ): Promise<void> {
+  if (fs.existsSync(outputPath)) {
+    log.debug(`Broker config already exists at ${outputPath}, leaving alone`);
+    return;
+  }
+
+  fs.mkdirSync(path.dirname(outputPath.toString()), { recursive: true });
+
   const template = await read(brokerConfigTemplateUrl).text();
   const doc = YAML.parseDocument(template, { logLevel: "silent" });
 
@@ -1315,4 +1339,4 @@ async function writeBrokerConfig(
   log.debug(`Broker config written to ${outputPath}`);
 }
 
-export const testExports = { parseNodeStatus };
+export const testExports = { parseNodeStatus, writeBrokerConfig };
