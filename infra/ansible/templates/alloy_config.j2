@@ -159,11 +159,9 @@ loki.source.journal "garden_containers" {
 loki.relabel "garden_containers" {
   forward_to = []
 
-  // 1. Filter: Only keep logs that have CONTAINER_TAG in the expected format
-  // and component is radicle-node or radicle-httpd
   rule {
     source_labels = ["__journal_container_tag"]
-    regex         = "garden\\|\\|(radicle-node|radicle-httpd)\\|\\|.+"
+    regex         = "garden\\|\\|(radicle-node|radicle-httpd|radicle-broker)\\|\\|.+"
     action        = "keep"
   }
 
