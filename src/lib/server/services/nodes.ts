@@ -178,7 +178,7 @@ async function createNode(user: User): Promise<Node | null> {
       await writeBrokerConfig(`${radHome}/broker/broker-config.yaml`, {
         user_node_id: nodeId,
         user_handle: user.handle,
-        rad_clone_url: nodeFqdn,
+        rad_clone_url: `${config.httpdPublicScheme}://${nodeFqdn}`,
         rad_browse_url: config.explorerUrl + "/seeds/" + nodeFqdn,
         rad_commit_status_url: config.frontendUrl + "/api/commit-status",
         webhooks_datasource_url: config.databaseUrl,
@@ -1109,7 +1109,7 @@ export async function ensureNodeActiveForUser(
           await writeBrokerConfig(`${radHome}/broker/broker-config.yaml`, {
             user_node_id: existingNode.node_id,
             user_handle: user.handle,
-            rad_clone_url: nodeFqdn,
+            rad_clone_url: `${config.httpdPublicScheme}://${nodeFqdn}`,
             rad_browse_url: config.explorerUrl + "/seeds/" + nodeFqdn,
             rad_commit_status_url: config.frontendUrl + "/api/commit-status",
             webhooks_datasource_url: config.databaseUrl,
@@ -1308,16 +1308,22 @@ async function writeBrokerConfig(
   const template = await read(brokerConfigTemplateUrl).text();
   const doc = YAML.parseDocument(template, { logLevel: "silent" });
 
-  const env = ["adapters", "webhooks", "env"];
-  doc.setIn([...env, "RAD_NODE_ID"], opts.user_node_id);
-  doc.setIn([...env, "RAD_USER_HANDLE"], opts.user_handle);
-  doc.setIn([...env, "RAD_BROWSE_URL"], opts.rad_browse_url);
-  doc.setIn([...env, "RAD_CLONE_URL"], opts.rad_clone_url);
-  doc.setIn([...env, "RAD_COMMIT_STATUS_URL"], opts.rad_commit_status_url);
+  const webhooksEnv = ["adapters", "webhooks", "env"];
+  doc.setIn([...webhooksEnv, "RAD_NODE_ID"], opts.user_node_id);
+  doc.setIn([...webhooksEnv, "RAD_USER_HANDLE"], opts.user_handle);
+  doc.setIn([...webhooksEnv, "RAD_BROWSE_URL"], opts.rad_browse_url);
+  doc.setIn([...webhooksEnv, "RAD_CLONE_URL"], opts.rad_clone_url);
+  doc.setIn(
+    [...webhooksEnv, "RAD_COMMIT_STATUS_URL"],
+    opts.rad_commit_status_url,
+  );
   doc.setIn(
     ["adapters", "webhooks", "sensitive_env", "WEBHOOKS_DATASOURCE_URL"],
     opts.webhooks_datasource_url,
   );
+
+  const buildkiteEnv = ["adapters", "buildkite", "env"];
+  doc.setIn([...buildkiteEnv, "RAD_CLONE_URL"], opts.rad_clone_url);
 
   YAML.visit(doc, {
     Scalar(_key, node) {

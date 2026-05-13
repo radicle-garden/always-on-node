@@ -43,7 +43,7 @@ describe("writeBrokerConfig", () => {
   const opts = {
     user_node_id: "z6MkwPUeUS2fJMfc2HZN1RQTQcTTuhw4HhPySB8JeUg2mVvx",
     user_handle: "alice",
-    rad_clone_url: "alice.example.com",
+    rad_clone_url: "https://alice.example.com",
     rad_browse_url: "https://example.com/seeds/alice.example.com",
     rad_commit_status_url: "https://example.com/api/commit-status",
     webhooks_datasource_url: "postgres://localhost/db",

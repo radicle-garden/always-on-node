@@ -17,6 +17,22 @@ adapters:
     sensitive_env:
       WEBHOOKS_DATASOURCE_URL: ""
       RAD_PASSPHRASE: ""
+  buildkite:
+    command: /usr/local/bin/radicle-buildkite-adapter
+    env:
+      LOG_LEVEL: info
+      BUILDS_POLL_INTERVAL_SECS: "10"
+      BUILDS_POLL_TIMEOUT_SECS: "1800"
+      MAX_POLL_RETRIES: "5"
+      BUILDKITE_ORG_SLUG: ""
+      BUILDKITE_CLUSTER_ID: ""
+      BUILDKITE_DEFAULT_BRANCH: main
+      BUILDKITE_PIPELINE_VISIBILITY: private
+      RAD_HOME: /radicle
+      RAD_CLONE_URL: ""
+    sensitive_env:
+      BUILDKITE_API_TOKEN: ""
+      RAD_PASSPHRASE: ""
 filters:
   - !And
     - !Or
@@ -30,3 +46,15 @@ filters:
     - !Or
       - !AnyDelegate
       - !Node ""
+triggers:
+  - adapter: buildkite
+    filters:
+      - !And
+        - !Or
+          - !BranchCreated
+          - !BranchUpdated
+          - !PatchCreated
+          - !PatchUpdated
+        - !Or
+          - !AnyDelegate
+          - !Node ""
