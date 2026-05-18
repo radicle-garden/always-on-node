@@ -126,6 +126,8 @@ EOF
   #   # Customize the amount of memory on the VM:
     vb.memory = "8192"
     vb.cpus = 6
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    vb.customize ["modifyvm", :id, "--natdnsproxy1",        "on"]
   end
 
   # Post-up message
