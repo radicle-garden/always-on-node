@@ -113,6 +113,7 @@ EOF
     pnpm db:migrate
     # Start the dev server (log to file and tmux session)
     tmux new-session -d -s "sveltekit" "pnpm dev 2>&1 | tee /vagrant/sveltekit.log"
+    echo 'cd /vagrant 2>/dev/null || true' >> "$HOME/.bashrc"
     SHELL
 
   # Provider-specific configuration so you can fine-tune various
