@@ -94,7 +94,7 @@
           version. For now, you can integrate with your own CI/CD system or use
           hosted CI services, using <a
             href={resolve("/help/ci")}
-            class="flex items-center gap-2 font-bold text-brand-hover hover:underline">
+            class="font-bold text-brand-hover hover:underline">
             Webhooks
           </a>
           .
