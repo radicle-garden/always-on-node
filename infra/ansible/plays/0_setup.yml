@@ -25,7 +25,6 @@
         src: ../templates/logrotate_rsyslog.j2
         dest: "/etc/logrotate.d/rsyslog"
 
-
 - name: Base setup
   hosts: all
   become: true
