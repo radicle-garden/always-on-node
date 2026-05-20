@@ -360,12 +360,18 @@ async function createContainers(
     {
       Image: brokerImage,
       Env: [
-        "RUST_LOG=debug",
+        "RUST_LOG=info",
         "RUST_BACKTRACE=1",
         "RAD_HOME=/radicle",
         "RAD_PASSPHRASE=",
       ],
-      Cmd: ["--config", `/home/radicle/broker-config.yaml`, `process-events`],
+      Cmd: [
+        "--config",
+        `/home/radicle/broker-config.yaml`,
+        `--log-level`,
+        `info`,
+        `process-events`,
+      ],
       HostConfig: {
         Binds: [
           `${radHome}:/radicle`,
